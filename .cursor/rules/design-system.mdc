@@ -1,0 +1,42 @@
+---
+description: Token-driven theme architecture for Frame. Mood and color mode are separate axes.
+alwaysApply: true
+---
+
+# Design system / north star rule
+
+The application has one shared product architecture and multiple interchangeable visual moods.
+
+Current default: Core — Editorial + Analytical + Entertainment (`core`).
+
+Alternative moods:
+
+- Editorial Observatory (`editorial-observatory`)
+- Cinematic Archive (`cinematic-archive`)
+- Modern Cultural Index (`modern-cultural-index`)
+- Slightly Game-Native (`game-native`)
+
+These are themes, not separate applications.
+
+## Rules
+
+1. Never hard-code theme-specific colors, typography, radii, shadows, spacing, or motion inside feature components.
+2. Feature components consume semantic design tokens (CSS variables emitted from the theme contract).
+3. Theme files provide token values. They live in `src/design-system/themes/`.
+4. Every theme implements the same typed `Theme` contract in `src/design-system/theme-types.ts`.
+5. Switching the active theme must require changing theme state or configuration, not editing feature components.
+6. Do not duplicate pages or components for individual moods.
+7. Preserve the same information architecture across moods.
+8. Every new component must work under all themes.
+9. Light/dark mode is independent of mood. Do not create a separate theme per combination.
+10. Never use positive/negative semantic colors as brand colors. Accent means interaction. Green, amber, and red mean evaluation state, and never alone.
+11. Interactive controls require `cursor: pointer` plus hover, focus-visible, active, disabled, and loading states where applicable.
+12. Motion must be restrained and functional. Respect `prefers-reduced-motion`.
+13. If a new visual property is needed, first determine whether it belongs in the token system.
+14. Do not introduce a one-off visual value merely because it is convenient.
+15. Accessibility is required across every theme.
+16. A theme experiment must never change product semantics or evaluation logic.
+17. The visual system must never cause the work's artwork to become less important than site chrome.
+18. Do not branch JSX on `theme === ...` unless the visual structure genuinely cannot be expressed with tokens. Prefer token changes.
+19. Do not make theme switching a prominent public navigation item. Color mode may be quiet. Mood switching stays in the appearance control.
+20. The default mood is `core`, overridable with `NEXT_PUBLIC_DEFAULT_MOOD`.

@@ -1,0 +1,42 @@
+---
+description: Modular monolith architecture for the review and evaluation platform.
+alwaysApply: true
+---
+
+# Technical architecture rule
+
+This project is a modular monolith:
+
+- Next.js
+- TypeScript
+- PostgreSQL
+- Prisma
+- Docker Desktop for local PostgreSQL
+
+The domain model is the foundation of the product. `docs/domain_model.md`, `docs/technical_architecture.md`, and `docs/review_website_north_star_for_cursor.md` are authoritative.
+
+Evaluation is the core judgment object. A written review is one part of an evaluation, not the whole model.
+
+The database stores canonical evidence and context. Aggregates such as Review Landscape are derived in `src/lib/aggregation` from published evaluations only. Do not store landscape percentages, homepage scores, or a canonical global score.
+
+Do not prematurely introduce microservices, Redis, Elasticsearch, a separate backend, message queues, Kubernetes, or a public REST API.
+
+Prefer server components for reads and server actions for mutations. Keep domain logic out of presentation components.
+
+Use Prisma migrations for schema changes. The schema lives at `prisma/schema.prisma`.
+
+## Schema reconciliation already decided
+
+- `WorkType` uses `TV_SERIES`, not `TELEVISION`.
+- `Stance` is `POSITIVE | MIXED | NEGATIVE`.
+- `ReviewSource` is `INTERNAL | IMPORTED | MIGRATED`.
+- `OwnershipContext` uses `OWNED`, not `PURCHASED`.
+- Reviewer profiles and evaluations use `onDelete: Restrict` so account removal does not cascade-delete review history.
+- Full evaluation revision history and an audit log are intentionally deferred. Evaluation identity stays stable across edits.
+- A reviewer has one evaluation per work. Edits update that evaluation.
+
+When an architectural change is proposed, identify its consequences before implementing it.
+
+## Product voice
+
+Describe evidence. "Reviewers disagree about execution." Do not appoint the site as the judge of the work. Show sample size. A small sample is not a consensus. Enjoyment and execution stay independent. Lens and standard stay independent.

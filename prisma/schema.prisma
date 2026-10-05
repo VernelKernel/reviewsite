@@ -1,0 +1,547 @@
+// Reconciled with the domain model.
+// Stance is Positive / Mixed / Negative — not a five-point score.
+// Review provenance is Internal / Imported / Migrated.
+// Evaluations are not cascade-deleted with an account.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum WorkType {
+  GAME
+  MOVIE
+  TV_SERIES
+  BOOK
+  ALBUM
+  OTHER
+}
+
+enum WorkStatus {
+  DRAFT
+  PUBLISHED
+  UNLISTED
+  ARCHIVED
+}
+
+enum CreatorRole {
+  DEVELOPER
+  PUBLISHER
+  STUDIO
+  DIRECTOR
+  WRITER
+  COMPOSER
+  ARTIST
+  ACTOR
+  PRODUCER
+  OTHER
+}
+
+enum ReleaseStatus {
+  ANNOUNCED
+  EARLY_ACCESS
+  RELEASED
+  DELISTED
+}
+
+enum MediaKind {
+  KEY_ART
+  POSTER
+  SCREENSHOT
+  TRAILER
+  COVER
+  LOGO
+  OTHER
+}
+
+enum MediaVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum EvaluationLens {
+  EXPERIENCE
+  EXECUTION
+  MIXED
+}
+
+enum EvaluationStandard {
+  ABSOLUTE
+  CONTEXTUAL
+  MIXED
+}
+
+enum Stance {
+  POSITIVE
+  MIXED
+  NEGATIVE
+}
+
+enum CompletionStatus {
+  JUST_STARTED
+  EARLY
+  SUBSTANTIAL
+  COMPLETED
+  ENDGAME
+  POST_GAME
+  ABANDONED
+  UNKNOWN
+}
+
+enum PlaytimeBucket {
+  LESS_THAN_ONE_HOUR
+  ONE_TO_FIVE_HOURS
+  FIVE_TO_TEN_HOURS
+  TEN_TO_TWENTY_HOURS
+  TWENTY_TO_FIFTY_HOURS
+  FIFTY_PLUS_HOURS
+  UNKNOWN
+}
+
+enum OwnershipContext {
+  OWNED
+  GIFTED
+  SUBSCRIPTION
+  BORROWED
+  REVIEW_COPY
+  FREE
+  OTHER
+}
+
+enum EvaluationStatus {
+  DRAFT
+  PUBLISHED
+  UNLISTED
+  HIDDEN
+  REMOVED
+}
+
+enum ReviewSource {
+  INTERNAL
+  IMPORTED
+  MIGRATED
+}
+
+enum ObservationPolarity {
+  PRAISE
+  CRITICISM
+}
+
+enum RelationKind {
+  SAME_SERIES
+  SEQUEL
+  PREQUEL
+  SPIRITUAL_SUCCESSOR
+  ADAPTATION
+  REMAKE
+  REMASTER
+  RELATED
+}
+
+enum AccountRole {
+  USER
+  MODERATOR
+  EDITOR
+  ADMIN
+}
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+  APPLE
+  DISCORD
+  STEAM
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+model User {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  emailVerified DateTime?
+  role          AccountRole @default(USER)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  profile       ReviewerProfile?
+  identities    AuthenticationIdentity[]
+  sessions      Session[]
+  preferences   UserPreference?
+  savedWorks    SavedWork[]
+  followedWorks FollowedWork[]
+  reports       Report[]                 @relation("ReportAuthor")
+}
+
+model AuthenticationIdentity {
+  id                String       @id @default(cuid())
+  userId            String
+  provider          AuthProvider
+  providerAccountId String
+  createdAt         DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model UserPreference {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  theme     String?
+  colorMode String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ReviewerProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  slug        String   @unique
+  displayName String
+  bio         String?
+  avatarUrl   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  evaluations Evaluation[]
+}
+
+model Work {
+  id        String     @id @default(cuid())
+  slug      String
+  title     String
+  workType  WorkType
+  status    WorkStatus @default(PUBLISHED)
+  synopsis  String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  alternateTitles WorkTitle[]
+  creators        WorkCreator[]
+  genres          WorkGenre[]
+  platforms       WorkPlatform[]
+  releases        Release[]
+  media           MediaAsset[]
+  evaluations     Evaluation[]
+  reports         Report[]
+
+  relationsFrom WorkRelation[] @relation("RelationFrom")
+  relationsTo   WorkRelation[] @relation("RelationTo")
+
+  savedBy    SavedWork[]
+  followedBy FollowedWork[]
+
+  @@unique([workType, slug])
+  @@index([workType])
+  @@index([status])
+  @@index([title])
+}
+
+model WorkTitle {
+  id        String  @id @default(cuid())
+  workId    String
+  title     String
+  locale    String?
+  isPrimary Boolean @default(false)
+
+  work Work @relation(fields: [workId], references: [id], onDelete: Cascade)
+
+  @@index([workId])
+  @@index([title])
+}
+
+model Creator {
+  id        String        @id @default(cuid())
+  slug      String        @unique
+  name      String
+  works     WorkCreator[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([name])
+}
+
+model WorkCreator {
+  workId    String
+  creatorId String
+  role      CreatorRole
+  sortOrder Int         @default(0)
+
+  work    Work    @relation(fields: [workId], references: [id], onDelete: Cascade)
+  creator Creator @relation(fields: [creatorId], references: [id], onDelete: Restrict)
+
+  @@id([workId, creatorId, role])
+  @@index([creatorId])
+}
+
+model Genre {
+  id        String      @id @default(cuid())
+  slug      String      @unique
+  name      String
+  works     WorkGenre[]
+  createdAt DateTime    @default(now())
+
+  @@index([name])
+}
+
+model WorkGenre {
+  workId  String
+  genreId String
+
+  work  Work  @relation(fields: [workId], references: [id], onDelete: Cascade)
+  genre Genre @relation(fields: [genreId], references: [id], onDelete: Restrict)
+
+  @@id([workId, genreId])
+  @@index([genreId])
+}
+
+model Platform {
+  id          String         @id @default(cuid())
+  slug        String         @unique
+  name        String
+  works       WorkPlatform[]
+  releases    Release[]
+  evaluations Evaluation[]
+}
+
+model WorkPlatform {
+  workId     String
+  platformId String
+
+  work     Work     @relation(fields: [workId], references: [id], onDelete: Cascade)
+  platform Platform @relation(fields: [platformId], references: [id], onDelete: Restrict)
+
+  @@id([workId, platformId])
+  @@index([platformId])
+}
+
+model Region {
+  id       String    @id @default(cuid())
+  code     String    @unique
+  name     String
+  releases Release[]
+}
+
+model Release {
+  id         String        @id @default(cuid())
+  workId     String
+  platformId String?
+  regionId   String?
+  releasedOn DateTime?
+  label      String?
+  status     ReleaseStatus @default(RELEASED)
+
+  work     Work      @relation(fields: [workId], references: [id], onDelete: Cascade)
+  platform Platform? @relation(fields: [platformId], references: [id])
+  region   Region?   @relation(fields: [regionId], references: [id])
+
+  @@index([workId])
+  @@index([platformId])
+  @@index([regionId])
+  @@index([releasedOn])
+}
+
+model MediaAsset {
+  id         String          @id @default(cuid())
+  workId     String
+  kind       MediaKind
+  src        String
+  alt        String
+  visibility MediaVisibility @default(PUBLIC)
+  isPrimary  Boolean         @default(false)
+  sortOrder  Int             @default(0)
+
+  work Work @relation(fields: [workId], references: [id], onDelete: Cascade)
+
+  @@index([workId, kind])
+}
+
+model Evaluation {
+  id         String           @id @default(cuid())
+  workId     String
+  reviewerId String
+  status     EvaluationStatus @default(DRAFT)
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  reviewedOn DateTime?
+
+  lens         EvaluationLens
+  standard     EvaluationStandard
+  standardNote String?
+
+  enjoyment Stance
+  execution Stance
+
+  completion CompletionStatus
+  playtime   PlaytimeBucket    @default(UNKNOWN)
+
+  platformId String?
+  ownership  OwnershipContext?
+
+  work     Work            @relation(fields: [workId], references: [id], onDelete: Restrict)
+  reviewer ReviewerProfile @relation(fields: [reviewerId], references: [id], onDelete: Restrict)
+  platform Platform?       @relation(fields: [platformId], references: [id])
+
+  review       Review?
+  judgments    EvaluationJudgment[]
+  observations Observation[]
+  reports      Report[]
+
+  @@unique([reviewerId, workId])
+  @@index([workId, status])
+  @@index([workId, reviewedOn])
+  @@index([reviewerId])
+  @@index([lens])
+  @@index([standard])
+}
+
+model Review {
+  id           String       @id @default(cuid())
+  evaluationId String       @unique
+  title        String?
+  body         String
+  source       ReviewSource @default(INTERNAL)
+
+  importSourceName String?
+  importSourceUrl  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  evaluation Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+}
+
+model Dimension {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  name        String
+  description String?
+  sortOrder   Int        @default(0)
+  appliesTo   WorkType[]
+
+  judgments EvaluationJudgment[]
+}
+
+model EvaluationJudgment {
+  id           String @id @default(cuid())
+  evaluationId String
+  dimensionId  String
+  stance       Stance
+
+  evaluation Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  dimension  Dimension  @relation(fields: [dimensionId], references: [id], onDelete: Restrict)
+
+  @@unique([evaluationId, dimensionId])
+  @@index([dimensionId, stance])
+}
+
+model Topic {
+  id   String @id @default(cuid())
+  slug String @unique
+  name String
+
+  observations Observation[]
+}
+
+model Observation {
+  id           String              @id @default(cuid())
+  evaluationId String
+  topicId      String
+  polarity     ObservationPolarity
+  content      String
+
+  evaluation Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  topic      Topic      @relation(fields: [topicId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([evaluationId])
+  @@index([topicId, polarity])
+}
+
+model WorkRelation {
+  id         String       @id @default(cuid())
+  fromWorkId String
+  toWorkId   String
+  kind       RelationKind
+
+  from Work @relation("RelationFrom", fields: [fromWorkId], references: [id], onDelete: Cascade)
+  to   Work @relation("RelationTo", fields: [toWorkId], references: [id], onDelete: Cascade)
+
+  @@unique([fromWorkId, toWorkId, kind])
+  @@index([toWorkId])
+}
+
+model SavedWork {
+  userId    String
+  workId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  work Work @relation(fields: [workId], references: [id], onDelete: Cascade)
+
+  @@id([userId, workId])
+  @@index([workId])
+}
+
+model FollowedWork {
+  userId    String
+  workId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  work Work @relation(fields: [workId], references: [id], onDelete: Cascade)
+
+  @@id([userId, workId])
+  @@index([workId])
+}
+
+model Report {
+  id           String       @id @default(cuid())
+  reporterId   String
+  evaluationId String?
+  workId       String?
+  reason       String
+  details      String?
+  status       ReportStatus @default(OPEN)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  reporter   User        @relation("ReportAuthor", fields: [reporterId], references: [id], onDelete: Restrict)
+  evaluation Evaluation? @relation(fields: [evaluationId], references: [id], onDelete: Restrict)
+  work       Work?       @relation(fields: [workId], references: [id], onDelete: Restrict)
+
+  @@index([reporterId])
+  @@index([evaluationId])
+  @@index([workId])
+  @@index([status])
+}
