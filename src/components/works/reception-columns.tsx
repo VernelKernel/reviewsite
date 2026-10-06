@@ -1,6 +1,7 @@
 import { CriticReading } from "@/components/evaluations/critic-reading";
+import { StanceLine } from "@/components/evaluations/stance-line";
 import type { ReviewCardModel } from "@/components/reviews/review-card";
-import { reviewHref, reviewerHref, stanceClass, stanceLabel } from "@/lib/domain/labels";
+import { reviewHref, reviewerHref } from "@/lib/domain/labels";
 import { formatDate } from "@/lib/works/present";
 
 const PREVIEW_LIMIT = 3;
@@ -90,11 +91,12 @@ function AudienceExcerpt({ review }: { review: ReviewCardModel }) {
         </a>
         {date ? <time className="meta">{date}</time> : null}
       </header>
-      <p className="excerpt-stances">
-        Enjoyment <span className={stanceClass(review.enjoyment)}>{stanceLabel[review.enjoyment] ?? review.enjoyment}</span>
-        {" · "}
-        Execution <span className={stanceClass(review.execution)}>{stanceLabel[review.execution] ?? review.execution}</span>
-      </p>
+      <StanceLine
+        items={[
+          { label: "Enjoyment", stance: review.enjoyment },
+          { label: "Execution", stance: review.execution },
+        ]}
+      />
       {body ? (
         <p className="excerpt-body">{body}</p>
       ) : observation ? (
