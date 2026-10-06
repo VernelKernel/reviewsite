@@ -240,7 +240,7 @@ function Details({ work }: { work: NonNullable<Awaited<ReturnType<typeof getWork
   );
 }
 
-function toReview(
+export function toReview(
   workType: string,
   workSlug: string,
   evaluation: NonNullable<Awaited<ReturnType<typeof getWork>>>["evaluations"][number],

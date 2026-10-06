@@ -445,6 +445,7 @@ p {
   grid-template-columns: var(--hero-columns);
   gap: var(--space-6);
   align-items: start;
+  margin-bottom: var(--space-7);
   margin-left: calc(var(--hero-bleed) * -1);
   margin-right: calc(var(--hero-bleed) * -0.35);
 }
@@ -470,6 +471,9 @@ p {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  align-self: start;
+  height: max-content;
+  min-width: 0;
   padding-top: var(--space-2);
 }
 
@@ -501,7 +505,9 @@ p {
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-3);
+  grid-column: 1 / -1;
   margin-top: var(--space-2);
 }
 
@@ -784,6 +790,72 @@ p {
 .review-list {
   display: grid;
   gap: var(--space-5);
+}
+
+.reception-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  align-items: start;
+  margin-top: var(--space-8);
+}
+
+.column-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.column-head h2 {
+  font-size: var(--text-h3);
+}
+
+.column-more {
+  color: var(--color-text-muted);
+  font-size: var(--text-meta);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.column-more:hover {
+  color: var(--color-text-primary);
+}
+
+.excerpt-list {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.excerpt-card {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.excerpt-card header,
+.excerpt-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.excerpt-stances,
+.excerpt-body {
+  color: var(--color-text-secondary);
+}
+
+.excerpt-foot a {
+  cursor: pointer;
 }
 
 .review-card {
@@ -1272,6 +1344,7 @@ html[data-compare="open"] #content {
   .work-hero,
   .split,
   .two-col,
+  .reception-columns,
   .header-inner {
     grid-template-columns: 1fr;
     display: flex;

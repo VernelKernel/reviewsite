@@ -3,6 +3,8 @@ import type { WorkType } from "@/generated/prisma/client";
 import { CompareButton } from "@/components/comparison/compare-controls";
 import { PopulationGauges } from "@/components/evaluations/population-gauges";
 import { ReviewLandscapeView } from "@/components/evaluations/review-landscape";
+import { ReceptionColumns } from "@/components/works/reception-columns";
+import { toReview } from "@/components/works/work-record";
 import { splitLandscapes } from "@/lib/aggregation/landscape";
 import {
   audienceHref,
@@ -65,6 +67,7 @@ export async function WorkPage({
       ? undefined
       : `Showing ${filtered.length} of ${work.evaluations.length} published evaluations. These figures describe the filtered set.`;
 
+  const reviews = filtered.map((evaluation) => toReview(work.workType, work.slug, evaluation));
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": work.workType === "MOVIE" ? "Movie" : "VideoGame",
@@ -136,18 +139,18 @@ export async function WorkPage({
             criticHref={criticsHref(work.workType, work.slug)}
             audienceHref={audienceHref(work.workType, work.slug)}
           />
-          <div className="hero-actions">
-            <a className="btn btn-primary" href={evaluateHref(work.workType, work.slug)}>
-              Evaluate this work
-            </a>
-            <a className="btn btn-secondary" href={audienceHref(work.workType, work.slug)}>
-              Read evaluations
-            </a>
-            <a className="btn btn-secondary" href={detailsHref(work.workType, work.slug)}>
-              Details
-            </a>
-            <CompareButton workType={work.workType} slug={work.slug} title={work.title} />
-          </div>
+        </div>
+        <div className="hero-actions">
+          <a className="btn btn-primary" href={evaluateHref(work.workType, work.slug)}>
+            Evaluate this work
+          </a>
+          <a className="btn btn-secondary" href={audienceHref(work.workType, work.slug)}>
+            Read evaluations
+          </a>
+          <a className="btn btn-secondary" href={detailsHref(work.workType, work.slug)}>
+            Details
+          </a>
+          <CompareButton workType={work.workType} slug={work.slug} title={work.title} />
         </div>
       </header>
 
@@ -163,6 +166,12 @@ export async function WorkPage({
         critics={landscape.critics}
         audience={landscape.audience}
         filteredNote={filteredNote}
+      />
+      <ReceptionColumns
+        critics={reviews.filter((review) => review.population === "CRITIC")}
+        audience={reviews.filter((review) => review.population !== "CRITIC")}
+        criticHref={criticsHref(work.workType, work.slug)}
+        audienceHref={audienceHref(work.workType, work.slug)}
       />
 
       {related.length > 0 ? (
