@@ -4,6 +4,7 @@ import path from "node:path";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { assertValidWorkRelation } from "../src/lib/domain/relations";
+import { clearDatabase } from "./clear-data";
 import { dimensions, genres, platforms, relations, reviewers, topics, works } from "./seed/catalog";
 import { coverSvg } from "./seed/covers";
 import { evaluations } from "./seed/evaluations";
@@ -14,37 +15,8 @@ const prisma = new PrismaClient({
 
 const regions = [{ code: "WORLDWIDE", name: "Worldwide" }];
 
-async function clear() {
-  await prisma.report.deleteMany();
-  await prisma.observation.deleteMany();
-  await prisma.evaluationJudgment.deleteMany();
-  await prisma.review.deleteMany();
-  await prisma.evaluation.deleteMany();
-  await prisma.savedWork.deleteMany();
-  await prisma.followedWork.deleteMany();
-  await prisma.session.deleteMany();
-  await prisma.userPreference.deleteMany();
-  await prisma.workRelation.deleteMany();
-  await prisma.mediaAsset.deleteMany();
-  await prisma.release.deleteMany();
-  await prisma.workPlatform.deleteMany();
-  await prisma.workGenre.deleteMany();
-  await prisma.workCreator.deleteMany();
-  await prisma.workTitle.deleteMany();
-  await prisma.work.deleteMany();
-  await prisma.reviewerProfile.deleteMany();
-  await prisma.authenticationIdentity.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.dimension.deleteMany();
-  await prisma.topic.deleteMany();
-  await prisma.genre.deleteMany();
-  await prisma.platform.deleteMany();
-  await prisma.region.deleteMany();
-  await prisma.creator.deleteMany();
-}
-
 async function main() {
-  await clear();
+  await clearDatabase(prisma);
 
   await prisma.region.createMany({ data: regions });
   const region = await prisma.region.findUniqueOrThrow({ where: { code: "WORLDWIDE" } });

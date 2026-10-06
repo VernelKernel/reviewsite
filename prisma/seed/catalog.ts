@@ -70,6 +70,11 @@ export const genres = [
   ["platformer", "Platformer"],
   ["fantasy", "Fantasy"],
   ["drama", "Drama"],
+  ["strategy", "Strategy"],
+  ["sports-and-racing", "Sports and racing"],
+  ["horror", "Horror"],
+  ["puzzle", "Puzzle"],
+  ["fighting", "Fighting"],
 ] as const;
 
 export const topics = [

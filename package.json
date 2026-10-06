@@ -11,6 +11,11 @@
     "db:up": "docker compose up -d",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
+    "catalog:run": "tsx prisma/catalog/run.ts",
+    "catalog:dry": "tsx prisma/catalog/run.ts --dry-run",
+    "catalog:backfill": "tsx prisma/catalog/backfill.ts",
+    "catalog:backfill:dry": "tsx prisma/catalog/backfill.ts --dry-run",
+    "db:clear": "tsx prisma/clear-data.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
   },
