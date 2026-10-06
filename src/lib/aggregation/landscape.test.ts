@@ -5,6 +5,7 @@ import {
   cardCountLine,
   criticCoverage,
   crossPopulationNotes,
+  dimensionShapeReading,
   distributionLabel,
   emptyDistribution,
   enjoymentExecutionGap,
@@ -178,5 +179,45 @@ describe("review landscape", () => {
     expect(landscape.agreement).toEqual([]);
     expect(landscape.disagreement).toEqual([]);
     expect(enjoymentExecutionGap(landscape)).toBeNull();
+  });
+});
+
+describe("dimension shape reading", () => {
+  it("keeps enjoyment, execution, and a dimension split in view", () => {
+    const art = { dimensionSlug: "art-direction", dimensionName: "Art direction", stance: "POSITIVE" as const, sortOrder: 4 };
+    const audience = buildLandscape([
+      ...Array.from({ length: 3 }, () =>
+        evaluation({
+          enjoyment: "POSITIVE",
+          execution: "NEGATIVE",
+          judgments: [art, { dimensionSlug: "technical-quality", dimensionName: "Technical quality", stance: "NEGATIVE", sortOrder: 5 }],
+        }),
+      ),
+      evaluation({
+        enjoyment: "POSITIVE",
+        execution: "NEGATIVE",
+        judgments: [art, { dimensionSlug: "technical-quality", dimensionName: "Technical quality", stance: "MIXED", sortOrder: 5 }],
+      }),
+    ]);
+    const critics = buildLandscape([
+      ...Array.from({ length: 2 }, () =>
+        evaluation({
+          enjoyment: "POSITIVE",
+          execution: "NEGATIVE",
+          judgments: [art, { dimensionSlug: "technical-quality", dimensionName: "Technical quality", stance: "MIXED", sortOrder: 5 }],
+        }),
+      ),
+      ...Array.from({ length: 2 }, () =>
+        evaluation({
+          enjoyment: "MIXED",
+          execution: "NEGATIVE",
+          judgments: [art, { dimensionSlug: "technical-quality", dimensionName: "Technical quality", stance: "MIXED", sortOrder: 5 }],
+        }),
+      ),
+    ]);
+
+    expect(dimensionShapeReading(critics, audience, "both")).toBe(
+      "Audience enjoyment is mostly positive, and execution is mostly negative. Critics are divided on enjoyment, and execution is mostly negative. Art direction is mostly positive in both groups. Technical quality is mostly negative for the audience and is mostly mixed for critics.",
+    );
   });
 });

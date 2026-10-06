@@ -7,6 +7,7 @@ import {
   type ReviewLandscape,
 } from "@/lib/aggregation/landscape";
 import { completionLabel, lensLabel, standardLabel } from "@/lib/domain/labels";
+import { DimensionShape } from "./dimension-shape";
 import { PairedDistribution } from "./distribution-bar";
 
 export function ReviewLandscapeView({
@@ -57,6 +58,7 @@ export function ReviewLandscapeView({
         <p className="empty">No published evaluations match this view yet.</p>
       ) : (
         <div className="landscape">
+          <DimensionShape critics={critics} audience={audience} />
           <div className="split">
             <div className="panel">
               <h3>What reviewers agree on</h3>

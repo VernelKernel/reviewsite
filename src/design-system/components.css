@@ -587,6 +587,209 @@ p {
   gap: var(--space-5);
 }
 
+.dimension-shape {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.shape-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.9fr);
+  gap: var(--space-5) var(--space-6);
+  align-items: center;
+}
+
+.shape-segment {
+  display: inline-flex;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.shape-segment button {
+  appearance: none;
+  border: 0;
+  border-right: var(--border-width) solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: var(--text-meta);
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+}
+
+.shape-segment button:last-child {
+  border-right: 0;
+}
+
+.shape-segment button:hover {
+  background: var(--color-canvas);
+  color: var(--color-text-primary);
+}
+
+.shape-segment button:active {
+  background: var(--color-border);
+}
+
+.shape-segment button:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -3px;
+  z-index: 1;
+}
+
+.shape-segment button[aria-checked="true"] {
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
+.shape-segment button[aria-checked="true"]:hover {
+  background: var(--color-accent-hover);
+  color: var(--color-accent-contrast);
+}
+
+.radar-chart {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.radar-chart text {
+  font-family: var(--font-body);
+  fill: var(--color-text-primary);
+}
+
+.radar-ring,
+.radar-spoke {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.radar-chart .radar-tick {
+  fill: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.radar-label {
+  font-size: 13px;
+  font-weight: 620;
+}
+
+.radar-audience {
+  fill: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  stroke: var(--color-accent);
+  stroke-width: 2.25;
+  stroke-linejoin: round;
+}
+
+.radar-critics {
+  fill: none;
+  stroke: var(--color-text-primary);
+  stroke-width: 1.75;
+  stroke-dasharray: 5 4;
+  stroke-linejoin: round;
+}
+
+.radar-dot {
+  stroke-width: 2.5;
+}
+
+.radar-dot-positive {
+  fill: var(--color-positive);
+  stroke: var(--color-positive);
+}
+
+.radar-dot-mixed {
+  fill: var(--color-caution);
+  stroke: var(--color-caution);
+}
+
+.radar-dot-negative {
+  fill: var(--color-negative);
+  stroke: var(--color-negative);
+}
+
+.radar-dot-divided {
+  fill: var(--color-border-strong);
+  stroke: var(--color-border-strong);
+}
+
+.radar-dot-hollow {
+  fill: var(--color-surface);
+}
+
+.shape-summary h3 {
+  margin-top: var(--space-4);
+}
+
+.shape-summary h3:first-child {
+  margin-top: 0;
+}
+
+.shape-reading {
+  margin-top: var(--space-4);
+  color: var(--color-text-secondary);
+}
+
+.shape-note {
+  color: var(--color-text-muted);
+  font-size: var(--text-meta);
+  margin-top: var(--space-3);
+}
+
+.shape-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-secondary);
+  font-size: var(--text-meta);
+}
+
+.shape-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.shape-swatch {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 99px;
+  background: var(--color-border-strong);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+}
+
+.shape-swatch-audience,
+.shape-swatch-critics {
+  width: 1.4rem;
+  height: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  border-top: 2px solid var(--color-accent);
+}
+
+.shape-swatch-critics {
+  border-top-style: dashed;
+  border-top-color: var(--color-text-primary);
+}
+
+.shape-swatch-positive {
+  background: var(--color-positive);
+}
+
+.shape-swatch-mixed {
+  background: var(--color-caution);
+}
+
+.shape-swatch-negative {
+  background: var(--color-negative);
+}
+
 .dist {
   display: grid;
   gap: var(--space-2);
@@ -1345,7 +1548,8 @@ html[data-compare="open"] #content {
   .split,
   .two-col,
   .reception-columns,
-  .header-inner {
+  .header-inner,
+  .shape-stage {
     grid-template-columns: 1fr;
     display: flex;
     flex-direction: column;

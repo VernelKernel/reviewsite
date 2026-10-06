@@ -16,7 +16,7 @@ export type LandscapeEvaluation = {
   enjoyment: StanceValue;
   execution: StanceValue;
   completion: string;
-  judgments: { dimensionSlug: string; dimensionName: string; stance: StanceValue }[];
+  judgments: { dimensionSlug: string; dimensionName: string; stance: StanceValue; sortOrder?: number }[];
   observations: { topicSlug: string; topicName: string; polarity: PolarityValue }[];
 };
 
@@ -29,6 +29,7 @@ export type CountShare = {
 export type DimensionLandscape = {
   slug: string;
   name: string;
+  sortOrder: number;
   distribution: Distribution;
 };
 
@@ -175,8 +176,10 @@ export function buildLandscape(evaluations: LandscapeEvaluation[]): ReviewLandsc
       const current = dimensionMap.get(judgment.dimensionSlug) ?? {
         slug: judgment.dimensionSlug,
         name: judgment.dimensionName,
+        sortOrder: judgment.sortOrder ?? 0,
         distribution: emptyDistribution(),
       };
+      if (judgment.sortOrder != null) current.sortOrder = judgment.sortOrder;
       current.distribution = addStance(current.distribution, judgment.stance);
       dimensionMap.set(judgment.dimensionSlug, current);
     }
@@ -420,6 +423,7 @@ export function crossPopulationNotes(critics: ReviewLandscape, audience: ReviewL
 export type PairedDimension = {
   slug: string;
   name: string;
+  sortOrder: number;
   critics: Distribution;
   audience: Distribution;
 };
@@ -430,17 +434,21 @@ export function pairedDimensions(critics: ReviewLandscape, audience: ReviewLands
     rows.set(dimension.slug, {
       slug: dimension.slug,
       name: dimension.name,
+      sortOrder: dimension.sortOrder,
       critics: dimension.distribution,
       audience: emptyDistribution(),
     });
   }
   for (const dimension of audience.dimensions) {
     const current = rows.get(dimension.slug);
-    if (current) current.audience = dimension.distribution;
-    else {
+    if (current) {
+      current.audience = dimension.distribution;
+      if (!current.sortOrder) current.sortOrder = dimension.sortOrder;
+    } else {
       rows.set(dimension.slug, {
         slug: dimension.slug,
         name: dimension.name,
+        sortOrder: dimension.sortOrder,
         critics: emptyDistribution(),
         audience: dimension.distribution,
       });
@@ -469,4 +477,77 @@ export function stanceShareGaps(landscape: ReviewLandscape): {
     mixed: enjoyment.mixed - execution.mixed,
     negative: enjoyment.negative - execution.negative,
   };
+}
+
+export type ShapeMode = "both" | "audience" | "critics";
+
+/** How a distribution reads inside a sentence: "leans positive", "is mostly negative", "is divided". */
+function shapeClause(distribution: Distribution): string | null {
+  if (distribution.count === 0) return null;
+  const label = distributionLabel(distribution);
+  if (label === "Divided") return "is divided";
+  if (label.startsWith("Divided")) return `is divided, from ${distribution.count} so far`;
+  if (label.startsWith("Mostly ")) return `is ${label.toLowerCase()}`;
+  if (label.startsWith("Leaning ")) return label.replace("Leaning ", "leans ");
+  return `is ${label.charAt(0).toLowerCase()}${label.slice(1)}`;
+}
+
+function populationLine(label: "Audience" | "Critics", landscape: ReviewLandscape): string | null {
+  const enjoyment = shapeClause(landscape.enjoyment);
+  const execution = shapeClause(landscape.execution);
+  if (!enjoyment && !execution) return null;
+  const enjoymentSubject = label === "Critics" ? "Critic enjoyment" : "Audience enjoyment";
+  if (enjoyment === "is divided" && execution) {
+    const who = label === "Critics" ? "Critics are" : "The audience is";
+    return `${who} divided on enjoyment, and execution ${execution}.`;
+  }
+  if (execution === "is divided" && enjoyment) return `${enjoymentSubject} ${enjoyment}, and execution is divided.`;
+  if (enjoyment && execution) return `${enjoymentSubject} ${enjoyment}, and execution ${execution}.`;
+  if (enjoyment) return `${enjoymentSubject} ${enjoyment}.`;
+  return `${label} execution ${execution}.`;
+}
+
+function dimensionSides(row: PairedDimension): string | null {
+  if (row.audience.count < 4 || row.critics.count < 4) return null;
+  const audience = shapeClause(row.audience);
+  const critics = shapeClause(row.critics);
+  if (!audience || !critics || audience === critics) return null;
+  const audienceKey = dominantKey(row.audience);
+  const criticKey = dominantKey(row.critics);
+  if (!audienceKey || !criticKey || audienceKey === criticKey) return null;
+  if (shareOf(row.audience, audienceKey) < 0.5 || shareOf(row.critics, criticKey) < 0.5) return null;
+  return `${row.name} ${audience} for the audience and ${critics} for critics.`;
+}
+
+function sharedDimension(row: PairedDimension): string | null {
+  if (row.audience.count < 4 || row.critics.count < 4) return null;
+  const audienceKey = dominantKey(row.audience);
+  const criticKey = dominantKey(row.critics);
+  if (!audienceKey || audienceKey !== criticKey) return null;
+  if (shareOf(row.audience, audienceKey) < 0.75 || shareOf(row.critics, criticKey) < 0.75) return null;
+  return `${row.name} is mostly ${audienceKey} in both groups.`;
+}
+
+/** A short reading of enjoyment, execution, and at most two dimension contrasts. Not a score. */
+export function dimensionShapeReading(critics: ReviewLandscape, audience: ReviewLandscape, mode: ShapeMode): string {
+  const lines: string[] = [];
+  if (mode !== "critics") {
+    const line = populationLine("Audience", audience);
+    if (line) lines.push(line);
+  }
+  if (mode !== "audience") {
+    const line = populationLine("Critics", critics);
+    if (line) lines.push(line);
+  }
+  if (mode === "both") {
+    const rows = pairedDimensions(critics, audience);
+    const split = rows.map(dimensionSides).find((line): line is string => Boolean(line));
+    const shared = rows
+      .filter((row) => !split?.startsWith(`${row.name} `))
+      .map(sharedDimension)
+      .find((line): line is string => Boolean(line));
+    if (shared) lines.push(shared);
+    if (split) lines.push(split);
+  }
+  return lines.join(" ");
 }
