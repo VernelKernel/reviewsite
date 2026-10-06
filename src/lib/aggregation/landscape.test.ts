@@ -2,14 +2,21 @@ import { describe, expect, it } from "vitest";
 import {
   addStance,
   buildLandscape,
+  cardCountLine,
+  criticCoverage,
+  crossPopulationNotes,
   distributionLabel,
   emptyDistribution,
   enjoymentExecutionGap,
+  pairedSampleNote,
+  populationShapeNote,
+  splitLandscapes,
   stanceShareGaps,
   isAggregateEligible,
   percentages,
   sampleNote,
   type LandscapeEvaluation,
+  type PopulatedEvaluation,
 } from "./landscape";
 
 function evaluation(overrides: Partial<LandscapeEvaluation> = {}): LandscapeEvaluation {
@@ -104,6 +111,63 @@ describe("review landscape", () => {
       evaluation({ standard: "ABSOLUTE", execution: "NEGATIVE" }),
     ]);
     expect(landscape.disagreement.some((line) => line.includes("expectations"))).toBe(true);
+  });
+
+  it("keeps critics and audience in separate samples", () => {
+    const critic = (overrides: Partial<LandscapeEvaluation> = {}): PopulatedEvaluation => ({
+      ...evaluation(overrides),
+      population: "CRITIC",
+    });
+    const audience = (overrides: Partial<LandscapeEvaluation> = {}): PopulatedEvaluation => ({
+      ...evaluation(overrides),
+      population: "AUDIENCE",
+    });
+    const paired = splitLandscapes([
+      critic({ enjoyment: "POSITIVE", execution: "POSITIVE" }),
+      critic({ enjoyment: "POSITIVE", execution: "POSITIVE" }),
+      critic({ enjoyment: "POSITIVE", execution: "POSITIVE" }),
+      critic({ enjoyment: "POSITIVE", execution: "POSITIVE" }),
+      audience({ enjoyment: "POSITIVE", execution: "MIXED" }),
+      audience({ enjoyment: "POSITIVE", execution: "MIXED" }),
+      audience({ enjoyment: "MIXED", execution: "MIXED" }),
+      audience({ enjoyment: "MIXED", execution: "MIXED" }),
+    ]);
+    expect(paired.critics.sampleSize).toBe(4);
+    expect(paired.audience.sampleSize).toBe(4);
+    expect(paired.critics.execution.positive).toBe(4);
+    expect(paired.audience.execution.mixed).toBe(4);
+    expect(populationShapeNote(paired.critics, paired.audience)).toBe(
+      "Critics are mostly positive on execution. Audience evaluations are mostly mixed.",
+    );
+    expect(populationShapeNote(paired.critics, buildLandscape([]))).toBeNull();
+    expect(criticCoverage(0)).toBe("0 of 10 outlets");
+    expect(cardCountLine(4, 8)).toBe("Critics 4 of 10 outlets · Audience 8 evals");
+    expect(pairedSampleNote(paired.critics, paired.audience)).toBe(
+      "Critics 4 of 10 outlets. Audience based on 4 evals.",
+    );
+  });
+
+  it("reports a dimension split only when both populations have a reading", () => {
+    const judgments = (stance: "POSITIVE" | "NEGATIVE", population: "CRITIC" | "AUDIENCE"): PopulatedEvaluation => ({
+      ...evaluation({
+        judgments: [{ dimensionSlug: "performance", dimensionName: "Performance", stance }],
+      }),
+      population,
+    });
+    const paired = splitLandscapes([
+      judgments("POSITIVE", "CRITIC"),
+      judgments("POSITIVE", "CRITIC"),
+      judgments("POSITIVE", "CRITIC"),
+      judgments("POSITIVE", "CRITIC"),
+      judgments("NEGATIVE", "AUDIENCE"),
+      judgments("NEGATIVE", "AUDIENCE"),
+      judgments("NEGATIVE", "AUDIENCE"),
+      judgments("NEGATIVE", "AUDIENCE"),
+    ]);
+    expect(crossPopulationNotes(paired.critics, paired.audience).disagreement).toEqual([
+      "Critics and audience split on performance.",
+    ]);
+    expect(crossPopulationNotes(paired.critics, buildLandscape([])).disagreement).toEqual([]);
   });
 
   it("withholds pattern language below the sample threshold", () => {

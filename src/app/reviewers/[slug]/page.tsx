@@ -51,7 +51,7 @@ export default async function ReviewerPage({ params }: { params: Promise<{ slug:
                 {evaluation.execution.toLowerCase()}
               </p>
               <p className="meta">
-                The work overall: enjoyment {distributionLabel(landscape.enjoyment).toLowerCase()}, execution{" "}
+                Audience evaluations: enjoyment {distributionLabel(landscape.enjoyment).toLowerCase()}, execution{" "}
                 {distributionLabel(landscape.execution).toLowerCase()}.
               </p>
               {evaluation.review?.body ? <p style={{ marginTop: "1rem" }}>{evaluation.review.body.slice(0, 280)}</p> : null}

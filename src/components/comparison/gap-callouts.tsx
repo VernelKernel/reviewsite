@@ -13,20 +13,26 @@ function reading(label: string, gap: number): string {
   return `${label}: enjoyment is ${points} percentage points ${relation} execution.`;
 }
 
-export function GapCallouts({ landscape }: { landscape: ReviewLandscape }) {
+export function GapCallouts({
+  landscape,
+  placement = "inline",
+}: {
+  landscape: ReviewLandscape;
+  placement?: "inline" | "overlay";
+}) {
   const gaps = stanceShareGaps(landscape);
   if (!gaps) return null;
 
   return (
-    <figure className="gap-callouts">
+    <figure className={placement === "overlay" ? "gap-callouts gap-callouts-overlay" : "gap-callouts"}>
       <div className="gap-callout-row">
         {STANCES.map((stance) => {
           const gap = gaps[stance.key];
-          const direction = gap > 0 ? "gap-up" : gap < 0 ? "gap-down" : "gap-even";
+          const tone = gap === 0 ? "gap-even" : `stance stance-${stance.key}`;
           return (
             <div className="gap-callout" key={stance.key}>
               <span className={`gap-callout-label stance stance-${stance.key}`}>{stance.label}</span>
-              <p className={`gap-figure ${direction}`} aria-label={reading(stance.label, gap)}>
+              <p className={`gap-figure ${tone}`} aria-label={reading(stance.label, gap)}>
                 {gap === 0 ? null : (
                   <span className="gap-arrow" aria-hidden="true">
                     {gap > 0 ? "↑" : "↓"}

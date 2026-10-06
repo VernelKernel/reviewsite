@@ -1,49 +1,12 @@
-import {
-  distributionLabel,
-  dominantKey,
-  percentages,
-  type Distribution,
-} from "@/lib/aggregation/landscape";
+import { cardCountLine } from "@/lib/aggregation/landscape";
 import { CompareButton } from "@/components/comparison/compare-controls";
+import { PairedDistribution } from "@/components/evaluations/distribution-bar";
 import { workHref, workTypeLabel } from "@/lib/domain/labels";
-import { creatorLine, landscapeFor, primaryArt, releaseYear, type CardWork } from "@/lib/works/present";
-
-function verdictClass(distribution: Distribution): string {
-  const dominant = dominantKey(distribution);
-  if (dominant) return `stance stance-${dominant}`;
-  return distribution.count === 0 ? "snapshot-quiet" : "snapshot-divided";
-}
-
-function SnapshotSignal({ label, distribution }: { label: string; distribution: Distribution }) {
-  const pct = percentages(distribution);
-  const verdict = distributionLabel(distribution);
-  const mix =
-    distribution.count === 0
-      ? verdict
-      : `${verdict}. Positive ${pct.positive}%, mixed ${pct.mixed}%, negative ${pct.negative}%`;
-
-  return (
-    <div className="snapshot-signal">
-      <div className="snapshot-head">
-        <span className="snapshot-label">{label}</span>
-        <span className={verdictClass(distribution)}>{verdict}</span>
-      </div>
-      <div className="dist-bar" role="img" aria-label={`${label}: ${mix}`}>
-        {distribution.count > 0 ? (
-          <>
-            <span className="dist-positive" style={{ width: `${pct.positive}%` }} />
-            <span className="dist-mixed" style={{ width: `${pct.mixed}%` }} />
-            <span className="dist-negative" style={{ width: `${pct.negative}%` }} />
-          </>
-        ) : null}
-      </div>
-    </div>
-  );
-}
+import { creatorLine, landscapesFor, primaryArt, releaseYear, type CardWork } from "@/lib/works/present";
 
 export function WorkCard({ work }: { work: CardWork }) {
   const art = primaryArt(work.media);
-  const landscape = landscapeFor(work);
+  const landscapes = landscapesFor(work);
   const year = releaseYear(work.releases);
   return (
     <article className="work-card">
@@ -59,10 +22,20 @@ export function WorkCard({ work }: { work: CardWork }) {
           </p>
           <h3>{work.title}</h3>
           <div className="snapshot">
-            <SnapshotSignal label="Enjoyment" distribution={landscape.enjoyment} />
-            <SnapshotSignal label="Execution" distribution={landscape.execution} />
+            <PairedDistribution
+              label="Enjoyment"
+              critics={landscapes.critics.enjoyment}
+              audience={landscapes.audience.enjoyment}
+              dense
+            />
+            <PairedDistribution
+              label="Execution"
+              critics={landscapes.critics.execution}
+              audience={landscapes.audience.execution}
+              dense
+            />
           </div>
-          <p className="meta">{landscape.sampleNote}</p>
+          <p className="meta">{cardCountLine(landscapes.critics.sampleSize, landscapes.audience.sampleSize)}</p>
         </div>
       </a>
       <div className="work-card-actions">

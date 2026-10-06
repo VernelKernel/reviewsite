@@ -23,6 +23,7 @@ export const cardInclude = {
       lens: true,
       standard: true,
       completion: true,
+      population: true,
       judgments: { include: { dimension: true } },
       observations: { include: { topic: true } },
     },
@@ -45,6 +46,7 @@ export const workInclude = {
     include: { platform: true, region: true },
     orderBy: { releasedOn: "asc" as const },
   },
+  steamReception: true,
   relationsFrom: {
     include: { to: { select: { title: true, slug: true, workType: true, status: true } } },
   },
@@ -94,6 +96,7 @@ export async function searchWorks(query: string): Promise<CardWork[]> {
         { alternateTitles: { some: { title: { contains: q, mode: "insensitive" } } } },
         { creators: { some: { creator: { name: { contains: q, mode: "insensitive" } } } } },
         { genres: { some: { genre: { name: { contains: q, mode: "insensitive" } } } } },
+        { tags: { some: { tag: { name: { contains: q, mode: "insensitive" } } } } },
         {
           evaluations: {
             some: {

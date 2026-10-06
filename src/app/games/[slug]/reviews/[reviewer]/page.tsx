@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CopyLink } from "@/components/reviews/copy-link";
+import { CriticReading } from "@/components/evaluations/critic-reading";
 import { ReviewCard, type ReviewCardModel } from "@/components/reviews/review-card";
 import { reviewHref, workHref } from "@/lib/domain/labels";
 import { getWork } from "@/lib/works/queries";
@@ -62,6 +63,8 @@ export async function ReviewScreen({
     playtime: evaluation.playtime,
     ownership: evaluation.ownership,
     platform: evaluation.platform?.name ?? null,
+    platformSlug: evaluation.platform?.slug ?? null,
+    population: evaluation.population === "CRITIC" ? "CRITIC" : "AUDIENCE",
     reviewedOn: evaluation.reviewedOn,
     judgments: evaluation.judgments
       .slice()
@@ -93,7 +96,7 @@ export async function ReviewScreen({
           <a href={workHref(work.workType, work.slug)}>{work.title}</a>
         </p>
         <h1 style={{ marginBottom: "1.5rem" }}>How {evaluation.reviewer.displayName} evaluated it</h1>
-        <ReviewCard review={review} linked={false} />
+        {review.population === "CRITIC" ? <CriticReading review={review} /> : <ReviewCard review={review} linked={false} />}
       </div>
       <aside className="panel">
         <h2>Share the judgment</h2>

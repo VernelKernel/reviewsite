@@ -120,6 +120,11 @@ enum EvaluationStatus {
   REMOVED
 }
 
+enum EvaluationPopulation {
+  CRITIC
+  AUDIENCE
+}
+
 enum ReviewSource {
   INTERNAL
   IMPORTED
@@ -162,6 +167,19 @@ enum ReportStatus {
   REVIEWING
   RESOLVED
   DISMISSED
+}
+
+enum CatalogSlot {
+  NEW_AAA
+  NEW_INDIE
+  RECENT_AAA
+  RECENT_AA
+  RECENT_INDIE
+  SETTLED_AAA
+  SETTLED_AA
+  SETTLED_INDIE
+  MULTIPLATFORM
+  GENRE_DEBT
 }
 
 model User {
@@ -258,6 +276,11 @@ model Work {
   savedBy    SavedWork[]
   followedBy FollowedWork[]
 
+  steamAppId       Int?              @unique
+  steamReception   SteamReception?
+  tags             WorkTag[]
+  catalogPlacements CatalogPlacement[]
+
   @@unique([workType, slug])
   @@index([workType])
   @@index([status])
@@ -312,8 +335,9 @@ model Genre {
 }
 
 model WorkGenre {
-  workId  String
-  genreId String
+  workId    String
+  genreId   String
+  isPrimary Boolean @default(false)
 
   work  Work  @relation(fields: [workId], references: [id], onDelete: Cascade)
   genre Genre @relation(fields: [genreId], references: [id], onDelete: Restrict)
@@ -405,6 +429,7 @@ model Evaluation {
 
   platformId String?
   ownership  OwnershipContext?
+  population EvaluationPopulation @default(AUDIENCE)
 
   work     Work            @relation(fields: [workId], references: [id], onDelete: Restrict)
   reviewer ReviewerProfile @relation(fields: [reviewerId], references: [id], onDelete: Restrict)
@@ -418,6 +443,7 @@ model Evaluation {
   @@unique([reviewerId, workId])
   @@index([workId, status])
   @@index([workId, reviewedOn])
+  @@index([workId, population])
   @@index([reviewerId])
   @@index([lens])
   @@index([standard])
@@ -544,4 +570,68 @@ model Report {
   @@index([evaluationId])
   @@index([workId])
   @@index([status])
+}
+
+model Tag {
+  id        String    @id @default(cuid())
+  slug      String    @unique
+  name      String
+  works     WorkTag[]
+  createdAt DateTime  @default(now())
+
+  @@index([name])
+}
+
+model WorkTag {
+  workId String
+  tagId  String
+
+  work Work @relation(fields: [workId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([workId, tagId])
+  @@index([tagId])
+}
+
+model SteamReception {
+  id             String   @id @default(cuid())
+  workId         String   @unique
+  label          String
+  positiveCount  Int
+  negativeCount  Int
+  totalCount     Int
+  fetchedAt      DateTime
+  storeUrl       String
+  reviewsUrl     String
+
+  work Work @relation(fields: [workId], references: [id], onDelete: Cascade)
+}
+
+model CatalogBatch {
+  id                 String              @id @default(cuid())
+  anchor             DateTime
+  nextAnchor         DateTime
+  campaignComplete   Boolean             @default(false)
+  shortfalls         Json
+  createdAt          DateTime            @default(now())
+  placements         CatalogPlacement[]
+
+  @@index([createdAt])
+}
+
+model CatalogPlacement {
+  id               String      @id @default(cuid())
+  batchId          String
+  workId           String
+  slot             CatalogSlot
+  primaryGenreSlug String
+  windowWidened    Boolean     @default(false)
+  buzzMet          Boolean?
+  releasedOn       DateTime
+
+  batch CatalogBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  work  Work         @relation(fields: [workId], references: [id], onDelete: Cascade)
+
+  @@unique([batchId, workId])
+  @@index([workId])
 }

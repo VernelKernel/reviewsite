@@ -322,6 +322,135 @@ function unique(values: string[]): string[] {
   return [...new Set(values)];
 }
 
+/** Core outlets that form the coverage denominator. Specialists are extra rows, not empty slots. */
+export const CORE_OUTLET_COUNT = 10;
+
+export type Population = "CRITIC" | "AUDIENCE";
+
+export type PopulatedEvaluation = LandscapeEvaluation & { population: Population };
+
+export type PairedLandscapes = {
+  critics: ReviewLandscape;
+  audience: ReviewLandscape;
+};
+
+export function splitLandscapes(evaluations: PopulatedEvaluation[]): PairedLandscapes {
+  return {
+    critics: buildLandscape(evaluations.filter((evaluation) => evaluation.population === "CRITIC")),
+    audience: buildLandscape(evaluations.filter((evaluation) => evaluation.population === "AUDIENCE")),
+  };
+}
+
+export function criticCoverage(count: number): string {
+  return `${count} of ${CORE_OUTLET_COUNT} outlets`;
+}
+
+export function pairedSampleNote(critics: ReviewLandscape, audience: ReviewLandscape): string {
+  const coverage = `Critics ${criticCoverage(critics.sampleSize)}.`;
+  if (audience.sampleSize === 0) return `${coverage} No audience evaluations yet.`;
+  const audienceNote = audience.sampleNote.replace(/^Based on /, "based on ");
+  return `${coverage} Audience ${audienceNote}`;
+}
+
+export function cardCountLine(critics: number, audience: number): string {
+  const audienceNote = audience === 0 ? "no evaluations yet" : audience === 1 ? "1 eval" : `${audience} evals`;
+  return `Critics ${criticCoverage(critics)} · Audience ${audienceNote}`;
+}
+
+function shapePhrase(distribution: Distribution): string | null {
+  if (distribution.count === 0) return null;
+  const key = dominantKey(distribution);
+  if (!key) return "divided";
+  const share = distribution[key] / distribution.count;
+  if (share >= 0.75) return `mostly ${key}`;
+  if (share >= 0.5) return `leaning ${key}`;
+  return "divided";
+}
+
+/** One sentence when critic and audience shapes differ on execution, otherwise on enjoyment. */
+export function populationShapeNote(critics: ReviewLandscape, audience: ReviewLandscape): string | null {
+  if (critics.sampleSize === 0 || audience.sampleSize === 0) return null;
+  const fields = [
+    ["execution", "execution"],
+    ["enjoyment", "enjoyment"],
+  ] as const;
+  for (const [field, name] of fields) {
+    const criticShape = shapePhrase(critics[field]);
+    const audienceShape = shapePhrase(audience[field]);
+    const criticKey = dominantKey(critics[field]);
+    const audienceKey = dominantKey(audience[field]);
+    const differs = criticKey && audienceKey ? criticKey !== audienceKey : criticShape !== audienceShape;
+    if (!criticShape || !audienceShape || !differs) continue;
+    return `Critics are ${criticShape} on ${name}. Audience evaluations are ${audienceShape}.`;
+  }
+  return null;
+}
+
+export function crossPopulationNotes(critics: ReviewLandscape, audience: ReviewLandscape): {
+  agreement: string[];
+  disagreement: string[];
+} {
+  const agreement: string[] = [];
+  const disagreement: string[] = [];
+  const audienceDimensions = new Map(audience.dimensions.map((dimension) => [dimension.slug, dimension]));
+  for (const criticDimension of critics.dimensions) {
+    const audienceDimension = audienceDimensions.get(criticDimension.slug);
+    if (!audienceDimension) continue;
+    if (criticDimension.distribution.count < 4 || audienceDimension.distribution.count < 4) continue;
+    const criticKey = dominantKey(criticDimension.distribution);
+    const audienceKey = dominantKey(audienceDimension.distribution);
+    const name = criticDimension.name.toLowerCase();
+    if (
+      criticKey &&
+      audienceKey &&
+      criticKey === audienceKey &&
+      shareOf(criticDimension.distribution, criticKey) >= 0.75 &&
+      shareOf(audienceDimension.distribution, audienceKey) >= 0.75
+    ) {
+      agreement.push(`Critics and audience agree on ${name}.`);
+      continue;
+    }
+    if (criticKey && audienceKey && criticKey !== audienceKey) {
+      disagreement.push(`Critics and audience split on ${name}.`);
+    }
+  }
+  return { agreement, disagreement };
+}
+
+export type PairedDimension = {
+  slug: string;
+  name: string;
+  critics: Distribution;
+  audience: Distribution;
+};
+
+export function pairedDimensions(critics: ReviewLandscape, audience: ReviewLandscape): PairedDimension[] {
+  const rows = new Map<string, PairedDimension>();
+  for (const dimension of critics.dimensions) {
+    rows.set(dimension.slug, {
+      slug: dimension.slug,
+      name: dimension.name,
+      critics: dimension.distribution,
+      audience: emptyDistribution(),
+    });
+  }
+  for (const dimension of audience.dimensions) {
+    const current = rows.get(dimension.slug);
+    if (current) current.audience = dimension.distribution;
+    else {
+      rows.set(dimension.slug, {
+        slug: dimension.slug,
+        name: dimension.name,
+        critics: emptyDistribution(),
+        audience: dimension.distribution,
+      });
+    }
+  }
+  return [...rows.values()].sort(
+    (left, right) => right.critics.count + right.audience.count - (left.critics.count + left.audience.count),
+  );
+}
+
 export function enjoymentExecutionGap(landscape: ReviewLandscape): number | null {
   return stanceShareGaps(landscape)?.positive ?? null;
 }

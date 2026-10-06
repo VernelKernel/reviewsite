@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 import type { WorkType } from "@/generated/prisma/client";
 import { CompareButton } from "@/components/comparison/compare-controls";
-import { DistributionBar } from "@/components/evaluations/distribution-bar";
+import { CriticReading } from "@/components/evaluations/critic-reading";
+import { PopulationGauges } from "@/components/evaluations/population-gauges";
 import { ReviewLandscapeView } from "@/components/evaluations/review-landscape";
 import { ReviewCard, type ReviewCardModel } from "@/components/reviews/review-card";
-import { buildLandscape } from "@/lib/aggregation/landscape";
+import { splitLandscapes, type Population } from "@/lib/aggregation/landscape";
 import {
   completionLabel,
   evaluateHref,
@@ -12,11 +13,12 @@ import {
   standardLabel,
   workTypeLabel,
 } from "@/lib/domain/labels";
+import { filterEvaluations } from "@/lib/works/filter-evaluations";
 import { getWork, worksSharingCreator } from "@/lib/works/queries";
 import {
   creatorLine,
   formatDate,
-  landscapeFor,
+  landscapesFor,
   primaryArt,
   relatedLinks,
   releaseYear,
@@ -27,6 +29,7 @@ import {
 const lenses = ["EXECUTION", "EXPERIENCE", "MIXED"] as const;
 const standards = ["ABSOLUTE", "CONTEXTUAL", "MIXED"] as const;
 const completions = ["JUST_STARTED", "EARLY", "SUBSTANTIAL", "COMPLETED", "ENDGAME", "POST_GAME", "ABANDONED"] as const;
+const populations = ["CRITIC", "AUDIENCE"] as const;
 
 function one(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -47,14 +50,14 @@ export async function WorkPage({
   const lens = lenses.find((item) => item === one(searchParams.lens));
   const standard = standards.find((item) => item === one(searchParams.standard));
   const completion = completions.find((item) => item === one(searchParams.completion));
-  const filtered = work.evaluations.filter((evaluation) => {
-    if (lens && evaluation.lens !== lens) return false;
-    if (standard && evaluation.standard !== standard) return false;
-    if (completion && evaluation.completion !== completion) return false;
-    return true;
-  });
-  const landscape = buildLandscape(filtered.map(toLandscapeInput));
-  const overall = landscapeFor(work);
+  const platformOptions = [...work.platforms]
+    .map((item) => item.platform)
+    .sort((left, right) => left.name.localeCompare(right.name));
+  const platform = platformOptions.find((item) => item.slug === one(searchParams.platform))?.slug;
+  const population = populations.find((item) => item === one(searchParams.population));
+  const filtered = filterEvaluations(work.evaluations, { lens, standard, completion, platform, population });
+  const landscape = splitLandscapes(filtered.map(toLandscapeInput));
+  const overall = landscapesFor(work);
   const art = primaryArt(work.media);
   const year = releaseYear(work.releases);
   const developerIds = work.creators.filter((creator) => creator.role === "DEVELOPER").map((creator) => creator.creatorId);
@@ -63,7 +66,7 @@ export async function WorkPage({
   const base = `/${workType === "MOVIE" ? "movies" : "games"}/${work.slug}`;
   const filteredNote =
     filtered.length === work.evaluations.length
-      ? overall.sampleNote
+      ? undefined
       : `Showing ${filtered.length} of ${work.evaluations.length} published evaluations. These figures describe the filtered set.`;
 
   const reviews: ReviewCardModel[] = filtered.map((evaluation) => ({
@@ -80,6 +83,8 @@ export async function WorkPage({
     playtime: evaluation.playtime,
     ownership: evaluation.ownership,
     platform: evaluation.platform?.name ?? null,
+    platformSlug: evaluation.platform?.slug ?? null,
+    population: evaluation.population === "CRITIC" ? "CRITIC" : "AUDIENCE",
     reviewedOn: evaluation.reviewedOn,
     judgments: evaluation.judgments
       .slice()
@@ -113,7 +118,9 @@ export async function WorkPage({
     <article className="page shell">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <header className="work-hero">
-        {art ? <img className="key-art" src={art.src} alt={art.alt} /> : <div className="key-art" />}
+        <div className="key-art-frame">
+          {art ? <img className="key-art" src={art.src} alt={art.alt} /> : <div className="key-art" />}
+        </div>
         <div className="hero-copy">
           <p className="kicker">{workTypeLabel[work.workType]}</p>
           <h1 className="hero-title">{work.title}</h1>
@@ -134,7 +141,27 @@ export async function WorkPage({
             {work.genres.length > 0 ? (
               <div>
                 <dt>Genres</dt>
-                <dd>{work.genres.map((genre) => genre.genre.name).join(", ")}</dd>
+                <dd>
+                  {[...work.genres]
+                    .sort((left, right) => Number(right.isPrimary) - Number(left.isPrimary))
+                    .map((genre) => genre.genre.name)
+                    .join(", ")}
+                </dd>
+              </div>
+            ) : null}
+            {work.steamReception ? (
+              <div>
+                <dt>On Steam</dt>
+                <dd>
+                  {work.steamReception.label}
+                  {work.steamReception.totalCount > 0
+                    ? ` · ${work.steamReception.totalCount.toLocaleString("en-US")} reviews`
+                    : ""}
+                  <span className="steam-links">
+                    <a href={work.steamReception.storeUrl}>Store page</a>
+                    <a href={work.steamReception.reviewsUrl}>Read the reviews on Steam</a>
+                  </span>
+                </dd>
               </div>
             ) : null}
             {work.platforms.length > 0 ? (
@@ -144,9 +171,7 @@ export async function WorkPage({
               </div>
             ) : null}
           </dl>
-          <DistributionBar label="Enjoyment" distribution={overall.enjoyment} />
-          <DistributionBar label="Execution" distribution={overall.execution} />
-          <p className="sample-note">{overall.sampleNote}</p>
+          <PopulationGauges critics={overall.critics} audience={overall.audience} />
           <div className="hero-actions">
             <a className="btn btn-primary" href={evaluateHref(work.workType, work.slug)}>
               Evaluate this work
@@ -159,23 +184,28 @@ export async function WorkPage({
         </div>
       </header>
 
-      <ReviewLandscapeView landscape={landscape} filteredNote={filteredNote} />
+      <ReviewLandscapeView
+        critics={landscape.critics}
+        audience={landscape.audience}
+        population={population}
+        filteredNote={filteredNote}
+      />
 
       <section className="section" id="reviews">
         <div className="section-head">
           <h2>Evaluations</h2>
           <p>{creatorLine(work.creators) ? `${work.title} · ${creatorLine(work.creators)}` : work.title}</p>
         </div>
-        <FilterBar base={base} lens={lens} standard={standard} completion={completion} />
-        {reviews.length === 0 ? (
-          <p className="empty">No evaluations in this filter. The work page is waiting on a different lens, or on a first evaluation.</p>
-        ) : (
-          <div className="review-list">
-            {reviews.map((review) => (
-              <ReviewCard key={`${review.reviewerSlug}-${formatDate(review.reviewedOn)}`} review={review} />
-            ))}
-          </div>
-        )}
+        <FilterBar
+          base={base}
+          lens={lens}
+          standard={standard}
+          completion={completion}
+          platform={platform}
+          population={population}
+          platforms={platformOptions}
+        />
+        <EvaluationLists reviews={reviews} population={population} />
       </section>
 
       {related.length > 0 ? (
@@ -196,18 +226,69 @@ export async function WorkPage({
   );
 }
 
+function EvaluationLists({ reviews, population }: { reviews: ReviewCardModel[]; population?: Population }) {
+  const critics = reviews.filter((review) => review.population === "CRITIC");
+  const audience = reviews.filter((review) => review.population !== "CRITIC");
+  const showCritics = population !== "AUDIENCE";
+  const showAudience = population !== "CRITIC";
+  if (reviews.length === 0 && !population) {
+    return (
+      <p className="empty">No evaluations in this filter. The work page is waiting on a different lens, or on a first evaluation.</p>
+    );
+  }
+
+  return (
+    <div className="evaluation-lists">
+      {showCritics && (critics.length > 0 || population === "CRITIC") ? (
+        <div className="evaluation-list-block">
+          <h3>Critics</h3>
+          {critics.length === 0 ? (
+            <p className="meta">No core outlets have a reading in this view yet.</p>
+          ) : (
+            <div className="review-list">
+              {critics.map((review) => (
+                <CriticReading key={`${review.reviewerSlug}-${formatDate(review.reviewedOn)}`} review={review} />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
+      {showAudience ? (
+        <div className="evaluation-list-block">
+          <h3>Audience</h3>
+          {audience.length === 0 ? (
+            <p className="meta">No audience evaluations in this view yet.</p>
+          ) : (
+            <div className="review-list">
+              {audience.map((review) => (
+                <ReviewCard key={`${review.reviewerSlug}-${formatDate(review.reviewedOn)}`} review={review} />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function FilterBar({
   base,
   lens,
   standard,
   completion,
+  platform,
+  population,
+  platforms,
 }: {
   base: string;
   lens?: string;
   standard?: string;
   completion?: string;
+  platform?: string;
+  population?: string;
+  platforms: { slug: string; name: string }[];
 }) {
-  const current = { lens, standard, completion };
+  const current = { lens, standard, completion, platform, population };
   return (
     <div className="filters" aria-label="Filter evaluations">
       <a className="chip" href={href(base, current, "lens")} aria-current={!lens ? "true" : undefined}>
@@ -238,11 +319,44 @@ function FilterBar({
           {completionLabel[value]}
         </a>
       ))}
+      {platforms.length > 0 ? (
+        <a className="chip" href={href(base, current, "platform")} aria-current={!platform ? "true" : undefined}>
+          Any platform
+        </a>
+      ) : null}
+      <a className="chip" href={href(base, current, "population")} aria-current={!population ? "true" : undefined}>
+        Critics and audience
+      </a>
+      {populations.map((value) => (
+        <a
+          key={value}
+          className="chip"
+          href={href(base, current, "population", value)}
+          aria-current={population === value ? "true" : undefined}
+        >
+          {value === "CRITIC" ? "Critics" : "Audience"}
+        </a>
+      ))}
+      {platforms.map((item) => (
+        <a
+          key={item.slug}
+          className="chip"
+          href={href(base, current, "platform", item.slug)}
+          aria-current={platform === item.slug ? "true" : undefined}
+        >
+          {item.name}
+        </a>
+      ))}
     </div>
   );
 }
 
-function href(base: string, current: { lens?: string; standard?: string; completion?: string }, key: string, value?: string) {
+function href(
+  base: string,
+  current: { lens?: string; standard?: string; completion?: string; platform?: string; population?: string },
+  key: string,
+  value?: string,
+) {
   const params = new URLSearchParams();
   for (const [name, existing] of Object.entries(current)) {
     if (existing && name !== key) params.set(name, existing);

@@ -5,6 +5,7 @@ import {
   playtimeLabel,
   reviewerHref,
   reviewHref,
+  workHref,
   stanceClass,
   stanceLabel,
   standardLabel,
@@ -25,6 +26,8 @@ export type ReviewCardModel = {
   playtime: string;
   ownership: string | null;
   platform: string | null;
+  platformSlug: string | null;
+  population: "CRITIC" | "AUDIENCE";
   reviewedOn: Date | null;
   judgments: { name: string; stance: string }[];
   observations: { topic: string; polarity: string; content: string }[];
@@ -43,7 +46,6 @@ export function ReviewCard({ review, linked = true }: { review: ReviewCardModel;
     standardLabel[review.standard],
     completionLabel[review.completion],
     review.playtime !== "UNKNOWN" ? playtimeLabel[review.playtime] : null,
-    review.platform,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -60,6 +62,13 @@ export function ReviewCard({ review, linked = true }: { review: ReviewCardModel;
           </a>
         ) : null}
       </header>
+      {review.platform && review.platformSlug ? (
+        <p className="review-platform">
+          <a className="chip" href={`${workHref(review.workType, review.workSlug)}?platform=${encodeURIComponent(review.platformSlug)}`}>
+            {review.platform}
+          </a>
+        </p>
+      ) : null}
       <p className="context-line">{context}</p>
       <table className="judgment-table">
         <tbody>
@@ -107,7 +116,7 @@ export function ReviewCard({ review, linked = true }: { review: ReviewCardModel;
             <>
               {" "}
               <a href={review.review.importSourceUrl} rel="noreferrer noopener">
-                Source
+                {review.review.importSourceName === "Steam" ? "View on Steam" : "View source"}
               </a>
             </>
           ) : null}

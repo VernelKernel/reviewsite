@@ -1,5 +1,11 @@
 import type { CardWork, FullWork } from "./queries";
-import { buildLandscape, type LandscapeEvaluation, type ReviewLandscape } from "../aggregation/landscape";
+import {
+  splitLandscapes,
+  type LandscapeEvaluation,
+  type PairedLandscapes,
+  type Population,
+  type ReviewLandscape,
+} from "../aggregation/landscape";
 import { relationPhrase, type RelationKindValue } from "../domain/relations";
 import { workHref } from "../domain/labels";
 
@@ -43,10 +49,12 @@ export function toLandscapeInput(evaluation: {
   enjoyment: LandscapeEvaluation["enjoyment"];
   execution: LandscapeEvaluation["execution"];
   completion: string;
+  population?: Population | string;
   judgments: { stance: LandscapeEvaluation["judgments"][number]["stance"]; dimension: { slug: string; name: string } }[];
   observations: { polarity: LandscapeEvaluation["observations"][number]["polarity"]; topic: { slug: string; name: string } }[];
-}): LandscapeEvaluation {
+}): LandscapeEvaluation & { population: Population } {
   return {
+    population: evaluation.population === "CRITIC" ? "CRITIC" : "AUDIENCE",
     lens: evaluation.lens,
     standard: evaluation.standard,
     enjoyment: evaluation.enjoyment,
@@ -65,8 +73,13 @@ export function toLandscapeInput(evaluation: {
   };
 }
 
+export function landscapesFor(work: { evaluations: Parameters<typeof toLandscapeInput>[0][] }): PairedLandscapes {
+  return splitLandscapes(work.evaluations.map(toLandscapeInput));
+}
+
+/** Audience landscape. Discovery shelves compare audience evaluations with each other. */
 export function landscapeFor(work: { evaluations: Parameters<typeof toLandscapeInput>[0][] }): ReviewLandscape {
-  return buildLandscape(work.evaluations.map(toLandscapeInput));
+  return landscapesFor(work).audience;
 }
 
 export type RelatedView = { href: string; phrase: string; title: string };
