@@ -7,11 +7,15 @@ export function PopulationGauges({
   audience,
   showGap = true,
   heading = "h2",
+  criticHref,
+  audienceHref,
 }: {
   critics: ReviewLandscape;
   audience: ReviewLandscape;
   showGap?: boolean;
   heading?: "h2" | "h3";
+  criticHref?: string;
+  audienceHref?: string;
 }) {
   const note = populationShapeNote(critics, audience);
   const Title = heading;
@@ -21,7 +25,7 @@ export function PopulationGauges({
       <section className="population-group" aria-label="Critics">
         <div className="population-head">
           <Title className="population-title">Critics</Title>
-          <p className="sample-note">{criticCoverage(critics.sampleSize)}</p>
+          <SampleLink href={criticHref}>{`Based on ${criticCoverage(critics.sampleSize)}`}</SampleLink>
         </div>
         <DistributionBar label="Enjoyment" distribution={critics.enjoyment} unit="outlet" />
         <DistributionBar label="Execution" distribution={critics.execution} unit="outlet" />
@@ -29,7 +33,7 @@ export function PopulationGauges({
       <section className="population-group" aria-label="Audience">
         <div className="population-head">
           <Title className="population-title">Audience</Title>
-          <p className="sample-note">{audience.sampleNote}</p>
+          <SampleLink href={audienceHref}>{audience.sampleNote}</SampleLink>
         </div>
         <DistributionBar label="Enjoyment" distribution={audience.enjoyment} />
         <DistributionBar label="Execution" distribution={audience.execution} />
@@ -37,5 +41,14 @@ export function PopulationGauges({
       </section>
       {note ? <p className="population-shape">{note}</p> : null}
     </div>
+  );
+}
+
+function SampleLink({ href, children }: { href?: string; children: string }) {
+  if (!href) return <p className="sample-note">{children}</p>;
+  return (
+    <a className="sample-link" href={href}>
+      {children}
+    </a>
   );
 }

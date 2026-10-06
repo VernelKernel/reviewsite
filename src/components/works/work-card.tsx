@@ -1,7 +1,7 @@
-import { cardCountLine } from "@/lib/aggregation/landscape";
+import { criticCoverage } from "@/lib/aggregation/landscape";
 import { CompareButton } from "@/components/comparison/compare-controls";
 import { PairedDistribution } from "@/components/evaluations/distribution-bar";
-import { workHref, workTypeLabel } from "@/lib/domain/labels";
+import { audienceHref, criticsHref, workHref, workTypeLabel } from "@/lib/domain/labels";
 import { creatorLine, landscapesFor, primaryArt, releaseYear, type CardWork } from "@/lib/works/present";
 
 export function WorkCard({ work }: { work: CardWork }) {
@@ -35,9 +35,13 @@ export function WorkCard({ work }: { work: CardWork }) {
               dense
             />
           </div>
-          <p className="meta">{cardCountLine(landscapes.critics.sampleSize, landscapes.audience.sampleSize)}</p>
         </div>
       </a>
+      <p className="card-counts">
+        <a href={criticsHref(work.workType, work.slug)}>{`Based on ${criticCoverage(landscapes.critics.sampleSize)}`}</a>
+        <span aria-hidden="true">·</span>
+        <a href={audienceHref(work.workType, work.slug)}>{landscapes.audience.sampleNote.replace(/\.$/, "")}</a>
+      </p>
       <div className="work-card-actions">
         <CompareButton workType={work.workType} slug={work.slug} title={work.title} />
       </div>

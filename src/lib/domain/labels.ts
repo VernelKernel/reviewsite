@@ -73,6 +73,18 @@ export function evaluateHref(workType: string, slug: string): string {
   return `${workHref(workType, slug)}/evaluate`;
 }
 
+export function criticsHref(workType: string, slug: string): string {
+  return `${workHref(workType, slug)}/critics`;
+}
+
+export function audienceHref(workType: string, slug: string): string {
+  return `${workHref(workType, slug)}/audience`;
+}
+
+export function detailsHref(workType: string, slug: string): string {
+  return `${workHref(workType, slug)}/details`;
+}
+
 export function reviewHref(workType: string, workSlug: string, reviewerSlug: string): string {
   return `${workHref(workType, workSlug)}/reviews/${reviewerSlug}`;
 }

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { workHref } from "@/lib/domain/labels";
+import { audienceHref, criticsHref, detailsHref, workHref } from "@/lib/domain/labels";
 import { listWorks } from "@/lib/works/queries";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -10,10 +10,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/games`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${base}/discover`, changeFrequency: "daily", priority: 0.7 },
     { url: `${base}/about`, changeFrequency: "monthly", priority: 0.4 },
-    ...works.map((work) => ({
-      url: `${base}${workHref(work.workType, work.slug)}`,
-      changeFrequency: "weekly" as const,
-      priority: 0.9,
-    })),
+    ...works.flatMap((work) => [
+      {
+        url: `${base}${workHref(work.workType, work.slug)}`,
+        changeFrequency: "weekly" as const,
+        priority: 0.9,
+      },
+      {
+        url: `${base}${criticsHref(work.workType, work.slug)}`,
+        changeFrequency: "weekly" as const,
+        priority: 0.6,
+      },
+      {
+        url: `${base}${audienceHref(work.workType, work.slug)}`,
+        changeFrequency: "weekly" as const,
+        priority: 0.6,
+      },
+      {
+        url: `${base}${detailsHref(work.workType, work.slug)}`,
+        changeFrequency: "weekly" as const,
+        priority: 0.5,
+      },
+    ]),
   ];
 }

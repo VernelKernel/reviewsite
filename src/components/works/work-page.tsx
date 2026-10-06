@@ -1,13 +1,14 @@
 import { notFound } from "next/navigation";
 import type { WorkType } from "@/generated/prisma/client";
 import { CompareButton } from "@/components/comparison/compare-controls";
-import { CriticReading } from "@/components/evaluations/critic-reading";
 import { PopulationGauges } from "@/components/evaluations/population-gauges";
 import { ReviewLandscapeView } from "@/components/evaluations/review-landscape";
-import { ReviewCard, type ReviewCardModel } from "@/components/reviews/review-card";
-import { splitLandscapes, type Population } from "@/lib/aggregation/landscape";
+import { splitLandscapes } from "@/lib/aggregation/landscape";
 import {
+  audienceHref,
   completionLabel,
+  criticsHref,
+  detailsHref,
   evaluateHref,
   lensLabel,
   standardLabel,
@@ -16,8 +17,6 @@ import {
 import { filterEvaluations } from "@/lib/works/filter-evaluations";
 import { getWork, worksSharingCreator } from "@/lib/works/queries";
 import {
-  creatorLine,
-  formatDate,
   landscapesFor,
   primaryArt,
   relatedLinks,
@@ -29,8 +28,6 @@ import {
 const lenses = ["EXECUTION", "EXPERIENCE", "MIXED"] as const;
 const standards = ["ABSOLUTE", "CONTEXTUAL", "MIXED"] as const;
 const completions = ["JUST_STARTED", "EARLY", "SUBSTANTIAL", "COMPLETED", "ENDGAME", "POST_GAME", "ABANDONED"] as const;
-const populations = ["CRITIC", "AUDIENCE"] as const;
-
 function one(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
@@ -54,8 +51,7 @@ export async function WorkPage({
     .map((item) => item.platform)
     .sort((left, right) => left.name.localeCompare(right.name));
   const platform = platformOptions.find((item) => item.slug === one(searchParams.platform))?.slug;
-  const population = populations.find((item) => item === one(searchParams.population));
-  const filtered = filterEvaluations(work.evaluations, { lens, standard, completion, platform, population });
+  const filtered = filterEvaluations(work.evaluations, { lens, standard, completion, platform });
   const landscape = splitLandscapes(filtered.map(toLandscapeInput));
   const overall = landscapesFor(work);
   const art = primaryArt(work.media);
@@ -68,43 +64,6 @@ export async function WorkPage({
     filtered.length === work.evaluations.length
       ? undefined
       : `Showing ${filtered.length} of ${work.evaluations.length} published evaluations. These figures describe the filtered set.`;
-
-  const reviews: ReviewCardModel[] = filtered.map((evaluation) => ({
-    workType: work.workType,
-    workSlug: work.slug,
-    reviewerName: evaluation.reviewer.displayName,
-    reviewerSlug: evaluation.reviewer.slug,
-    lens: evaluation.lens,
-    standard: evaluation.standard,
-    standardNote: evaluation.standardNote,
-    enjoyment: evaluation.enjoyment,
-    execution: evaluation.execution,
-    completion: evaluation.completion,
-    playtime: evaluation.playtime,
-    ownership: evaluation.ownership,
-    platform: evaluation.platform?.name ?? null,
-    platformSlug: evaluation.platform?.slug ?? null,
-    population: evaluation.population === "CRITIC" ? "CRITIC" : "AUDIENCE",
-    reviewedOn: evaluation.reviewedOn,
-    judgments: evaluation.judgments
-      .slice()
-      .sort((a, b) => a.dimension.sortOrder - b.dimension.sortOrder)
-      .map((judgment) => ({ name: judgment.dimension.name, stance: judgment.stance })),
-    observations: evaluation.observations.map((observation) => ({
-      topic: observation.topic.name,
-      polarity: observation.polarity,
-      content: observation.content,
-    })),
-    review: evaluation.review
-      ? {
-          title: evaluation.review.title,
-          body: evaluation.review.body,
-          source: evaluation.review.source,
-          importSourceName: evaluation.review.importSourceName,
-          importSourceUrl: evaluation.review.importSourceUrl,
-        }
-      : null,
-  }));
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -171,42 +130,40 @@ export async function WorkPage({
               </div>
             ) : null}
           </dl>
-          <PopulationGauges critics={overall.critics} audience={overall.audience} />
+          <PopulationGauges
+            critics={overall.critics}
+            audience={overall.audience}
+            criticHref={criticsHref(work.workType, work.slug)}
+            audienceHref={audienceHref(work.workType, work.slug)}
+          />
           <div className="hero-actions">
             <a className="btn btn-primary" href={evaluateHref(work.workType, work.slug)}>
               Evaluate this work
             </a>
-            <a className="btn btn-secondary" href="#reviews">
+            <a className="btn btn-secondary" href={audienceHref(work.workType, work.slug)}>
               Read evaluations
+            </a>
+            <a className="btn btn-secondary" href={detailsHref(work.workType, work.slug)}>
+              Details
             </a>
             <CompareButton workType={work.workType} slug={work.slug} title={work.title} />
           </div>
         </div>
       </header>
 
+      <FilterBar
+        base={base}
+        lens={lens}
+        standard={standard}
+        completion={completion}
+        platform={platform}
+        platforms={platformOptions}
+      />
       <ReviewLandscapeView
         critics={landscape.critics}
         audience={landscape.audience}
-        population={population}
         filteredNote={filteredNote}
       />
-
-      <section className="section" id="reviews">
-        <div className="section-head">
-          <h2>Evaluations</h2>
-          <p>{creatorLine(work.creators) ? `${work.title} · ${creatorLine(work.creators)}` : work.title}</p>
-        </div>
-        <FilterBar
-          base={base}
-          lens={lens}
-          standard={standard}
-          completion={completion}
-          platform={platform}
-          population={population}
-          platforms={platformOptions}
-        />
-        <EvaluationLists reviews={reviews} population={population} />
-      </section>
 
       {related.length > 0 ? (
         <section className="section">
@@ -226,58 +183,12 @@ export async function WorkPage({
   );
 }
 
-function EvaluationLists({ reviews, population }: { reviews: ReviewCardModel[]; population?: Population }) {
-  const critics = reviews.filter((review) => review.population === "CRITIC");
-  const audience = reviews.filter((review) => review.population !== "CRITIC");
-  const showCritics = population !== "AUDIENCE";
-  const showAudience = population !== "CRITIC";
-  if (reviews.length === 0 && !population) {
-    return (
-      <p className="empty">No evaluations in this filter. The work page is waiting on a different lens, or on a first evaluation.</p>
-    );
-  }
-
-  return (
-    <div className="evaluation-lists">
-      {showCritics && (critics.length > 0 || population === "CRITIC") ? (
-        <div className="evaluation-list-block">
-          <h3>Critics</h3>
-          {critics.length === 0 ? (
-            <p className="meta">No core outlets have a reading in this view yet.</p>
-          ) : (
-            <div className="review-list">
-              {critics.map((review) => (
-                <CriticReading key={`${review.reviewerSlug}-${formatDate(review.reviewedOn)}`} review={review} />
-              ))}
-            </div>
-          )}
-        </div>
-      ) : null}
-      {showAudience ? (
-        <div className="evaluation-list-block">
-          <h3>Audience</h3>
-          {audience.length === 0 ? (
-            <p className="meta">No audience evaluations in this view yet.</p>
-          ) : (
-            <div className="review-list">
-              {audience.map((review) => (
-                <ReviewCard key={`${review.reviewerSlug}-${formatDate(review.reviewedOn)}`} review={review} />
-              ))}
-            </div>
-          )}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
 function FilterBar({
   base,
   lens,
   standard,
   completion,
   platform,
-  population,
   platforms,
 }: {
   base: string;
@@ -285,10 +196,9 @@ function FilterBar({
   standard?: string;
   completion?: string;
   platform?: string;
-  population?: string;
   platforms: { slug: string; name: string }[];
 }) {
-  const current = { lens, standard, completion, platform, population };
+  const current = { lens, standard, completion, platform };
   return (
     <div className="filters" aria-label="Filter evaluations">
       <a className="chip" href={href(base, current, "lens")} aria-current={!lens ? "true" : undefined}>
@@ -324,19 +234,6 @@ function FilterBar({
           Any platform
         </a>
       ) : null}
-      <a className="chip" href={href(base, current, "population")} aria-current={!population ? "true" : undefined}>
-        Critics and audience
-      </a>
-      {populations.map((value) => (
-        <a
-          key={value}
-          className="chip"
-          href={href(base, current, "population", value)}
-          aria-current={population === value ? "true" : undefined}
-        >
-          {value === "CRITIC" ? "Critics" : "Audience"}
-        </a>
-      ))}
       {platforms.map((item) => (
         <a
           key={item.slug}
@@ -353,7 +250,7 @@ function FilterBar({
 
 function href(
   base: string,
-  current: { lens?: string; standard?: string; completion?: string; platform?: string; population?: string },
+  current: { lens?: string; standard?: string; completion?: string; platform?: string },
   key: string,
   value?: string,
 ) {
