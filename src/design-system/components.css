@@ -1458,6 +1458,87 @@ html[data-compare="open"] #content {
   padding-bottom: 5.5rem;
 }
 
+.scroll-top {
+  position: fixed;
+  right: max(var(--space-5), env(safe-area-inset-right));
+  bottom: max(var(--space-5), env(safe-area-inset-bottom));
+  z-index: 15;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: 50%;
+  background: var(--color-surface-elevated);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-floating);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(var(--space-3));
+  transition:
+    opacity var(--motion-slow) ease,
+    transform var(--motion-slow) ease,
+    background var(--motion-fast) ease,
+    border-color var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    box-shadow var(--motion-normal) ease,
+    bottom var(--motion-normal) ease,
+    visibility 0s linear var(--motion-slow);
+}
+
+.scroll-top svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  display: block;
+}
+
+.scroll-top[data-visible="true"] {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition:
+    opacity var(--motion-slow) ease,
+    transform var(--motion-slow) ease,
+    background var(--motion-fast) ease,
+    border-color var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    box-shadow var(--motion-normal) ease,
+    bottom var(--motion-normal) ease,
+    visibility 0s;
+}
+
+.scroll-top[data-visible="true"]:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  transform: translateY(calc(var(--hover-lift) * -1));
+}
+
+.scroll-top[data-visible="true"]:active {
+  color: var(--color-accent-active);
+  border-color: var(--color-accent-active);
+  transform: translateY(0);
+}
+
+.scroll-top:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 3px;
+}
+
+.scroll-top:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+html[data-compare="open"] .scroll-top {
+  bottom: calc(var(--compare-tray-offset, 5.5rem) + var(--space-3));
+}
+
+
 .two-col {
   display: grid;
   grid-template-columns: 1.3fr 0.7fr;

@@ -5,6 +5,7 @@ import { defaultMode, defaultMood } from "@/design-system/themes";
 import { isColorMode, isThemeId } from "@/design-system/theme-types";
 import { CompareProvider } from "@/components/comparison/compare-provider";
 import { CompareTray } from "@/components/comparison/compare-controls";
+import { ScrollToTop } from "@/components/navigation/scroll-to-top";
 import { SiteFooter, SiteHeader } from "@/components/navigation/site-header";
 import { getCurrentUser } from "@/lib/auth/session";
 import "@/design-system/components.css";
@@ -54,6 +55,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <div id="content">{children}</div>
           <SiteFooter />
           <CompareTray />
+          <ScrollToTop />
         </CompareProvider>
       </body>
     </html>
