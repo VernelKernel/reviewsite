@@ -1,9 +1,9 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId } from "react";
 import { DistributionBar } from "@/components/evaluations/distribution-bar";
+import { ShapeShare } from "@/components/evaluations/shape-share";
 import {
-  dimensionShapeReading,
   distributionLabel,
   dominantKey,
   pairedDimensions,
@@ -20,18 +20,22 @@ const MODES: { value: ShapeMode; label: string }[] = [
 export function DimensionShape({
   critics,
   audience,
+  share,
+  mode,
+  onMode,
 }: {
   critics: ReviewLandscape;
   audience: ReviewLandscape;
+  share?: { title: string; path: string };
+  mode: ShapeMode;
+  onMode: (mode: ShapeMode) => void;
 }) {
-  const [mode, setMode] = useState<ShapeMode>("both");
-  const readingId = useId();
+  const noteId = useId();
   const axes = pairedDimensions(critics, audience)
     .filter((dimension) => dimension.audience.count > 0 || dimension.critics.count > 0)
     .sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name));
   if (axes.length < 3) return null;
 
-  const reading = dimensionShapeReading(critics, audience, mode);
   const showAudience = mode !== "critics";
   const showCritics = mode !== "audience";
 
@@ -46,7 +50,7 @@ export function DimensionShape({
               type="button"
               role="radio"
               aria-checked={mode === item.value}
-              onClick={() => setMode(item.value)}
+              onClick={() => onMode(item.value)}
             >
               {item.label}
             </button>
@@ -55,11 +59,22 @@ export function DimensionShape({
       </div>
       <div className="shape-stage">
         <figure>
-          <ShapeChart axes={axes} showAudience={showAudience} showCritics={showCritics} labelledBy={readingId} />
-          <figcaption className="shape-note">
+          <ShapeChart axes={axes} showAudience={showAudience} showCritics={showCritics} labelledBy={noteId} />
+          <figcaption className="shape-note" id={noteId}>
             Distance from the center is the share of positive judgments among people who judged that dimension. Dot color is the
             stance reading.
           </figcaption>
+          {share ? (
+            <ShapeShare
+              title={share.title}
+              path={share.path}
+              axes={axes}
+              audience={audience}
+              critics={critics}
+              showAudience={showAudience}
+              showCritics={showCritics}
+            />
+          ) : null}
         </figure>
         <div className="panel shape-summary">
           {showAudience ? (
@@ -77,15 +92,6 @@ export function DimensionShape({
           <h3>Execution</h3>
           {showAudience ? <DistributionBar label="Audience" distribution={audience.execution} /> : null}
           {showCritics ? <DistributionBar label="Critics" distribution={critics.execution} unit="outlet" /> : null}
-          {reading ? (
-            <p className="shape-reading" id={readingId}>
-              {reading}
-            </p>
-          ) : (
-            <p className="shape-reading" id={readingId}>
-              No published evaluations in this view yet.
-            </p>
-          )}
         </div>
       </div>
       <ShapeLegend showAudience={showAudience} showCritics={showCritics} />

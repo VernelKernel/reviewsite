@@ -15,6 +15,10 @@
     "catalog:dry": "tsx prisma/catalog/run.ts --dry-run",
     "catalog:backfill": "tsx prisma/catalog/backfill.ts",
     "catalog:backfill:dry": "tsx prisma/catalog/backfill.ts --dry-run",
+    "catalog:critics": "tsx prisma/catalog/import-critics.ts",
+    "catalog:critics:dry": "tsx prisma/catalog/import-critics.ts --dry-run",
+    "catalog:critics:platforms": "tsx prisma/catalog/align-critic-platforms.ts",
+    "intake:resolve": "tsx prisma/intake/resolve.ts",
     "db:clear": "tsx prisma/clear-data.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"

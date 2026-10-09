@@ -38,8 +38,7 @@ export function WorkCard({ work }: { work: CardWork }) {
         </div>
       </a>
       <p className="card-counts">
-        <a href={criticsHref(work.workType, work.slug)}>{`Based on ${criticCoverage(landscapes.critics.sampleSize)}`}</a>
-        <span aria-hidden="true">·</span>
+        <a href={criticsHref(work.workType, work.slug)}>{`Based on ${criticCoverage(landscapes.critics.coverageCount)}`}</a>
         <a href={audienceHref(work.workType, work.slug)}>{landscapes.audience.sampleNote.replace(/\.$/, "")}</a>
       </p>
       <div className="work-card-actions">

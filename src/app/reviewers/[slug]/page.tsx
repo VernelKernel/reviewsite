@@ -16,22 +16,31 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
+const STEAM_PROFILE_BIO = /^Reviews imported from their Steam profile:\s+(https:\/\/steamcommunity\.com\/profiles\/\d+\/?)\s*$/;
+
+function steamProfileFromBio(bio: string | null): string | null {
+  if (!bio) return null;
+  return bio.match(STEAM_PROFILE_BIO)?.[1] ?? null;
+}
+
 export default async function ReviewerPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const reviewer = await getReviewer(slug);
   if (!reviewer) notFound();
+  const steamProfile = steamProfileFromBio(reviewer.bio);
+  const bio = steamProfile ? null : reviewer.bio;
 
   return (
     <main className="page shell">
       <p className="kicker">Reviewer</p>
       <h1>{reviewer.displayName}</h1>
-      {reviewer.bio ? (
+      {bio ? (
         <p className="lede" style={{ marginTop: "1rem" }}>
-          {reviewer.bio}
+          {bio}
         </p>
       ) : null}
       <p className="sample-note" style={{ marginTop: "1rem" }}>
-        {reviewer.evaluations.length} published {reviewer.evaluations.length === 1 ? "evaluation" : "evaluations"}. The profile is the public identity. The account behind it stays private.
+        {reviewer.evaluations.length} published {reviewer.evaluations.length === 1 ? "evaluation" : "evaluations"}.
       </p>
       <div className="profile-list" style={{ marginTop: "2rem" }}>
         {reviewer.evaluations.map((evaluation) => {
@@ -47,14 +56,28 @@ export default async function ReviewerPage({ params }: { params: Promise<{ slug:
                 </a>
               </header>
               <p className="context-line">
-                {lensLabel[evaluation.lens]} · {standardLabel[evaluation.standard]} · Enjoyment {evaluation.enjoyment.toLowerCase()} · Execution{" "}
-                {evaluation.execution.toLowerCase()}
+                {[
+                  evaluation.lens ? lensLabel[evaluation.lens] : null,
+                  evaluation.standard ? standardLabel[evaluation.standard] : null,
+                  `Enjoyment ${evaluation.enjoyment.toLowerCase()}`,
+                  `Execution ${evaluation.execution.toLowerCase()}`,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
               </p>
               <p className="meta">
                 Audience evaluations: enjoyment {distributionLabel(landscape.enjoyment).toLowerCase()}, execution{" "}
                 {distributionLabel(landscape.execution).toLowerCase()}.
               </p>
               {evaluation.review?.body ? <p style={{ marginTop: "1rem" }}>{evaluation.review.body.slice(0, 280)}</p> : null}
+              {steamProfile ? (
+                <p className="provenance">
+                  Reviews imported from their Steam profile:{" "}
+                  <a href={steamProfile} rel="noreferrer noopener">
+                    {steamProfile}
+                  </a>
+                </p>
+              ) : null}
             </article>
           );
         })}

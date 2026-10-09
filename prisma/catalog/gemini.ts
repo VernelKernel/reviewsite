@@ -1,4 +1,14 @@
-import { interpretationPrompt, parseInterpretation, type Interpretation } from "../../src/lib/catalog/interpret";
+import {
+  criticInterpretationPrompt,
+  criticPlatformPrompt,
+  interpretationPrompt,
+  parseCriticInterpretation,
+  parseCriticPlatform,
+  parseInterpretation,
+  type CriticInterpretation,
+  type Interpretation,
+  type ReviewPlatformSlug,
+} from "../../src/lib/catalog/interpret";
 
 const MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
@@ -64,6 +74,16 @@ export async function assertGeminiReady(): Promise<void> {
   const payload = await generate('Return {"ok":true}', 0);
   const record = payload !== null && typeof payload === "object" ? (payload as { ok?: unknown }) : null;
   if (record?.ok !== true) throw new GeminiError("Gemini did not answer the readiness check.", 200);
+}
+
+export async function interpretCriticPlatform(input: { title: string; outlet: string; body: string }): Promise<ReviewPlatformSlug | null> {
+  const payload = await generate(criticPlatformPrompt(input), 0);
+  return parseCriticPlatform(payload);
+}
+
+export async function interpretCriticReview(input: { title: string; outlet: string; body: string }): Promise<CriticInterpretation | null> {
+  const payload = await generate(criticInterpretationPrompt(input), 0.2);
+  return parseCriticInterpretation(payload);
 }
 
 export async function interpretReview(input: {

@@ -5,7 +5,6 @@ import {
   cardCountLine,
   criticCoverage,
   crossPopulationNotes,
-  dimensionShapeReading,
   distributionLabel,
   emptyDistribution,
   enjoymentExecutionGap,
@@ -65,8 +64,9 @@ describe("distributions", () => {
     expect(result.positive + result.mixed + result.negative).toBe(100);
   });
 
-  it("does not describe a small sample as a consensus", () => {
-    expect(sampleNote(3)).toMatch(/not a consensus/);
+  it("states the sample size without a verdict", () => {
+    expect(sampleNote(1)).toBe("Based on 1 eval.");
+    expect(sampleNote(3)).toBe("Based on 3 evals.");
     expect(sampleNote(12)).toBe("Based on 12 evals.");
     expect(sampleNote(0)).toMatch(/No published/);
   });
@@ -142,6 +142,14 @@ describe("review landscape", () => {
     );
     expect(populationShapeNote(paired.critics, buildLandscape([]))).toBeNull();
     expect(criticCoverage(0)).toBe("0 of 10 outlets");
+    const withOutlets = splitLandscapes([
+      { ...critic({ enjoyment: "POSITIVE", execution: "POSITIVE" }), outletName: "IGN" },
+      { ...critic({ enjoyment: "POSITIVE", execution: "NEGATIVE" }), outletName: "Edge" },
+      { ...critic({ enjoyment: "MIXED", execution: "MIXED" }), outletName: "Polygon" },
+    ]);
+    expect(withOutlets.critics.sampleSize).toBe(3);
+    expect(withOutlets.critics.coverageCount).toBe(2);
+    expect(criticCoverage(withOutlets.critics.coverageCount)).toBe("2 of 10 outlets");
     expect(cardCountLine(4, 8)).toBe("Critics 4 of 10 outlets · Audience 8 evals");
     expect(pairedSampleNote(paired.critics, paired.audience)).toBe(
       "Critics 4 of 10 outlets. Audience based on 4 evals.",
@@ -179,45 +187,5 @@ describe("review landscape", () => {
     expect(landscape.agreement).toEqual([]);
     expect(landscape.disagreement).toEqual([]);
     expect(enjoymentExecutionGap(landscape)).toBeNull();
-  });
-});
-
-describe("dimension shape reading", () => {
-  it("keeps enjoyment, execution, and a dimension split in view", () => {
-    const art = { dimensionSlug: "art-direction", dimensionName: "Art direction", stance: "POSITIVE" as const, sortOrder: 4 };
-    const audience = buildLandscape([
-      ...Array.from({ length: 3 }, () =>
-        evaluation({
-          enjoyment: "POSITIVE",
-          execution: "NEGATIVE",
-          judgments: [art, { dimensionSlug: "technical-quality", dimensionName: "Technical quality", stance: "NEGATIVE", sortOrder: 5 }],
-        }),
-      ),
-      evaluation({
-        enjoyment: "POSITIVE",
-        execution: "NEGATIVE",
-        judgments: [art, { dimensionSlug: "technical-quality", dimensionName: "Technical quality", stance: "MIXED", sortOrder: 5 }],
-      }),
-    ]);
-    const critics = buildLandscape([
-      ...Array.from({ length: 2 }, () =>
-        evaluation({
-          enjoyment: "POSITIVE",
-          execution: "NEGATIVE",
-          judgments: [art, { dimensionSlug: "technical-quality", dimensionName: "Technical quality", stance: "MIXED", sortOrder: 5 }],
-        }),
-      ),
-      ...Array.from({ length: 2 }, () =>
-        evaluation({
-          enjoyment: "MIXED",
-          execution: "NEGATIVE",
-          judgments: [art, { dimensionSlug: "technical-quality", dimensionName: "Technical quality", stance: "MIXED", sortOrder: 5 }],
-        }),
-      ),
-    ]);
-
-    expect(dimensionShapeReading(critics, audience, "both")).toBe(
-      "Audience enjoyment is mostly positive, and execution is mostly negative. Critics are divided on enjoyment, and execution is mostly negative. Art direction is mostly positive in both groups. Technical quality is mostly negative for the audience and is mostly mixed for critics.",
-    );
   });
 });

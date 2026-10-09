@@ -11,11 +11,13 @@ export type Distribution = {
 };
 
 export type LandscapeEvaluation = {
-  lens: LensValue;
-  standard: StandardValue;
+  lens: LensValue | null;
+  standard: StandardValue | null;
   enjoyment: StanceValue;
   execution: StanceValue;
   completion: string;
+  /** Outlet name for a critic reading. Audience rows leave this empty. */
+  outletName?: string | null;
   judgments: { dimensionSlug: string; dimensionName: string; stance: StanceValue; sortOrder?: number }[];
   observations: { topicSlug: string; topicName: string; polarity: PolarityValue }[];
 };
@@ -43,6 +45,8 @@ export type TopicLandscape = {
 
 export type ReviewLandscape = {
   sampleSize: number;
+  /** Core outlets present. Rows without an outlet name count toward this so older aggregates stay stable. */
+  coverageCount: number;
   enjoyment: Distribution;
   execution: Distribution;
   dimensions: DimensionLandscape[];
@@ -131,8 +135,7 @@ export function distributionLabel(distribution: Distribution): string {
 
 export function sampleNote(count: number): string {
   if (count === 0) return "No published evaluations yet.";
-  if (count === 1) return "Based on 1 eval. This is an early picture, not a consensus.";
-  if (count < 4) return `Based on ${count} evals. This is an early picture, not a consensus.`;
+  if (count === 1) return "Based on 1 eval.";
   return `Based on ${count} evals.`;
 }
 
@@ -288,30 +291,41 @@ export function buildLandscape(evaluations: LandscapeEvaluation[]): ReviewLandsc
 
   return {
     sampleSize,
+    coverageCount: coverageCountFor(evaluations),
     enjoyment,
     execution,
     dimensions,
     lenses: countGroup(
-      evaluations.map((evaluation) => ({
-        key: evaluation.lens,
-        label:
-          evaluation.lens === "EXECUTION"
-            ? "Execution-focused"
-            : evaluation.lens === "EXPERIENCE"
-              ? "Experience-focused"
-              : "Mixed approach",
-      })),
+      evaluations.flatMap((evaluation) => {
+        if (!evaluation.lens) return [];
+        return [
+          {
+            key: evaluation.lens,
+            label:
+              evaluation.lens === "EXECUTION"
+                ? "Execution-focused"
+                : evaluation.lens === "EXPERIENCE"
+                  ? "Experience-focused"
+                  : "Mixed approach",
+          },
+        ];
+      }),
     ),
     standards: countGroup(
-      evaluations.map((evaluation) => ({
-        key: evaluation.standard,
-        label:
-          evaluation.standard === "ABSOLUTE"
-            ? "Absolute standards"
-            : evaluation.standard === "CONTEXTUAL"
-              ? "Contextual standards"
-              : "Mixed standards",
-      })),
+      evaluations.flatMap((evaluation) => {
+        if (!evaluation.standard) return [];
+        return [
+          {
+            key: evaluation.standard,
+            label:
+              evaluation.standard === "ABSOLUTE"
+                ? "Absolute standards"
+                : evaluation.standard === "CONTEXTUAL"
+                  ? "Contextual standards"
+                  : "Mixed standards",
+          },
+        ];
+      }),
     ),
     completions: countGroup(evaluations.map((evaluation) => ({ key: evaluation.completion, label: evaluation.completion }))),
     topics,
@@ -326,7 +340,28 @@ function unique(values: string[]): string[] {
 }
 
 /** Core outlets that form the coverage denominator. Specialists are extra rows, not empty slots. */
-export const CORE_OUTLET_COUNT = 10;
+export const CORE_OUTLET_NAMES = [
+  "IGN",
+  "GameSpot",
+  "PC Gamer",
+  "Polygon",
+  "Eurogamer",
+  "Destructoid",
+  "Kotaku",
+  "GamesRadar+",
+  "VGC",
+  "Digital Trends",
+] as const;
+
+export const CORE_OUTLET_COUNT = CORE_OUTLET_NAMES.length;
+
+const CORE_OUTLET_KEYS = new Set(CORE_OUTLET_NAMES.map((name) => name.toLowerCase()));
+
+function coverageCountFor(evaluations: LandscapeEvaluation[]): number {
+  const names = evaluations.map((evaluation) => evaluation.outletName?.trim()).filter((name): name is string => Boolean(name));
+  if (names.length === 0) return evaluations.length;
+  return new Set(names.map((name) => name.toLowerCase()).filter((name) => CORE_OUTLET_KEYS.has(name))).size;
+}
 
 export type Population = "CRITIC" | "AUDIENCE";
 
@@ -349,7 +384,7 @@ export function criticCoverage(count: number): string {
 }
 
 export function pairedSampleNote(critics: ReviewLandscape, audience: ReviewLandscape): string {
-  const coverage = `Critics ${criticCoverage(critics.sampleSize)}.`;
+  const coverage = `Critics ${criticCoverage(critics.coverageCount)}.`;
   if (audience.sampleSize === 0) return `${coverage} No audience evaluations yet.`;
   const audienceNote = audience.sampleNote.replace(/^Based on /, "based on ");
   return `${coverage} Audience ${audienceNote}`;
@@ -480,74 +515,3 @@ export function stanceShareGaps(landscape: ReviewLandscape): {
 }
 
 export type ShapeMode = "both" | "audience" | "critics";
-
-/** How a distribution reads inside a sentence: "leans positive", "is mostly negative", "is divided". */
-function shapeClause(distribution: Distribution): string | null {
-  if (distribution.count === 0) return null;
-  const label = distributionLabel(distribution);
-  if (label === "Divided") return "is divided";
-  if (label.startsWith("Divided")) return `is divided, from ${distribution.count} so far`;
-  if (label.startsWith("Mostly ")) return `is ${label.toLowerCase()}`;
-  if (label.startsWith("Leaning ")) return label.replace("Leaning ", "leans ");
-  return `is ${label.charAt(0).toLowerCase()}${label.slice(1)}`;
-}
-
-function populationLine(label: "Audience" | "Critics", landscape: ReviewLandscape): string | null {
-  const enjoyment = shapeClause(landscape.enjoyment);
-  const execution = shapeClause(landscape.execution);
-  if (!enjoyment && !execution) return null;
-  const enjoymentSubject = label === "Critics" ? "Critic enjoyment" : "Audience enjoyment";
-  if (enjoyment === "is divided" && execution) {
-    const who = label === "Critics" ? "Critics are" : "The audience is";
-    return `${who} divided on enjoyment, and execution ${execution}.`;
-  }
-  if (execution === "is divided" && enjoyment) return `${enjoymentSubject} ${enjoyment}, and execution is divided.`;
-  if (enjoyment && execution) return `${enjoymentSubject} ${enjoyment}, and execution ${execution}.`;
-  if (enjoyment) return `${enjoymentSubject} ${enjoyment}.`;
-  return `${label} execution ${execution}.`;
-}
-
-function dimensionSides(row: PairedDimension): string | null {
-  if (row.audience.count < 4 || row.critics.count < 4) return null;
-  const audience = shapeClause(row.audience);
-  const critics = shapeClause(row.critics);
-  if (!audience || !critics || audience === critics) return null;
-  const audienceKey = dominantKey(row.audience);
-  const criticKey = dominantKey(row.critics);
-  if (!audienceKey || !criticKey || audienceKey === criticKey) return null;
-  if (shareOf(row.audience, audienceKey) < 0.5 || shareOf(row.critics, criticKey) < 0.5) return null;
-  return `${row.name} ${audience} for the audience and ${critics} for critics.`;
-}
-
-function sharedDimension(row: PairedDimension): string | null {
-  if (row.audience.count < 4 || row.critics.count < 4) return null;
-  const audienceKey = dominantKey(row.audience);
-  const criticKey = dominantKey(row.critics);
-  if (!audienceKey || audienceKey !== criticKey) return null;
-  if (shareOf(row.audience, audienceKey) < 0.75 || shareOf(row.critics, criticKey) < 0.75) return null;
-  return `${row.name} is mostly ${audienceKey} in both groups.`;
-}
-
-/** A short reading of enjoyment, execution, and at most two dimension contrasts. Not a score. */
-export function dimensionShapeReading(critics: ReviewLandscape, audience: ReviewLandscape, mode: ShapeMode): string {
-  const lines: string[] = [];
-  if (mode !== "critics") {
-    const line = populationLine("Audience", audience);
-    if (line) lines.push(line);
-  }
-  if (mode !== "audience") {
-    const line = populationLine("Critics", critics);
-    if (line) lines.push(line);
-  }
-  if (mode === "both") {
-    const rows = pairedDimensions(critics, audience);
-    const split = rows.map(dimensionSides).find((line): line is string => Boolean(line));
-    const shared = rows
-      .filter((row) => !split?.startsWith(`${row.name} `))
-      .map(sharedDimension)
-      .find((line): line is string => Boolean(line));
-    if (shared) lines.push(shared);
-    if (split) lines.push(split);
-  }
-  return lines.join(" ");
-}

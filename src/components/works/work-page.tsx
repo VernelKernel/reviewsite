@@ -67,6 +67,12 @@ export async function WorkPage({
       ? undefined
       : `Showing ${filtered.length} of ${work.evaluations.length} published evaluations. These figures describe the filtered set.`;
 
+  const shareParams = new URLSearchParams();
+  if (lens) shareParams.set("lens", lens);
+  if (standard) shareParams.set("standard", standard);
+  if (completion) shareParams.set("completion", completion);
+  if (platform) shareParams.set("platform", platform);
+  const shareQuery = shareParams.toString();
   const reviews = filtered.map((evaluation) => toReview(work.workType, work.slug, evaluation));
   const jsonLd = {
     "@context": "https://schema.org",
@@ -166,6 +172,7 @@ export async function WorkPage({
         critics={landscape.critics}
         audience={landscape.audience}
         filteredNote={filteredNote}
+        share={{ title: work.title, path: shareQuery ? `${base}?${shareQuery}` : base }}
       />
       <ReceptionColumns
         critics={reviews.filter((review) => review.population === "CRITIC")}

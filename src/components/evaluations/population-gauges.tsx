@@ -25,7 +25,7 @@ export function PopulationGauges({
       <section className="population-group" aria-label="Critics">
         <div className="population-head">
           <Title className="population-title">Critics</Title>
-          <SampleLink href={criticHref}>{`Based on ${criticCoverage(critics.sampleSize)}`}</SampleLink>
+          <SampleLink href={criticHref}>{`Based on ${criticCoverage(critics.coverageCount)}`}</SampleLink>
         </div>
         <DistributionBar label="Enjoyment" distribution={critics.enjoyment} unit="outlet" />
         <DistributionBar label="Execution" distribution={critics.execution} unit="outlet" />

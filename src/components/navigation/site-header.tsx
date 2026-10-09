@@ -1,7 +1,7 @@
 import { AppearanceControl } from "./appearance-control";
 import { NavLinks } from "./nav-links";
 
-export function SiteHeader({ mood, mode }: { mood: string; mode: string }) {
+export function SiteHeader({ mood, mode, editor = false }: { mood: string; mode: string; editor?: boolean }) {
   return (
     <header className="site-header">
       <div className="shell header-inner">
@@ -20,6 +20,11 @@ export function SiteHeader({ mood, mode }: { mood: string; mode: string }) {
               Search
             </button>
           </form>
+          {editor ? (
+            <a className="btn btn-ghost" href="/admin/outlets">
+              Outlets
+            </a>
+          ) : null}
           <AppearanceControl mood={mood} mode={mode} />
         </div>
       </div>

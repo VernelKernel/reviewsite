@@ -105,7 +105,7 @@ function RecordList({
   const landscape = view === "critics" ? critics : audience;
   const showing =
     view === "critics"
-      ? `Showing ${criticCoverage(landscape.sampleSize)}`
+      ? `Showing ${criticCoverage(landscape.coverageCount)}`
       : `Showing ${landscape.sampleSize} audience ${landscape.sampleSize === 1 ? "evaluation" : "evaluations"}`;
 
   return (

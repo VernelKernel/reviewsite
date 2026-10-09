@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { dimensions, topics } from "../../../prisma/seed/catalog";
 import { GAME_DIMENSION_SLUGS, OBSERVATION_TOPICS } from "./evaluation-fields";
-import { interpretationPrompt, parseInterpretation } from "./interpret";
+import {
+  criticInterpretationPrompt,
+  criticPlatformPrompt,
+  interpretationPrompt,
+  parseCriticInterpretation,
+  parseCriticPlatform,
+  parseInterpretation,
+  reviewPlatformSlug,
+} from "./interpret";
 
 describe("review interpretation", () => {
   it("accepts a structured reading and drops unknown fields", () => {
@@ -26,6 +34,40 @@ describe("review interpretation", () => {
     expect(reading?.observations).toEqual([{ topic: "combat", polarity: "PRAISE", content: "The fights stay readable." }]);
     expect(reading?.enjoyment).toBe("POSITIVE");
     expect(reading?.execution).toBe("MIXED");
+  });
+
+  it("leaves an unstated critic approach unset", () => {
+    const reading = parseCriticInterpretation({
+      enjoyment: "NEGATIVE",
+      execution: "MIXED",
+      judgments: [{ dimension: "technical-quality", stance: "NEGATIVE" }],
+    });
+    expect(reading?.lens).toBeNull();
+    expect(reading?.standard).toBeNull();
+    expect(reading?.completion).toBe("UNKNOWN");
+    expect(reading?.platform).toBeNull();
+    expect(reading?.judgments).toEqual([{ dimension: "technical-quality", stance: "NEGATIVE" }]);
+    const prompt = criticInterpretationPrompt({ title: "Alkurai", outlet: "IGN", body: "The port stutters." });
+    expect(prompt).toContain("Leave lens empty");
+    expect(prompt).toContain("Leave platform empty");
+  });
+
+  it("keeps the platform the critic played and ignores a version list", () => {
+    expect(reviewPlatformSlug("PS5")).toBe("playstation-5");
+    expect(reviewPlatformSlug("PlayStation 5")).toBe("playstation-5");
+    expect(reviewPlatformSlug("Xbox Series X")).toBe("xbox-series");
+    expect(reviewPlatformSlug("Nintendo Switch")).toBe("switch");
+    expect(reviewPlatformSlug("PlayStation")).toBeNull();
+    expect(reviewPlatformSlug("every platform")).toBeNull();
+    const reading = parseCriticInterpretation({
+      enjoyment: "POSITIVE",
+      execution: "POSITIVE",
+      platform: "PS5",
+    });
+    expect(reading?.platform).toBe("playstation-5");
+    expect(parseCriticPlatform({ platform: "Nintendo Switch" })).toBe("switch");
+    expect(parseCriticPlatform({ platform: "" })).toBeNull();
+    expect(criticPlatformPrompt({ title: "Alkurai", outlet: "IGN", body: "Played on PS5." })).toContain("Leave platform empty");
   });
 
   it("rejects a reading that has no enjoyment", () => {

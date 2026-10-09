@@ -50,14 +50,17 @@ export function toLandscapeInput(evaluation: {
   execution: LandscapeEvaluation["execution"];
   completion: string;
   population?: Population | string;
+  outletName?: string | null;
+  review?: { importSourceName: string | null } | null;
   judgments: {
     stance: LandscapeEvaluation["judgments"][number]["stance"];
-    dimension: { slug: string; name: string; sortOrder: number };
+    dimension: { slug: string; name: string; sortOrder?: number };
   }[];
   observations: { polarity: LandscapeEvaluation["observations"][number]["polarity"]; topic: { slug: string; name: string } }[];
 }): LandscapeEvaluation & { population: Population } {
   return {
     population: evaluation.population === "CRITIC" ? "CRITIC" : "AUDIENCE",
+    outletName: evaluation.outletName ?? evaluation.review?.importSourceName ?? null,
     lens: evaluation.lens,
     standard: evaluation.standard,
     enjoyment: evaluation.enjoyment,

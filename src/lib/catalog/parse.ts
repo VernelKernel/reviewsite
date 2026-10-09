@@ -81,6 +81,58 @@ export function parsePlayerCount(payload: unknown): number {
   return count(response?.player_count);
 }
 
+export type SteamTitleHit = { appId: number; title: string };
+
+export function parseSteamTitleHits(payload: unknown): SteamTitleHit[] {
+  const root = asRecord(payload);
+  const fromItems = steamItems(root);
+  if (fromItems.length > 0) return fromItems;
+  const html = typeof root?.results_html === "string" ? root.results_html : "";
+  const hits: SteamTitleHit[] = [];
+  const seen = new Set<number>();
+  const anchors = html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi);
+  for (const anchor of anchors) {
+    const tag = anchor[1] ?? "";
+    const inner = anchor[2] ?? "";
+    if (!tag.includes("search_result_row")) continue;
+    const idMatch = `${tag} ${inner}`.match(/data-ds-appid="(\d+)"/);
+    const titleMatch = inner.match(/<span class="title">([^<]*)<\/span>/i);
+    if (!idMatch || !titleMatch) continue;
+    const appId = Number(idMatch[1]);
+    const title = decodeSteamText(titleMatch[1] ?? "").trim();
+    if (!Number.isInteger(appId) || appId <= 0 || !title || seen.has(appId)) continue;
+    seen.add(appId);
+    hits.push({ appId, title });
+  }
+  return hits;
+}
+
+function steamItems(root: Record<string, unknown> | null): SteamTitleHit[] {
+  if (!root || !Array.isArray(root.items)) return [];
+  const hits: SteamTitleHit[] = [];
+  const seen = new Set<number>();
+  for (const item of root.items) {
+    const record = asRecord(item);
+    const title = typeof record?.name === "string" ? record.name.trim() : "";
+    const logo = typeof record?.logo === "string" ? record.logo : "";
+    const idMatch = logo.match(/\/apps\/(\d+)\//);
+    const appId = idMatch ? Number(idMatch[1]) : 0;
+    if (!Number.isInteger(appId) || appId <= 0 || !title || seen.has(appId)) continue;
+    seen.add(appId);
+    hits.push({ appId, title });
+  }
+  return hits;
+}
+
+function decodeSteamText(value: string): string {
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+}
+
 export function parseSearchPage(payload: unknown): { hits: SearchHit[]; total: number | null } {
   const root = asRecord(payload);
   const html = typeof root?.results_html === "string" ? root.results_html : "";

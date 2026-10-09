@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import {
   criticCoverage,
   crossPopulationNotes,
@@ -5,24 +8,28 @@ import {
   pairedSampleNote,
   type Population,
   type ReviewLandscape,
+  type ShapeMode,
 } from "@/lib/aggregation/landscape";
 import { completionLabel, lensLabel, standardLabel } from "@/lib/domain/labels";
-import { DimensionShape } from "./dimension-shape";
 import { PairedDistribution } from "./distribution-bar";
+import { DimensionShape } from "./dimension-shape";
 
 export function ReviewLandscapeView({
   critics,
   audience,
   population,
   filteredNote,
+  share,
 }: {
   critics: ReviewLandscape;
   audience: ReviewLandscape;
   population?: Population;
   filteredNote?: string;
+  share?: { title: string; path: string };
 }) {
-  const showCritics = population !== "AUDIENCE";
-  const showAudience = population !== "CRITIC";
+  const [mode, setMode] = useState<ShapeMode>("both");
+  const showCritics = population !== "AUDIENCE" && mode !== "audience";
+  const showAudience = population !== "CRITIC" && mode !== "critics";
   const bothPopulated = showCritics && showAudience && critics.sampleSize > 0 && audience.sampleSize > 0;
   const dimensions = pairedDimensions(critics, audience);
   const cross = showCritics && showAudience ? crossPopulationNotes(critics, audience) : { agreement: [], disagreement: [] };
@@ -39,7 +46,7 @@ export function ReviewLandscapeView({
   const note =
     filteredNote ??
     (population === "CRITIC"
-      ? `Critics ${criticCoverage(critics.sampleSize)}.`
+      ? `Critics ${criticCoverage(critics.coverageCount)}.`
       : population === "AUDIENCE"
         ? audience.sampleNote
         : pairedSampleNote(critics, audience));
@@ -58,7 +65,7 @@ export function ReviewLandscapeView({
         <p className="empty">No published evaluations match this view yet.</p>
       ) : (
         <div className="landscape">
-          <DimensionShape critics={critics} audience={audience} />
+          <DimensionShape critics={critics} audience={audience} share={share} mode={mode} onMode={setMode} />
           <div className="split">
             <div className="panel">
               <h3>What reviewers agree on</h3>
@@ -85,20 +92,25 @@ export function ReviewLandscapeView({
               )}
             </div>
           </div>
-          {dimensions.map((dimension) => (
-            <PairedDistribution
-              key={dimension.slug}
-              label={dimension.name}
-              critics={dimension.critics}
-              audience={dimension.audience}
-              showCritics={showCritics}
-              showAudience={showAudience}
-            />
-          ))}
+          {dimensions
+            .filter(
+              (dimension) =>
+                (showAudience && dimension.audience.count > 0) || (showCritics && dimension.critics.count > 0),
+            )
+            .map((dimension) => (
+              <PairedDistribution
+                key={dimension.slug}
+                label={dimension.name}
+                critics={dimension.critics}
+                audience={dimension.audience}
+                showCritics={showCritics}
+                showAudience={showAudience}
+              />
+            ))}
           {showApproach && showAudience && audience.sampleSize > 0 ? (
             <ApproachSplit
-              approachTitle={showCritics && critics.sampleSize > 0 ? "Audience approach" : "Approach"}
-              experienceTitle={showCritics && critics.sampleSize > 0 ? "How much the audience experienced" : "How much they experienced"}
+              approachTitle={critics.sampleSize > 0 ? "Audience approach" : "Approach"}
+              experienceTitle={critics.sampleSize > 0 ? "How much the audience experienced" : "How much they experienced"}
               landscape={audience}
             />
           ) : null}

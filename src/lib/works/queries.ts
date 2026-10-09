@@ -24,6 +24,7 @@ export const cardInclude = {
       standard: true,
       completion: true,
       population: true,
+      review: { select: { importSourceName: true } },
       judgments: { include: { dimension: true } },
       observations: { include: { topic: true } },
     },

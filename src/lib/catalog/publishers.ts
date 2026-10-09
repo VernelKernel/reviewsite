@@ -108,6 +108,12 @@ const AA = [
 const AAA_SET = new Set(AAA);
 const AA_SET = new Set(AA);
 
+export function publicCreditName(name: string): string {
+  const trimmed = name.trim().replace(/\s+/g, " ");
+  if (/^ubisoft\b/i.test(trimmed)) return "Ubisoft";
+  return trimmed;
+}
+
 export function tierForPublishers(publishers: string[]): Tier {
   const names = publishers.map(normalize);
   if (names.some((name) => AAA_SET.has(name))) return "AAA";

@@ -17,7 +17,7 @@ import {
   slugify,
   type ReviewSummary,
 } from "../../src/lib/catalog/parse";
-import { tierForPublishers } from "../../src/lib/catalog/publishers";
+import { publicCreditName, tierForPublishers } from "../../src/lib/catalog/publishers";
 import {
   discoveryBand,
   meetsBuzz,
@@ -371,9 +371,9 @@ async function main() {
     usedSlugs.add(slug);
     const summary = await reviewSummary(placement.steamAppId).catch(() => null);
     const developerIds = [];
-    for (const name of unique(details.developers)) developerIds.push({ id: await creatorId(name, creators), role: "DEVELOPER" as const });
+    for (const name of unique(details.developers.map(publicCreditName))) developerIds.push({ id: await creatorId(name, creators), role: "DEVELOPER" as const });
     const publisherIds = [];
-    for (const name of unique(details.publishers)) publisherIds.push({ id: await creatorId(name, creators), role: "PUBLISHER" as const });
+    for (const name of unique(details.publishers.map(publicCreditName))) publisherIds.push({ id: await creatorId(name, creators), role: "PUBLISHER" as const });
     const consoles = supplement[placement.steamAppId] ?? [];
     const releaseRows = [
       { platformId: platformId.get("pc"), releasedOn: asUtcDate(details.releasedOn ?? placement.releasedOn) },

@@ -17,8 +17,8 @@ export type ReviewCardModel = {
   workSlug: string;
   reviewerName: string;
   reviewerSlug: string;
-  lens: string;
-  standard: string;
+  lens: string | null;
+  standard: string | null;
   standardNote: string | null;
   enjoyment: string;
   execution: string;
@@ -42,8 +42,8 @@ export type ReviewCardModel = {
 
 export function ReviewCard({ review, linked = true }: { review: ReviewCardModel; linked?: boolean }) {
   const context = [
-    lensLabel[review.lens],
-    standardLabel[review.standard],
+    review.lens ? lensLabel[review.lens] : null,
+    review.standard ? standardLabel[review.standard] : null,
     completionLabel[review.completion],
     review.playtime !== "UNKNOWN" ? playtimeLabel[review.playtime] : null,
   ]

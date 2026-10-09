@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Game dimension comparison · mockup · Frame</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,500;0,9..40,600;0,9..40,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="mockup.css" />
+  </head>
+  <body data-page="compare">
+    <a class="skip-link" href="#content">Skip to content</a>
+    <header class="banner">
+      <div class="shell" style="display: flex; justify-content: space-between; gap: 1rem; align-items: center; flex-wrap: wrap; width: min(70rem, calc(100% - 3rem));">
+        <p>Static mockup · illustrative counts · not part of the app</p>
+        <nav aria-label="Mockups">
+          <a href="index.html">Overview</a>
+          <a href="work.html">One work</a>
+          <a href="compare.html" aria-current="page">Comparison</a>
+        </nav>
+        <button class="mode-toggle" type="button" id="mode-toggle">Use dark colors</button>
+      </div>
+    </header>
+    <main class="page shell" id="content">
+      <p class="kicker">Comparison</p>
+      <h1>Six games on the same dimensions</h1>
+      <p class="lede">
+        The grid is a heatmap of stance readings. Green, amber, and red mean a positive, mixed, or negative reading that carries at least half the judgments in that cell. A divided cell stays neutral. Fewer than four judgments stay in plain type, without a stance color, because a small sample is not a consensus.
+      </p>
+      <noscript><p class="lede">This mockup draws the grid with JavaScript.</p></noscript>
+      <section class="section" aria-labelledby="card-heading">
+        <div class="section-head">
+          <div>
+            <p class="kicker">What could be posted</p>
+            <h2 id="card-heading">A crop that shows disagreement</h2>
+          </div>
+          <p class="note">Three games and five dimensions, tight enough for a post. The full grid is below. On a narrow window it scrolls sideways, and the work names stay put.</p>
+        </div>
+        <div id="share-card"></div>
+      </section>
+      <section class="section" aria-labelledby="grid-heading">
+        <div class="section-head">
+          <div>
+            <p class="kicker">On a comparison page</p>
+            <h2 id="grid-heading">Audience and critics, one grid at a time</h2>
+          </div>
+          <div class="segment" role="radiogroup" aria-label="Population" data-population>
+            <button type="button" role="radio" data-value="audience" aria-checked="true">Audience</button>
+            <button type="button" role="radio" data-value="critics" aria-checked="false">Critics</button>
+          </div>
+        </div>
+        <div id="heat-stage"></div>
+        <p class="detail" id="heat-detail" aria-live="polite"></p>
+        <div class="legend" aria-hidden="true">
+          <span><i class="swatch" style="background: var(--positive)"></i>Positive reading</span>
+          <span><i class="swatch" style="background: var(--caution)"></i>Mixed reading</span>
+          <span><i class="swatch" style="background: var(--negative)"></i>Negative reading</span>
+          <span><i class="swatch" style="background: var(--border-strong)"></i>Divided, or fewer than 4</span>
+        </div>
+        <p class="fine">A stronger tint is a “mostly” reading. A lighter tint is a “leaning” reading. Select a cell for the positive, mixed, and negative counts. Illustrative counts, composed for this mockup.</p>
+      </section>
+    </main>
+    <script src="mockup.js"></script>
+  </body>
+</html>

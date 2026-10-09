@@ -49,13 +49,42 @@ async function uniqueSlug(displayName: string): Promise<string> {
   return slug;
 }
 
+export async function ensureReviewerProfile(userId: string, displayName: string) {
+  const name = displayName.trim();
+  const existing = await prisma.reviewerProfile.findUnique({ where: { userId } });
+  if (!existing) {
+    return prisma.reviewerProfile.create({
+      data: { userId, slug: await uniqueSlug(name), displayName: name },
+    });
+  }
+  if (existing.displayName !== name) {
+    return prisma.reviewerProfile.update({ where: { id: existing.id }, data: { displayName: name } });
+  }
+  return existing;
+}
+
+export async function openSession(userId: string) {
+  const token = randomBytes(32).toString("base64url");
+  await prisma.session.create({
+    data: {
+      userId,
+      tokenHash: hashToken(token),
+      expiresAt: new Date(Date.now() + THIRTY_DAYS_MS),
+    },
+  });
+  const store = await cookies();
+  store.set(SESSION_COOKIE, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: THIRTY_DAYS_MS / 1000,
+  });
+}
+
 export async function establishReviewer(input: { email: string; displayName: string }) {
   const email = input.email.trim().toLowerCase();
-  const existing = await prisma.user.findUnique({
-    where: { email },
-    include: { profile: true },
-  });
-
+  const existing = await prisma.user.findUnique({ where: { email } });
   const user =
     existing ??
     (await prisma.user.create({
@@ -65,43 +94,9 @@ export async function establishReviewer(input: { email: string; displayName: str
           create: { provider: "EMAIL", providerAccountId: email },
         },
       },
-      include: { profile: true },
     }));
 
-  const profile =
-    user.profile ??
-    (await prisma.reviewerProfile.create({
-      data: {
-        userId: user.id,
-        slug: await uniqueSlug(input.displayName),
-        displayName: input.displayName.trim(),
-      },
-    }));
-
-  if (user.profile && user.profile.displayName !== input.displayName.trim()) {
-    await prisma.reviewerProfile.update({
-      where: { id: profile.id },
-      data: { displayName: input.displayName.trim() },
-    });
-  }
-
-  const token = randomBytes(32).toString("base64url");
-  await prisma.session.create({
-    data: {
-      userId: user.id,
-      tokenHash: hashToken(token),
-      expiresAt: new Date(Date.now() + THIRTY_DAYS_MS),
-    },
-  });
-
-  const store = await cookies();
-  store.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: THIRTY_DAYS_MS / 1000,
-  });
-
-  return prisma.reviewerProfile.findUniqueOrThrow({ where: { id: profile.id } });
+  const profile = await ensureReviewerProfile(user.id, input.displayName);
+  await openSession(user.id);
+  return profile;
 }

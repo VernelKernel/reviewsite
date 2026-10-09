@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cyberpunk 2077 dimension radar · mockup · Frame</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,500;0,9..40,600;0,9..40,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="mockup.css" />
+  </head>
+  <body data-page="work">
+    <a class="skip-link" href="#content">Skip to content</a>
+    <header class="banner">
+      <div class="shell" style="display: flex; justify-content: space-between; gap: 1rem; align-items: center; flex-wrap: wrap; width: min(70rem, calc(100% - 3rem));">
+        <p>Static mockup · illustrative counts · not part of the app</p>
+        <nav aria-label="Mockups">
+          <a href="index.html">Overview</a>
+          <a href="work.html" aria-current="page">One work</a>
+          <a href="compare.html">Comparison</a>
+        </nav>
+        <button class="mode-toggle" type="button" id="mode-toggle">Use dark colors</button>
+      </div>
+    </header>
+    <main class="page shell" id="content">
+      <p class="kicker">One work</p>
+      <h1>Cyberpunk 2077 as a dimension shape</h1>
+      <p class="lede">
+        The chart uses the nine game dimensions already in the catalog. The outline is how often the judgments on that dimension were positive. The dot color is the stance reading, which can be mixed or negative even when some praise is present. Enjoyment and execution sit beside the chart.
+      </p>
+      <noscript><p class="lede">This mockup draws the chart with JavaScript.</p></noscript>
+      <section class="section" aria-labelledby="card-heading">
+        <div class="section-head">
+          <div>
+            <p class="kicker">What could be posted</p>
+            <h2 id="card-heading">A card with the shape and the sample</h2>
+          </div>
+          <p class="note">The card is audience-only, so it can travel as one picture. The page below keeps critics and audience apart.</p>
+        </div>
+        <div id="share-card"></div>
+      </section>
+      <section class="section" aria-labelledby="page-heading">
+        <div class="section-head">
+          <div>
+            <p class="kicker">On the work page</p>
+            <h2 id="page-heading">Same evidence, with both populations</h2>
+          </div>
+          <div class="segment" role="radiogroup" aria-label="Population" data-population>
+            <button type="button" role="radio" data-value="both" aria-checked="true">Both</button>
+            <button type="button" role="radio" data-value="audience" aria-checked="false">Audience</button>
+            <button type="button" role="radio" data-value="critics" aria-checked="false">Critics</button>
+          </div>
+        </div>
+        <div class="stage" id="work-stage"></div>
+        <div id="radar-legend"></div>
+        <div id="dimension-list"></div>
+        <p class="fine">Choosing a dimension on the chart or in the list marks that spoke. Counts are illustrative. Not every evaluation has to judge every dimension, so a dimension’s sample can be smaller than 86.</p>
+      </section>
+    </main>
+    <script src="mockup.js"></script>
+  </body>
+</html>

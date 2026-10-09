@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { mapSteamLabels } from "./genres";
 import { parseSteamDate } from "./dates";
-import { parseAppDetails, parseReviewSummary, parseSearchPage } from "./parse";
-import { tierForPublishers } from "./publishers";
+import { parseAppDetails, parseReviewSummary, parseSearchPage, parseSteamTitleHits } from "./parse";
+import { publicCreditName, tierForPublishers } from "./publishers";
 
 describe("steam parsers", () => {
   it("reads a review summary and drops review text", () => {
@@ -42,6 +42,33 @@ describe("steam parsers", () => {
     ]);
   });
 
+  it("reads titles from store search rows in either attribute order", () => {
+    const hits = parseSteamTitleHits({
+      results_html: `
+        <a class="search_result_row" data-ds-appid="123"><span class="title">Ace Combat 8: Wings of Theve</span></a>
+        <a data-ds-appid="456" class="search_result_row"><span class="title">Ace Combat 7</span></a>
+      `,
+    });
+    expect(hits).toEqual([
+      { appId: 123, title: "Ace Combat 8: Wings of Theve" },
+      { appId: 456, title: "Ace Combat 7" },
+    ]);
+  });
+
+  it("reads the current store search item list", () => {
+    expect(
+      parseSteamTitleHits({
+        items: [
+          { name: "Hades", logo: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1145360/capsule.jpg" },
+          { name: "Hades II", logo: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1145350/capsule.jpg" },
+        ],
+      }),
+    ).toEqual([
+      { appId: 1145360, title: "Hades" },
+      { appId: 1145350, title: "Hades II" },
+    ]);
+  });
+
   it("reads app details without treating a store description as a review", () => {
     const details = parseAppDetails(10, {
       "10": {
@@ -71,6 +98,13 @@ describe("genre and tier mapping", () => {
     expect(mapSteamLabels(["Action", "RPG"]).primary).toBe("role-playing");
     expect(mapSteamLabels(["Action", "RPG"]).secondary).toContain("action");
     expect(mapSteamLabels(["Indie", "Roguelike"]).primary).toBe("roguelike");
+  });
+
+  it("collapses Ubisoft studios to the public name", () => {
+    expect(publicCreditName("Ubisoft Montreal")).toBe("Ubisoft");
+    expect(publicCreditName("ubisoft entertainment")).toBe("Ubisoft");
+    expect(publicCreditName("Ubisoft")).toBe("Ubisoft");
+    expect(publicCreditName("North Wind")).toBe("North Wind");
   });
 
   it("treats an unlisted publisher as indie", () => {

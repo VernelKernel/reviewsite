@@ -7,8 +7,8 @@ export type EvaluationFilter = {
 };
 
 export type FilterableEvaluation = {
-  lens: string;
-  standard: string;
+  lens: string | null;
+  standard: string | null;
   completion: string;
   platform: { slug: string } | null;
   population?: string;
