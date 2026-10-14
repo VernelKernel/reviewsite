@@ -4,7 +4,8 @@ import { CompareRemove, CompareSync } from "@/components/comparison/compare-cont
 import { compareKey, parseCompareKeys, type CompareRef } from "@/lib/comparison/selection";
 import { workHref } from "@/lib/domain/labels";
 import { listWorks } from "@/lib/works/queries";
-import { landscapesFor, primaryArt } from "@/lib/works/present";
+import { ArtImage } from "@/components/works/work-art";
+import { landscapesFor, workArt } from "@/lib/works/present";
 
 export const metadata: Metadata = {
   title: "Compare",
@@ -46,12 +47,12 @@ export default async function ComparePage({
         <div className="compare-grid">
           {selected.map((work) => {
             const landscapes = landscapesFor(work);
-            const art = primaryArt(work.media);
+            const art = workArt(work.media);
             const standards = landscapes.audience.disagreement.find((line) => line.includes("expectations"));
             return (
               <section className="compare-column" key={compareKey(work)} aria-labelledby={`compare-${work.slug}`}>
                 <a className="compare-art" href={workHref(work.workType, work.slug)}>
-                  {art ? <img src={art.src} alt={art.alt} /> : null}
+                  <ArtImage art={art} shape="wide" />
                 </a>
                 <div className="compare-column-body">
                   <h2 id={`compare-${work.slug}`}>

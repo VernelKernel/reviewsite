@@ -32,9 +32,18 @@ export function releaseYear(releases: { releasedOn: Date | null }[]): number | n
   return new Date(Math.min(...dated.map((date) => date.getTime()))).getUTCFullYear();
 }
 
-export function primaryArt(media: { kind: string; src: string; alt: string; isPrimary: boolean }[]) {
-  const primary = media.find((item) => item.isPrimary) ?? media.find((item) => item.kind === "KEY_ART" || item.kind === "POSTER") ?? media[0];
-  return primary ? { src: primary.src, alt: primary.alt } : null;
+export type Art = { src: string; alt: string };
+export type WorkArt = { wide: Art | null; tall: Art | null };
+
+const wideKinds = new Set(["KEY_ART", "SCREENSHOT"]);
+const tallKinds = new Set(["POSTER", "COVER"]);
+
+export function workArt(media: { kind: string; src: string; alt: string; isPrimary: boolean }[]): WorkArt {
+  const pick = (kinds: Set<string>): Art | null => {
+    const item = media.find((entry) => kinds.has(entry.kind) && entry.isPrimary) ?? media.find((entry) => kinds.has(entry.kind));
+    return item ? { src: item.src, alt: item.alt } : null;
+  };
+  return { wide: pick(wideKinds), tall: pick(tallKinds) };
 }
 
 export function creatorLine(creators: { role: string; creator: { name: string } }[]): string {

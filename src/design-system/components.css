@@ -306,6 +306,10 @@ p {
   transform: scale(var(--image-scale));
 }
 
+.work-card img[data-fit="contain"] {
+  object-fit: contain;
+}
+
 .work-card-body {
   padding: var(--space-4);
   display: flex;
@@ -465,6 +469,22 @@ p {
   aspect-ratio: var(--hero-ratio);
   object-fit: cover;
   background: var(--color-surface-elevated);
+}
+
+.key-art[data-shape="tall"] {
+  object-fit: var(--hero-tall-fit, cover);
+}
+
+.key-art[data-shape="wide"] {
+  object-fit: var(--hero-wide-fit, cover);
+}
+
+.key-art-frame[data-art="both"] .key-art[data-shape="tall"] {
+  display: var(--hero-tall-display, none);
+}
+
+.key-art-frame[data-art="both"] .key-art[data-shape="wide"] {
+  display: var(--hero-wide-display, block);
 }
 
 .hero-copy {
@@ -1092,6 +1112,10 @@ p {
   background: var(--color-surface-elevated);
 }
 
+.record-thumb[data-fit="contain"] {
+  object-fit: contain;
+}
+
 .record-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -1568,6 +1592,10 @@ fieldset {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.compare-art img[data-fit="contain"] {
+  object-fit: contain;
 }
 
 .compare-column-body {

@@ -192,6 +192,27 @@ export function parseAppDetails(appId: number, payload: unknown): AppDetails | n
   };
 }
 
+const STEAM_ASSET_BASE = "https://shared.akamai.steamstatic.com/store_item_assets/";
+
+export function parseStorePortraits(payload: unknown): Map<number, string> {
+  const items = asRecord(asRecord(payload)?.response)?.store_items;
+  const portraits = new Map<number, string>();
+  if (!Array.isArray(items)) return portraits;
+  for (const item of items) {
+    const record = asRecord(item);
+    const assets = asRecord(record?.assets);
+    const appId = Number(record?.appid ?? record?.id);
+    const format = typeof assets?.asset_url_format === "string" ? assets.asset_url_format : "";
+    const capsule = [assets?.library_capsule_2x, assets?.library_capsule].find(
+      (value): value is string => typeof value === "string" && value.trim().length > 0,
+    );
+    if (!Number.isInteger(appId) || appId <= 0 || record?.success !== 1) continue;
+    if (!format.startsWith("steam/apps/") || !format.includes("${FILENAME}") || !capsule) continue;
+    portraits.set(appId, `${STEAM_ASSET_BASE}${format.replace("${FILENAME}", capsule)}`);
+  }
+  return portraits;
+}
+
 export function slugify(value: string): string {
   const slug = value
     .normalize("NFKD")

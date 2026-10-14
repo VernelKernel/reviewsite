@@ -29,8 +29,14 @@ function colorVars(colors: ColorTokens): string {
   ].join("; ");
 }
 
+export function heroArtShape(ratio: string): "tall" | "wide" {
+  const [width, height] = ratio.split("/").map((part) => Number(part.trim()));
+  return height > width ? "tall" : "wide";
+}
+
 function themeBlock(theme: Theme, mode: ColorMode): string {
   const elevation = theme.elevation[mode];
+  const tallHero = heroArtShape(theme.media.heroRatio) === "tall";
   const declarations = [
     colorVars(theme.colors[mode]),
     `--font-body: ${theme.typography.fontBody}`,
@@ -72,6 +78,10 @@ function themeBlock(theme: Theme, mode: ColorMode): string {
     `--hero-bleed: ${theme.media.heroBleed}`,
     `--hero-ratio: ${theme.media.heroRatio}`,
     `--hero-columns: ${theme.media.heroColumns}`,
+    `--hero-tall-display: ${tallHero ? "block" : "none"}`,
+    `--hero-wide-display: ${tallHero ? "none" : "block"}`,
+    `--hero-tall-fit: ${tallHero ? "cover" : "contain"}`,
+    `--hero-wide-fit: ${tallHero ? "contain" : "cover"}`,
   ].join("; ");
 
   return `[data-mood="${theme.id}"][data-mode="${mode}"] { ${declarations}; }`;

@@ -7,6 +7,7 @@ import { FollowedOnWork } from "@/components/comparison/followed-on-work";
 import { PopulationGauges } from "@/components/evaluations/population-gauges";
 import { ReviewLandscapeView } from "@/components/evaluations/review-landscape";
 import { ReceptionColumns } from "@/components/works/reception-columns";
+import { HeroArt } from "@/components/works/work-art";
 import { toReview } from "@/components/works/work-record";
 import { splitLandscapes } from "@/lib/aggregation/landscape";
 import { alignCritics, type CriticEvaluation } from "@/lib/comparison/critic-alignment";
@@ -27,11 +28,11 @@ import { filterEvaluations } from "@/lib/works/filter-evaluations";
 import { getWork, worksSharingCreator, type FullWork } from "@/lib/works/queries";
 import {
   landscapesFor,
-  primaryArt,
   relatedLinks,
   releaseYear,
   roleName,
   toLandscapeInput,
+  workArt,
 } from "@/lib/works/present";
 
 const lenses = ["EXECUTION", "EXPERIENCE", "MIXED"] as const;
@@ -63,7 +64,7 @@ export async function WorkPage({
   const filtered = filterEvaluations(work.evaluations, { lens, standard, completion, platform });
   const landscape = splitLandscapes(filtered.map(toLandscapeInput));
   const overall = landscapesFor(work);
-  const art = primaryArt(work.media);
+  const art = workArt(work.media);
   const year = releaseYear(work.releases);
   const developerIds = work.creators.filter((creator) => creator.role === "DEVELOPER").map((creator) => creator.creatorId);
   const sameCreator = await worksSharingCreator(work.id, developerIds);
@@ -130,9 +131,7 @@ export async function WorkPage({
     <article className="page shell">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <header className="work-hero">
-        <div className="key-art-frame">
-          {art ? <img className="key-art" src={art.src} alt={art.alt} /> : <div className="key-art" />}
-        </div>
+        <HeroArt art={art} />
         <div className="hero-copy">
           <p className="kicker">{workTypeLabel[work.workType]}</p>
           <h1 className="hero-title">{work.title}</h1>

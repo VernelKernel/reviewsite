@@ -1,4 +1,4 @@
-import { parseAppDetails, parseSteamTitleHits, type AppDetails, type SteamTitleHit } from "./parse";
+import { parseAppDetails, parseSteamTitleHits, parseStorePortraits, type AppDetails, type SteamTitleHit } from "./parse";
 
 export class SteamLookupError extends Error {
   constructor(message: string) {
@@ -63,4 +63,18 @@ export async function searchSteamTitles(title: string): Promise<SteamTitleHit[]>
 export async function fetchSteamApp(appId: number): Promise<AppDetails | null> {
   const payload = await fetchSteam(`https://store.steampowered.com/api/appdetails?appids=${appId}&l=english`);
   return parseAppDetails(appId, payload);
+}
+
+export function steamStoreItemsUrl(appIds: number[]): string {
+  const input = {
+    ids: appIds.map((appid) => ({ appid })),
+    context: { language: "english", country_code: "US" },
+    data_request: { include_assets: true },
+  };
+  return `https://api.steampowered.com/IStoreBrowseService/GetItems/v1/?input_json=${encodeURIComponent(JSON.stringify(input))}`;
+}
+
+export async function fetchSteamPortraits(appIds: number[]): Promise<Map<number, string>> {
+  if (appIds.length === 0) return new Map();
+  return parseStorePortraits(await fetchSteam(steamStoreItemsUrl(appIds)));
 }

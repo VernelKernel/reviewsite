@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { mapSteamLabels } from "./genres";
 import { parseSteamDate } from "./dates";
-import { parseAppDetails, parseReviewSummary, parseSearchPage, parseSteamTitleHits } from "./parse";
+import { parseAppDetails, parseReviewSummary, parseSearchPage, parseSteamTitleHits, parseStorePortraits } from "./parse";
 import { publicCreditName, tierForPublishers } from "./publishers";
 
 describe("steam parsers", () => {
@@ -90,6 +90,35 @@ describe("steam parsers", () => {
     expect(details?.releasedOn).toBe("2026-03-01");
     expect(details?.synopsis).toBe("A quiet sim.\nAbout tending.");
     expect(details?.windows).toBe(true);
+  });
+
+  it("builds portrait cover URLs from store item assets, including hashed paths", () => {
+    const portraits = parseStorePortraits({
+      response: {
+        store_items: [
+          {
+            appid: 639240,
+            success: 1,
+            assets: {
+              asset_url_format: "steam/apps/639240/${FILENAME}?t=1",
+              library_capsule: "library_600x900.jpg",
+              library_capsule_2x: "library_600x900_2x.jpg",
+            },
+          },
+          {
+            appid: 1912410,
+            success: 1,
+            assets: { asset_url_format: "steam/apps/1912410/${FILENAME}?t=2", library_capsule: "47d3/library_capsule.jpg" },
+          },
+          { appid: 5, success: 1, assets: { asset_url_format: "steam/apps/5/${FILENAME}" } },
+          { appid: 6, success: 2 },
+        ],
+      },
+    });
+    expect([...portraits]).toEqual([
+      [639240, "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/639240/library_600x900_2x.jpg?t=1"],
+      [1912410, "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1912410/47d3/library_capsule.jpg?t=2"],
+    ]);
   });
 });
 

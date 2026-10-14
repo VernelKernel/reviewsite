@@ -16,7 +16,8 @@ import {
 import type { EvaluationCardInput } from "@/components/evaluations/evaluation-card";
 import type { RadarAxis, StanceName } from "@/lib/evaluations/radar";
 import { personalHeadline } from "@/lib/intake/judgments";
-import { formatDate, primaryArt, type FullWork } from "@/lib/works/present";
+import { HeroArt } from "@/components/works/work-art";
+import { formatDate, workArt, type FullWork } from "@/lib/works/present";
 
 type Evaluation = FullWork["evaluations"][number];
 
@@ -29,7 +30,7 @@ export function EvaluationRecord({
   evaluation: Evaluation;
   saved: boolean;
 }) {
-  const art = primaryArt(work.media);
+  const art = workArt(work.media);
   const path = reviewHref(work.workType, work.slug, evaluation.reviewer.slug);
   const enjoyment = evaluation.enjoyment as StanceName;
   const execution = evaluation.execution as StanceName;
@@ -60,9 +61,7 @@ export function EvaluationRecord({
     <main className="page shell evaluation-page">
       {saved ? <p className="form-error">Published. This page is the evaluation.</p> : null}
       <header className="evaluation-hero">
-        <div className="key-art-frame evaluation-poster">
-          {art ? <img className="key-art" src={art.src} alt={art.alt} /> : <div className="key-art" />}
-        </div>
+        <HeroArt art={art} className="evaluation-poster" />
         <div className="evaluation-hero-copy">
           <p className="kicker">{workTypeLabel[work.workType]} review</p>
           <h1>

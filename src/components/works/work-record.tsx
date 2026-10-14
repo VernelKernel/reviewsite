@@ -8,7 +8,8 @@ import { criticCoverage, splitLandscapes } from "@/lib/aggregation/landscape";
 import { audienceHref, criticsHref, detailsHref, workHref } from "@/lib/domain/labels";
 import { filterEvaluations } from "@/lib/works/filter-evaluations";
 import { getWork } from "@/lib/works/queries";
-import { formatDate, primaryArt, releaseYear, roleName, toLandscapeInput } from "@/lib/works/present";
+import { ArtImage } from "@/components/works/work-art";
+import { formatDate, releaseYear, roleName, toLandscapeInput, workArt } from "@/lib/works/present";
 
 export type RecordView = "critics" | "audience" | "details";
 
@@ -37,7 +38,7 @@ export async function WorkRecordPage({
   const population = view === "details" ? undefined : view === "critics" ? "CRITIC" : "AUDIENCE";
   const filtered = filterEvaluations(work.evaluations, { platform, population });
   const landscape = splitLandscapes(filtered.map(toLandscapeInput));
-  const art = primaryArt(work.media);
+  const art = workArt(work.media);
   const base = view === "critics" ? criticsHref(work.workType, work.slug) : audienceHref(work.workType, work.slug);
   const reviews = filtered.map((evaluation) => toReview(work.workType, work.slug, evaluation));
 
@@ -47,7 +48,7 @@ export async function WorkRecordPage({
         <a href={workHref(work.workType, work.slug)}>{work.title}</a>
       </p>
       <header className="record-head">
-        {art ? <img className="record-thumb" src={art.src} alt="" /> : null}
+        <ArtImage art={art} shape="tall" className="record-thumb" decorative />
         <h1>{recordTitle(work.title, view)}</h1>
       </header>
       <nav className="record-tabs" aria-label="Work record">

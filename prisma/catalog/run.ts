@@ -14,9 +14,12 @@ import {
   parsePopularTags,
   parseReviewSummary,
   parseSearchPage,
+  parseStorePortraits,
   slugify,
   type ReviewSummary,
 } from "../../src/lib/catalog/parse";
+import { steamArtwork } from "../../src/lib/catalog/media";
+import { steamStoreItemsUrl } from "../../src/lib/catalog/steam-title";
 import { publicCreditName, tierForPublishers } from "../../src/lib/catalog/publishers";
 import {
   discoveryBand,
@@ -181,6 +184,19 @@ async function appDetails(appId: number) {
   const details = parseAppDetails(appId, payload);
   if (details) writeCache(file, details);
   return details;
+}
+
+async function storePortraits(appIds: number[]): Promise<Map<number, string>> {
+  const portraits = new Map<number, string>();
+  for (let start = 0; start < appIds.length; start += 50) {
+    try {
+      const batch = parseStorePortraits(await fetchJson(steamStoreItemsUrl(appIds.slice(start, start + 50))));
+      for (const [appId, src] of batch) portraits.set(appId, src);
+    } catch (error) {
+      console.error(`Could not read Steam cover art: ${error instanceof Error ? error.message : "request failed"}`);
+    }
+  }
+  return portraits;
 }
 
 async function reviewSummary(appId: number): Promise<ReviewSummary | null> {
@@ -358,6 +374,7 @@ async function main() {
   const creators = new Map<string, string>();
   const usedSlugs = new Set((await prisma.work.findMany({ where: { workType: "GAME" }, select: { slug: true } })).map((work) => work.slug));
 
+  const portraits = await storePortraits(selection.placements.map((placement) => placement.steamAppId));
   const written: { workId: string; placement: (typeof selection.placements)[number] }[] = [];
   for (const placement of selection.placements) {
     const details = await appDetails(placement.steamAppId);
@@ -380,6 +397,7 @@ async function main() {
       ...consoles.map((release) => ({ platformId: platformId.get(release.platform), releasedOn: asUtcDate(release.date) })),
     ].filter((release): release is { platformId: string; releasedOn: Date } => Boolean(release.platformId));
     const storedTags = unique([...steamTags, ...details.genres, ...details.categories]).slice(0, 20);
+    const artwork = steamArtwork(details.title, details.headerImage, portraits.get(placement.steamAppId) ?? null);
 
     try {
       const work = await prisma.work.create({
@@ -414,16 +432,7 @@ async function main() {
               status: "RELEASED" as const,
             })),
           },
-          media: details.headerImage
-            ? {
-                create: {
-                  kind: "KEY_ART" as const,
-                  src: details.headerImage,
-                  alt: `Key art for ${details.title}`,
-                  isPrimary: true,
-                },
-              }
-            : undefined,
+          media: artwork.length > 0 ? { create: artwork } : undefined,
           tags: {
             create: await Promise.all(
               storedTags.map(async (name) => {

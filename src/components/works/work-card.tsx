@@ -2,17 +2,18 @@ import { criticCoverage } from "@/lib/aggregation/landscape";
 import { CompareButton } from "@/components/comparison/compare-controls";
 import { PairedDistribution } from "@/components/evaluations/distribution-bar";
 import { audienceHref, criticsHref, workHref, workTypeLabel } from "@/lib/domain/labels";
-import { creatorLine, landscapesFor, primaryArt, releaseYear, type CardWork } from "@/lib/works/present";
+import { ArtImage } from "@/components/works/work-art";
+import { creatorLine, landscapesFor, releaseYear, workArt, type CardWork } from "@/lib/works/present";
 
 export function WorkCard({ work }: { work: CardWork }) {
-  const art = primaryArt(work.media);
+  const art = workArt(work.media);
   const landscapes = landscapesFor(work);
   const year = releaseYear(work.releases);
   return (
     <article className="work-card">
       <a className="work-card-link" href={workHref(work.workType, work.slug)}>
         <div className="work-card-media">
-          {art ? <img src={art.src} alt={art.alt} /> : null}
+          <ArtImage art={art} shape="wide" />
         </div>
         <div className="work-card-body">
           <p className="meta">

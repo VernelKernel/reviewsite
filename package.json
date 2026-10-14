@@ -15,6 +15,8 @@
     "catalog:dry": "tsx prisma/catalog/run.ts --dry-run",
     "catalog:backfill": "tsx prisma/catalog/backfill.ts",
     "catalog:backfill:dry": "tsx prisma/catalog/backfill.ts --dry-run",
+    "catalog:posters": "tsx prisma/catalog/posters.ts",
+    "catalog:posters:dry": "tsx prisma/catalog/posters.ts --dry-run",
     "catalog:critics": "tsx prisma/catalog/import-critics.ts",
     "catalog:critics:dry": "tsx prisma/catalog/import-critics.ts --dry-run",
     "catalog:critics:platforms": "tsx prisma/catalog/align-critic-platforms.ts",

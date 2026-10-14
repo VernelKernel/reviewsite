@@ -1,7 +1,8 @@
 import type { WorkType } from "@/generated/prisma/client";
 import { mapSteamLabels } from "../catalog/genres";
+import { steamArtwork } from "../catalog/media";
 import { slugify } from "../catalog/parse";
-import { fetchSteamApp, SteamLookupError } from "../catalog/steam-title";
+import { fetchSteamApp, fetchSteamPortraits, SteamLookupError } from "../catalog/steam-title";
 import { prisma } from "../db/client";
 import { readJudgments, type StoredJudgment } from "./judgments";
 import { normalizeTitle } from "./normalize";
@@ -47,6 +48,10 @@ export async function ensureSteamWork(appId: number): Promise<string> {
   const base = slugify(details.title);
   const collision = await prisma.work.findFirst({ where: { workType: "GAME", slug: base }, select: { id: true } });
   const slug = collision ? `${base.slice(0, 60)}-${appId}` : base;
+  const portrait = await fetchSteamPortraits([appId])
+    .then((portraits) => portraits.get(appId) ?? null)
+    .catch(() => null);
+  const artwork = steamArtwork(details.title, details.headerImage, portrait);
 
   try {
     const work = await prisma.work.create({
@@ -64,16 +69,7 @@ export async function ensureSteamWork(appId: number): Promise<string> {
           })),
         },
         platforms: pc ? { create: [{ platformId: pc.id }] } : undefined,
-        media: details.headerImage
-          ? {
-              create: {
-                kind: "KEY_ART",
-                src: details.headerImage,
-                alt: `Key art for ${details.title}`,
-                isPrimary: true,
-              },
-            }
-          : undefined,
+        media: artwork.length > 0 ? { create: artwork } : undefined,
       },
       select: { id: true },
     });
