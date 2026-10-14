@@ -2238,6 +2238,10 @@ body:has(.mockup-sheet) .page {
   min-width: 0;
 }
 
+.evaluation-details .prose {
+  max-width: none;
+}
+
 .evaluation-overview {
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(15rem, 0.8fr);
