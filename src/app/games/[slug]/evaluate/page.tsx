@@ -54,6 +54,7 @@ export async function EvaluateScreen({
                 ownership: existing?.ownership ?? "",
                 platformId: existing?.platformId ?? "",
                 reviewTitle: existing?.review?.title ?? "",
+                impression: existing?.review?.impression ?? "",
                 reviewBody: existing?.review?.body ?? "",
                 imported: existing?.review?.source === "IMPORTED",
                 importSourceName: existing?.review?.importSourceName ?? "",

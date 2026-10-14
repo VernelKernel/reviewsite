@@ -22,6 +22,10 @@ function colorVars(colors: ColorTokens): string {
     `--color-positive-soft: ${colors.positiveSoft}`,
     `--color-caution-soft: ${colors.cautionSoft}`,
     `--color-negative-soft: ${colors.negativeSoft}`,
+    `--color-chart-stage: ${colors.chartStage}`,
+    `--color-chart-stage-end: ${colors.chartStageEnd}`,
+    `--color-chart-grid: ${colors.chartGrid}`,
+    `--color-chart-label: ${colors.chartLabel}`,
   ].join("; ");
 }
 

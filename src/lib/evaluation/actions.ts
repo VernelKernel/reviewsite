@@ -117,20 +117,22 @@ export async function saveEvaluation(
         });
       }
 
-      if (input.reviewBody) {
+      if (input.reviewBody || input.impression) {
         await tx.review.upsert({
           where: { evaluationId: saved.id },
           create: {
             evaluationId: saved.id,
             title: input.reviewTitle ?? null,
-            body: input.reviewBody,
+            impression: input.impression ?? null,
+            body: input.reviewBody ?? "",
             source: input.imported ? "IMPORTED" : "INTERNAL",
             importSourceName: input.imported ? (input.importSourceName ?? null) : null,
             importSourceUrl: input.imported ? (input.importSourceUrl ?? null) : null,
           },
           update: {
             title: input.reviewTitle ?? null,
-            body: input.reviewBody,
+            impression: input.impression ?? null,
+            body: input.reviewBody ?? "",
             source: input.imported ? "IMPORTED" : "INTERNAL",
             importSourceName: input.imported ? (input.importSourceName ?? null) : null,
             importSourceUrl: input.imported ? (input.importSourceUrl ?? null) : null,

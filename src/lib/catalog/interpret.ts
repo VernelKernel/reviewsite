@@ -60,6 +60,7 @@ export type CriticInterpretation = {
   platform: ReviewPlatformSlug | null;
   judgments: Interpretation["judgments"];
   observations: Interpretation["observations"];
+  impression: string | null;
 };
 
 export type Interpretation = {
@@ -71,6 +72,7 @@ export type Interpretation = {
   completion: Completion;
   judgments: { dimension: (typeof GAME_DIMENSION_SLUGS)[number]; stance: Stance }[];
   observations: { topic: (typeof OBSERVATION_TOPICS)[number]; polarity: "PRAISE" | "CRITICISM"; content: string }[];
+  impression: string | null;
 };
 
 const PROMPT_REVIEW_LIMIT = 6000;
@@ -124,8 +126,18 @@ export function parseInterpretation(payload: unknown): Interpretation | null {
   }
 
   const standardNote = standard === "ABSOLUTE" ? null : clip(record.standardNote, 240) || null;
-  return { lens, standard, standardNote, enjoyment, execution, completion, judgments, observations };
+  return { lens, standard, standardNote, enjoyment, execution, completion, judgments, observations, impression: readImpression(record.impression) };
 }
+
+function readImpression(value: unknown): string | null {
+  const text = clip(value, 80);
+  return text.length >= 12 ? text : null;
+}
+
+const editorialCopy = [
+  "Write the impression and the observations as things a person would notice, not as labels for the stance fields.",
+  "impression: one overall line of at most 80 characters, usually two short clauses. Say what the experience felt like. Do not turn Positive, Mixed, or Negative into a sentence. Do not invent a scene, mechanic, or complaint the review did not give. Leave impression empty when the review is too thin for a specific line.",
+].join(" ");
 
 export function parseCriticInterpretation(payload: unknown): CriticInterpretation | null {
   const record = asRecord(payload);
@@ -193,7 +205,8 @@ export function criticInterpretationPrompt(input: { title: string; outlet: strin
     "completion: JUST_STARTED, EARLY, SUBSTANTIAL, COMPLETED, ENDGAME, POST_GAME, ABANDONED, or UNKNOWN.",
     platformInstruction,
     `judgments: dimension is one of ${GAME_DIMENSION_SLUGS.join(", ")}. stance is POSITIVE, MIXED, or NEGATIVE. Omit a dimension the review does not discuss.`,
-    `observations: up to 4, each on a different topic. topic is one of ${OBSERVATION_TOPICS.join(", ")}. polarity is PRAISE or CRITICISM. content is one clause of at most 20 words. Do not paste the article.`,
+    editorialCopy,
+    `observations: up to 4, each on a different topic. topic is one of ${OBSERVATION_TOPICS.join(", ")}. polarity is PRAISE or CRITICISM. content is one specific observation, ideally under 12 words, about something the review actually noticed. Do not paste the article, and do not restate the topic as a category such as "strong music" or "repetitive gameplay".`,
     "Review:",
     review,
   ].join("\n");
@@ -222,7 +235,8 @@ export function interpretationPrompt(input: {
     "enjoyment and execution: POSITIVE, MIXED, or NEGATIVE.",
     "completion: JUST_STARTED, EARLY, SUBSTANTIAL, COMPLETED, ENDGAME, POST_GAME, ABANDONED, or UNKNOWN.",
     `judgments: dimension is one of ${GAME_DIMENSION_SLUGS.join(", ")}. stance is POSITIVE, MIXED, or NEGATIVE.`,
-    `observations: up to 4, each on a different topic. topic is one of ${OBSERVATION_TOPICS.join(", ")}. polarity is PRAISE or CRITICISM. content is one clause of at most 20 words about that topic. Do not paste the whole review, and do not repeat a sentence.`,
+    editorialCopy,
+    `observations: up to 4, each on a different topic. topic is one of ${OBSERVATION_TOPICS.join(", ")}. polarity is PRAISE or CRITICISM. content is one specific observation, ideally under 12 words, about something the review actually noticed. Do not paste the whole review, do not repeat a sentence, and do not restate the topic as a category such as "strong music" or "repetitive gameplay".`,
     "Review:",
     review,
   ].join("\n");

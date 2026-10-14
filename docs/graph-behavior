@@ -1,0 +1,24 @@
+Revise the evaluation graph heatmap behavior.
+
+The current implementation incorrectly uses a center-based radial heatmap where the middle is always red/orange and the outer perimeter becomes green. That does not match the meaning of this review system.
+
+In this graph, the center does NOT mean “negative.” It means weaker or less intense stance. Therefore, an all-positive review should not show a red center.
+
+Instead, implement the chart as a blended evaluative field:
+
+- Each plotted dimension emits color influence based on its stance.
+- Positive emits green/lime influence.
+- Mixed emits yellow/amber influence.
+- Negative emits orange/red influence.
+- Blend these influences smoothly across the polygon interior.
+
+The polygon fill should communicate the overall emotional/evaluative feel of the review, not just distance from center.
+
+Rules:
+- If all dimensions are Positive, the polygon should appear mostly green, with perhaps subtle yellow-green variation near the center.
+- Do not show a red center unless the actual review contains negative influence that justifies it.
+- Warm colors should be localized to weaker or mixed/negative areas.
+- The result should feel like a performance field or stance aura, inspired by the Einhänder evaluation screen.
+- Keep the radar geometry and labels, but make the fill feel alive, expressive, and semantically correct.
+
+If needed, use layered gradients, mesh-like interpolation, blurred vertex color sources, or canvas/WebGL/SVG techniques to achieve a blended field effect rather than a simple radial gradient.

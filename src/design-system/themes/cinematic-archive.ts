@@ -25,6 +25,10 @@ export const cinematicArchiveTheme: Theme = {
       positiveSoft: "#E3F0E8",
       cautionSoft: "#F6EEDD",
       negativeSoft: "#F6E8E6",
+      chartStage: "#1A2744",
+      chartStageEnd: "#101828",
+      chartGrid: "#D4D8E0",
+      chartLabel: "#F3F0E8",
     },
     dark: {
       canvas: "#0C0D10",
@@ -46,6 +50,10 @@ export const cinematicArchiveTheme: Theme = {
       positiveSoft: "#13281E",
       cautionSoft: "#2C2414",
       negativeSoft: "#351C1A",
+      chartStage: "#1A2744",
+      chartStageEnd: "#101828",
+      chartGrid: "#D4D8E0",
+      chartLabel: "#F3F0E8",
     },
   },
   typography: {

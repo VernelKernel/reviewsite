@@ -25,6 +25,10 @@ export const editorialObservatoryTheme: Theme = {
       positiveSoft: "#E7F3EB",
       cautionSoft: "#F8F0DC",
       negativeSoft: "#F8EBE8",
+      chartStage: "#1E3358",
+      chartStageEnd: "#121E38",
+      chartGrid: "#D7DEE8",
+      chartLabel: "#F4F1E8",
     },
     dark: {
       canvas: "#1A1714",
@@ -46,6 +50,10 @@ export const editorialObservatoryTheme: Theme = {
       positiveSoft: "#1C3328",
       cautionSoft: "#332A16",
       negativeSoft: "#3A221E",
+      chartStage: "#1E3358",
+      chartStageEnd: "#121E38",
+      chartGrid: "#D7DEE8",
+      chartLabel: "#F4F1E8",
     },
   },
   typography: {

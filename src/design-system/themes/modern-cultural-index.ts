@@ -25,6 +25,10 @@ export const modernCulturalIndexTheme: Theme = {
       positiveSoft: "#E3F6F1",
       cautionSoft: "#FBF3E2",
       negativeSoft: "#FBECEA",
+      chartStage: "#241E4A",
+      chartStageEnd: "#16122E",
+      chartGrid: "#D8D6E8",
+      chartLabel: "#F4F5F8",
     },
     dark: {
       canvas: "#101216",
@@ -46,6 +50,10 @@ export const modernCulturalIndexTheme: Theme = {
       positiveSoft: "#102820",
       cautionSoft: "#2E2412",
       negativeSoft: "#351C1C",
+      chartStage: "#241E4A",
+      chartStageEnd: "#16122E",
+      chartGrid: "#D8D6E8",
+      chartLabel: "#F4F5F8",
     },
   },
   typography: {

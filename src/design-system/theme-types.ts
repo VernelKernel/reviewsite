@@ -29,6 +29,10 @@ export type ColorTokens = {
   positiveSoft: string;
   cautionSoft: string;
   negativeSoft: string;
+  chartStage: string;
+  chartStageEnd: string;
+  chartGrid: string;
+  chartLabel: string;
 };
 
 export type Theme = {

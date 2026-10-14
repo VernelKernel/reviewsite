@@ -37,6 +37,7 @@ export type ReviewCardModel = {
     source: string;
     importSourceName: string | null;
     importSourceUrl: string | null;
+    impression?: string | null;
   } | null;
 };
 
@@ -92,6 +93,7 @@ export function ReviewCard({ review, linked = true }: { review: ReviewCardModel;
       {review.ownership ? <p className="context-line">Access: {ownershipLabel[review.ownership]}</p> : null}
       {review.review ? (
         <div className="prose">
+          {review.review.impression ? <p className="impression-line">{review.review.impression}</p> : null}
           {review.review.title ? <h3>{review.review.title}</h3> : null}
           {review.review.body.split(/\n{2,}/).map((paragraph) => (
             <p key={paragraph.slice(0, 24)}>{paragraph}</p>

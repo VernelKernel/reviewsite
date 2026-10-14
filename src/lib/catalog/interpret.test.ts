@@ -34,6 +34,32 @@ describe("review interpretation", () => {
     expect(reading?.observations).toEqual([{ topic: "combat", polarity: "PRAISE", content: "The fights stay readable." }]);
     expect(reading?.enjoyment).toBe("POSITIVE");
     expect(reading?.execution).toBe("MIXED");
+    expect(reading?.impression).toBeNull();
+  });
+
+  it("keeps a short impression and drops a stub", () => {
+    const full = "The fights land. The missions repeat themselves before the campaign finds another idea worth chasing tonight.";
+    const reading = parseInterpretation({
+      lens: "EXECUTION",
+      standard: "ABSOLUTE",
+      enjoyment: "MIXED",
+      execution: "MIXED",
+      completion: "COMPLETED",
+      impression: full,
+    });
+    expect(reading?.impression).toBe(full.slice(0, 80));
+    const empty = parseInterpretation({
+      lens: "EXECUTION",
+      standard: "ABSOLUTE",
+      enjoyment: "POSITIVE",
+      execution: "POSITIVE",
+      completion: "COMPLETED",
+      impression: "Good.",
+    });
+    expect(empty?.impression).toBeNull();
+    const prompt = interpretationPrompt({ title: "Ace", body: "The missions repeat.", votedUp: true, playtimeMinutes: 600, earlyAccess: false });
+    expect(prompt).toContain("at most 80 characters");
+    expect(prompt).toContain("Do not invent");
   });
 
   it("leaves an unstated critic approach unset", () => {

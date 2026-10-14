@@ -466,6 +466,7 @@ model Review {
   id           String       @id @default(cuid())
   evaluationId String       @unique
   title        String?
+  impression   String?
   body         String
   source       ReviewSource @default(INTERNAL)
 

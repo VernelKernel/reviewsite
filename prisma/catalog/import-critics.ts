@@ -186,6 +186,7 @@ async function main() {
             review: {
               create: {
                 body: "",
+                impression: reading.impression,
                 source: "IMPORTED",
                 importSourceName: outlet.name,
                 importSourceUrl: reviewUrl,

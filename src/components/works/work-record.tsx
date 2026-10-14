@@ -274,6 +274,7 @@ export function toReview(
     review: evaluation.review
       ? {
           title: evaluation.review.title,
+          impression: evaluation.review.impression,
           body: evaluation.review.body,
           source: evaluation.review.source,
           importSourceName: evaluation.review.importSourceName,

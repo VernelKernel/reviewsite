@@ -25,6 +25,10 @@ export const gameNativeTheme: Theme = {
       positiveSoft: "#E5F6EC",
       cautionSoft: "#FBF1E4",
       negativeSoft: "#FDE8EE",
+      chartStage: "#163056",
+      chartStageEnd: "#0E1C34",
+      chartGrid: "#D3DCE6",
+      chartLabel: "#F4F6F8",
     },
     dark: {
       canvas: "#101318",
@@ -46,6 +50,10 @@ export const gameNativeTheme: Theme = {
       positiveSoft: "#13281C",
       cautionSoft: "#2E2212",
       negativeSoft: "#35141C",
+      chartStage: "#163056",
+      chartStageEnd: "#0E1C34",
+      chartGrid: "#D3DCE6",
+      chartLabel: "#F4F6F8",
     },
   },
   typography: {

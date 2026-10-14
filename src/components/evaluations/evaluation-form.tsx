@@ -55,6 +55,7 @@ export function EvaluationForm({
     ownership: string;
     platformId: string;
     reviewTitle: string;
+    impression: string;
     reviewBody: string;
     imported: boolean;
     importSourceName: string;
@@ -65,6 +66,7 @@ export function EvaluationForm({
 }) {
   const action = saveEvaluation.bind(null, workType, slug);
   const [state, formAction] = useActionState(action, {} as ActionState);
+  const [impression, setImpression] = useState(defaults?.impression ?? "");
   const [observations, setObservations] = useState<Observation[]>(
     defaults?.observations.length
       ? defaults.observations
@@ -208,6 +210,17 @@ export function EvaluationForm({
             This text was written somewhere else
             <small>Imported reviews stay marked as imported.</small>
           </span>
+        </label>
+        <label className="field">
+          <span>Overall impression</span>
+          <input
+            name="impression"
+            maxLength={80}
+            value={impression}
+            onChange={(event) => setImpression(event.target.value)}
+            placeholder="Two short clauses are enough."
+          />
+          <p className="meta">{impression.length}/80. One line someone could quote. Leave it blank if you would rather write the review.</p>
         </label>
         <label className="field">
           <span>Title, optional</span>

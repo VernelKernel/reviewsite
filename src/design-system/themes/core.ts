@@ -25,6 +25,10 @@ export const coreTheme: Theme = {
       positiveSoft: "#E5F4EC",
       cautionSoft: "#FBF3DE",
       negativeSoft: "#FBECEA",
+      chartStage: "#1B3A5C",
+      chartStageEnd: "#10243C",
+      chartGrid: "#D5DEE6",
+      chartLabel: "#F2F6FA",
     },
     dark: {
       canvas: "#121417",
@@ -46,6 +50,10 @@ export const coreTheme: Theme = {
       positiveSoft: "#163226",
       cautionSoft: "#33280F",
       negativeSoft: "#3A1C1A",
+      chartStage: "#1B3A5C",
+      chartStageEnd: "#10243C",
+      chartGrid: "#D5DEE6",
+      chartLabel: "#F2F6FA",
     },
   },
   typography: {

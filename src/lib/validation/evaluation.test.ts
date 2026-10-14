@@ -39,6 +39,15 @@ describe("evaluation validation", () => {
     expect(result.ok).toBe(false);
   });
 
+  it("keeps an impression inside 80 characters", () => {
+    const impression = "The fights land. The missions start to repeat.";
+    const result = parseEvaluationForm(form({ ...base, impression }));
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.data.impression).toBe(impression);
+    const tooLong = parseEvaluationForm(form({ ...base, impression: "x".repeat(81) }));
+    expect(tooLong.ok).toBe(false);
+  });
+
   it("requires pasted prose when the review is imported", () => {
     const result = parseEvaluationForm(form({ ...base, reviewBody: "", imported: "on" }));
     expect(result.ok).toBe(false);
