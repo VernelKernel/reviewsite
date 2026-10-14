@@ -63,6 +63,16 @@ export async function ensureReviewerProfile(userId: string, displayName: string)
   return existing;
 }
 
+function sessionCookieOptions(maxAge: number) {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge,
+  };
+}
+
 export async function openSession(userId: string) {
   const token = randomBytes(32).toString("base64url");
   await prisma.session.create({
@@ -73,13 +83,16 @@ export async function openSession(userId: string) {
     },
   });
   const store = await cookies();
-  store.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: THIRTY_DAYS_MS / 1000,
-  });
+  store.set(SESSION_COOKIE, token, sessionCookieOptions(THIRTY_DAYS_MS / 1000));
+}
+
+export async function closeSession() {
+  const store = await cookies();
+  const token = store.get(SESSION_COOKIE)?.value;
+  if (token) {
+    await prisma.session.deleteMany({ where: { tokenHash: hashToken(token) } });
+  }
+  store.set(SESSION_COOKIE, "", sessionCookieOptions(0));
 }
 
 export async function establishReviewer(input: { email: string; displayName: string }) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ownershipFromSteam, parseSteamPersona, parseSteamReviews, playtimeBucket, reviewPageState, reviewsStillNeeded, selectSteamReviews, steamReviewUrl } from "./reviews";
+import { ownershipFromSteam, parseSteamPersona, parseSteamReviews, playtimeBucket, reviewPageState, reviewsStillNeeded, sampleSteamReviews, selectSteamReviews, steamReviewUrl, type SteamReview } from "./reviews";
 
 describe("steam review import", () => {
   it("keeps the review text, author, and playtime, and drops the rest of the payload", () => {
@@ -56,6 +56,26 @@ describe("steam review import", () => {
       80,
     );
     expect(selected.map((review) => review.recommendationId)).toEqual(["2"]);
+  });
+
+  it("does not count an already imported review toward the sample", () => {
+    const body = "x".repeat(80);
+    const review = (id: string): SteamReview => ({
+      recommendationId: id,
+      steamId: id,
+      body,
+      language: "english",
+      votedUp: true,
+      createdAt: null,
+      playtimeMinutes: null,
+      steamPurchase: true,
+      receivedForFree: false,
+      earlyAccess: false,
+    });
+    const reviews = [review("1"), review("2"), review("3"), review("4"), review("2")];
+    expect(selectSteamReviews(reviews, 2, 80, new Set(["1"])).map((item) => item.steamId)).toEqual(["2", "3"]);
+    expect(sampleSteamReviews(reviews, 2, 80, new Set(["1"]), () => 0).map((item) => item.steamId)).toEqual(["4", "3"]);
+    expect(sampleSteamReviews(reviews, 8, 80, new Set(["1"])).map((item) => item.steamId)).toEqual(["2", "3", "4"]);
   });
 
   it("keeps paging only while a page still has reviews", () => {

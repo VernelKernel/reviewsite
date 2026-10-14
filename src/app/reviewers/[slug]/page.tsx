@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { FollowReviewerButton } from "@/components/comparison/follow-reviewer-button";
 import { distributionLabel } from "@/lib/aggregation/landscape";
-import { lensLabel, reviewHref, standardLabel, workHref } from "@/lib/domain/labels";
+import { getCurrentUser } from "@/lib/auth/session";
+import { prisma } from "@/lib/db/client";
+import { lensLabel, reviewHref, reviewerCompareHref, standardLabel, workHref } from "@/lib/domain/labels";
 import { getReviewer } from "@/lib/works/queries";
 import { landscapeFor } from "@/lib/works/present";
 
@@ -27,6 +30,15 @@ export default async function ReviewerPage({ params }: { params: Promise<{ slug:
   const { slug } = await params;
   const reviewer = await getReviewer(slug);
   if (!reviewer) notFound();
+  const viewer = await getCurrentUser();
+  const isSelf = viewer?.profile?.id === reviewer.id;
+  const following = viewer && !isSelf
+    ? Boolean(
+        await prisma.followedReviewer.findUnique({
+          where: { userId_reviewerId: { userId: viewer.id, reviewerId: reviewer.id } },
+        }),
+      )
+    : false;
   const steamProfile = steamProfileFromBio(reviewer.bio);
   const bio = steamProfile ? null : reviewer.bio;
 
@@ -34,6 +46,21 @@ export default async function ReviewerPage({ params }: { params: Promise<{ slug:
     <main className="page shell">
       <p className="kicker">Reviewer</p>
       <h1>{reviewer.displayName}</h1>
+      {viewer && !isSelf ? (
+        <div className="hero-actions">
+          <FollowReviewerButton reviewerId={reviewer.id} following={following} />
+          {following ? (
+            <a className="btn btn-secondary" href={reviewerCompareHref(reviewer.slug)}>
+              Compare evaluations
+            </a>
+          ) : null}
+        </div>
+      ) : null}
+      {!viewer ? (
+        <p className="meta" style={{ marginTop: "1rem" }}>
+          <a href="/login">Sign in</a> to follow this reviewer.
+        </p>
+      ) : null}
       {bio ? (
         <p className="lede" style={{ marginTop: "1rem" }}>
           {bio}

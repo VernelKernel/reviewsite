@@ -93,6 +93,10 @@ export function reviewerHref(slug: string): string {
   return `/reviewers/${slug}`;
 }
 
+export function reviewerCompareHref(slug: string): string {
+  return `/reviewers/${slug}/compare`;
+}
+
 export function stanceClass(stance: string): string {
   if (stance === "POSITIVE") return "stance stance-positive";
   if (stance === "NEGATIVE") return "stance stance-negative";

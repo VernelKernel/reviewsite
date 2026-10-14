@@ -658,6 +658,7 @@ A User can:
 * manage preferences
 * save works
 * follow works
+* follow reviewer profiles
 * submit evaluations
 * manage their Reviewer Profile
 
@@ -1540,6 +1541,18 @@ Following is private user state unless explicitly exposed.
 
 ---
 
+# 55a. Followed Reviewers
+
+A User may follow a Reviewer Profile.
+
+Following a reviewer lets later readings place that person’s published evaluations beside the follower’s own. It does not create a mutual friendship, a public follower count, or a stored match score.
+
+A User does not follow their own Reviewer Profile.
+
+Following is private user state unless explicitly exposed. Account removal deletes the follows that user created. Follows other people created toward a remaining public profile stay with that profile.
+
+---
+
 # 56. User Preferences
 
 Preferences belong to User.
@@ -1574,7 +1587,7 @@ There is only:
 
 A User can access the same account from multiple devices.
 
-The same Evaluation, Saved Work, Followed Work, and Preferences must resolve to the same persistent state.
+The same Evaluation, Saved Work, Followed Work, Followed Reviewer, and Preferences must resolve to the same persistent state.
 
 ---
 
@@ -1689,6 +1702,8 @@ The following rules are mandatory.
 * Authentication identities belong to Users.
 * A User may have multiple Sessions.
 * A User may have zero or one Reviewer Profile.
+* A User does not follow their own Reviewer Profile.
+* Following a reviewer is private and does not change published evaluations.
 
 ## Reviewer
 

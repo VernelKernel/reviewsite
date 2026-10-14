@@ -4,11 +4,11 @@ export const NEWEST_DAYS = 30;
 export const INITIAL_ANCHOR_LAG_DAYS = 0;
 export const REVIEWS_PER_GAME = 8;
 export const MIN_REVIEW_CHARS = 80;
-/** Games under this many evaluations are left for the separate backfill. */
-export const THIN_EVALUATION_LIMIT = 4;
-export const BACKFILL_MIN_REVIEW_CHARS = 40;
-export const BACKFILL_PAGES = 5;
+/** Audience readings the backfill gathers per game. The catalog run stays at REVIEWS_PER_GAME. */
+export const AUDIENCE_SAMPLE_TARGET = 400;
 export const BACKFILL_PAGE_SIZE = 100;
+/** Safety cap while walking Steam's recent feed. The cursor ending stops the walk sooner. */
+export const BACKFILL_MAX_PAGES = 1000;
 export const RECENT_START_DAYS = 60;
 export const RECENT_END_DAYS = 100;
 export const SETTLED_START_DAYS = 120;

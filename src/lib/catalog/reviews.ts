@@ -115,16 +115,58 @@ export function reviewPageState(payload: unknown): { cursor: string | null; tota
   return { cursor: reviews > 0 && cursor.length > 0 ? cursor : null, total };
 }
 
-export function selectSteamReviews(reviews: SteamReview[], limit: number, minChars: number): SteamReview[] {
+function isImportableSteamReview(
+  review: SteamReview,
+  minChars: number,
+  seen: Set<string>,
+  exclude?: ReadonlySet<string>,
+): boolean {
+  if (seen.has(review.steamId) || exclude?.has(review.steamId)) return false;
+  if (review.language !== "english") return false;
+  if (review.body.length < minChars) return false;
+  return true;
+}
+
+export function selectSteamReviews(
+  reviews: SteamReview[],
+  limit: number,
+  minChars: number,
+  exclude?: ReadonlySet<string>,
+): SteamReview[] {
+  if (limit <= 0) return [];
   const chosen: SteamReview[] = [];
   const seen = new Set<string>();
   for (const review of reviews) {
-    if (seen.has(review.steamId)) continue;
-    if (review.language !== "english") continue;
-    if (review.body.length < minChars) continue;
+    if (!isImportableSteamReview(review, minChars, seen, exclude)) continue;
     seen.add(review.steamId);
     chosen.push(review);
     if (chosen.length >= limit) break;
+  }
+  return chosen;
+}
+
+/** Uniform sample across the feed. Already imported reviews are skipped before they count toward the limit. */
+export function sampleSteamReviews(
+  reviews: SteamReview[],
+  limit: number,
+  minChars: number,
+  exclude?: ReadonlySet<string>,
+  random: () => number = Math.random,
+): SteamReview[] {
+  if (limit <= 0) return [];
+  const chosen: SteamReview[] = [];
+  const seen = new Set<string>();
+  let qualifying = 0;
+  for (const review of reviews) {
+    if (!isImportableSteamReview(review, minChars, seen, exclude)) continue;
+    seen.add(review.steamId);
+    qualifying += 1;
+    if (chosen.length < limit) {
+      chosen.push(review);
+      continue;
+    }
+    const slot = Math.floor(random() * qualifying);
+    if (slot < limit) chosen[slot] = review;
   }
   return chosen;
 }

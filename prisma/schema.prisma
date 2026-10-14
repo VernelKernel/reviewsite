@@ -190,6 +190,14 @@ enum CatalogSlot {
   GENRE_DEBT
 }
 
+enum AccountDeletionReason {
+  NOT_USING
+  PRIVACY
+  HARD_TO_USE
+  NEW_ACCOUNT
+  OTHER
+}
+
 model User {
   id            String      @id @default(cuid())
   email         String      @unique
@@ -202,11 +210,13 @@ model User {
   identities    AuthenticationIdentity[]
   sessions      Session[]
   preferences   UserPreference?
-  savedWorks    SavedWork[]
-  followedWorks FollowedWork[]
+  savedWorks         SavedWork[]
+  followedWorks      FollowedWork[]
+  followedReviewers  FollowedReviewer[]
   reports              Report[]            @relation("ReportAuthor")
   intakes              Intake[]
   verificationTokens   VerificationToken[]
+  emailLoginCodes      EmailLoginCode[]
 }
 
 model AuthenticationIdentity {
@@ -259,6 +269,7 @@ model ReviewerProfile {
 
   user        User         @relation(fields: [userId], references: [id], onDelete: Restrict)
   evaluations Evaluation[]
+  followedBy  FollowedReviewer[]
 }
 
 model Work {
@@ -565,6 +576,18 @@ model FollowedWork {
   @@index([workId])
 }
 
+model FollowedReviewer {
+  userId     String
+  reviewerId String
+  createdAt  DateTime @default(now())
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewer ReviewerProfile @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@id([userId, reviewerId])
+  @@index([reviewerId])
+}
+
 model Report {
   id           String       @id @default(cuid())
   reporterId   String
@@ -681,6 +704,29 @@ model Intake {
   @@index([userId])
   @@index([expiresAt])
   @@index([normalizedTitle, workType])
+}
+
+model EmailLoginCode {
+  id                 String    @id @default(cuid())
+  userId             String
+  codeHash           String
+  pendingDisplayName String?
+  expiresAt          DateTime
+  attemptCount       Int       @default(0)
+  usedAt             DateTime?
+  createdAt          DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model AccountDeletionFeedback {
+  id        String                 @id @default(cuid())
+  reason    AccountDeletionReason
+  otherText String?
+  createdAt DateTime               @default(now())
 }
 
 model VerificationToken {

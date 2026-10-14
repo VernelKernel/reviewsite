@@ -51,7 +51,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <a className="skip-link" href="#content">
             Skip to content
           </a>
-          <SiteHeader mood={preferredMood} mode={preferredMode} editor={user?.role === "ADMIN" || user?.role === "EDITOR"} />
+          <SiteHeader
+            mood={preferredMood}
+            mode={preferredMode}
+            account={
+              user
+                ? {
+                    displayName: user.profile?.displayName ?? "Account",
+                    reviewerSlug: user.profile?.slug ?? null,
+                    editor: user.role === "ADMIN" || user.role === "EDITOR",
+                  }
+                : null
+            }
+          />
           <div id="content">{children}</div>
           <SiteFooter />
           <CompareTray />

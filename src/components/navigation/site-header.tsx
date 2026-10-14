@@ -1,7 +1,8 @@
 import { AppearanceControl } from "./appearance-control";
 import { NavLinks } from "./nav-links";
+import { SiteMenu, type SiteMenuAccount } from "./site-menu";
 
-export function SiteHeader({ mood, mode, editor = false }: { mood: string; mode: string; editor?: boolean }) {
+export function SiteHeader({ mood, mode, account = null }: { mood: string; mode: string; account?: SiteMenuAccount | null }) {
   return (
     <header className="site-header">
       <div className="shell header-inner">
@@ -20,12 +21,8 @@ export function SiteHeader({ mood, mode, editor = false }: { mood: string; mode:
               Search
             </button>
           </form>
-          {editor ? (
-            <a className="btn btn-ghost" href="/admin/outlets">
-              Outlets
-            </a>
-          ) : null}
           <AppearanceControl mood={mood} mode={mode} />
+          <SiteMenu account={account} />
         </div>
       </div>
     </header>

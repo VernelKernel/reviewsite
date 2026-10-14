@@ -1,11 +1,18 @@
 import { notFound } from "next/navigation";
 import type { WorkType } from "@/generated/prisma/client";
 import { CompareButton } from "@/components/comparison/compare-controls";
+import { AudiencePlacementView } from "@/components/comparison/audience-placement";
+import { CriticAlignmentPanel } from "@/components/comparison/critic-alignment-panel";
+import { FollowedOnWork } from "@/components/comparison/followed-on-work";
 import { PopulationGauges } from "@/components/evaluations/population-gauges";
 import { ReviewLandscapeView } from "@/components/evaluations/review-landscape";
 import { ReceptionColumns } from "@/components/works/reception-columns";
 import { toReview } from "@/components/works/work-record";
 import { splitLandscapes } from "@/lib/aggregation/landscape";
+import { alignCritics, type CriticEvaluation } from "@/lib/comparison/critic-alignment";
+import { placeAudience, type PlacementEvaluation } from "@/lib/comparison/placement";
+import { getCurrentUser } from "@/lib/auth/session";
+import { prisma } from "@/lib/db/client";
 import {
   audienceHref,
   completionLabel,
@@ -17,7 +24,7 @@ import {
   workTypeLabel,
 } from "@/lib/domain/labels";
 import { filterEvaluations } from "@/lib/works/filter-evaluations";
-import { getWork, worksSharingCreator } from "@/lib/works/queries";
+import { getWork, worksSharingCreator, type FullWork } from "@/lib/works/queries";
 import {
   landscapesFor,
   primaryArt,
@@ -74,6 +81,43 @@ export async function WorkPage({
   if (platform) shareParams.set("platform", platform);
   const shareQuery = shareParams.toString();
   const reviews = filtered.map((evaluation) => toReview(work.workType, work.slug, evaluation));
+  const viewer = await getCurrentUser();
+  const viewerId = viewer?.profile?.id;
+  const viewerEvaluation = viewerId
+    ? work.evaluations.find((evaluation) => evaluation.population === "AUDIENCE" && evaluation.reviewer.id === viewerId)
+    : undefined;
+  const viewerInFilter = viewerEvaluation ? filtered.some((evaluation) => evaluation.id === viewerEvaluation.id) : false;
+  const audiencePlacement =
+    viewerEvaluation && viewerInFilter
+      ? placeAudience(
+          toPlacement(viewerEvaluation),
+          filtered.filter((evaluation) => evaluation.population === "AUDIENCE").map(toPlacement),
+        )
+      : null;
+  const criticRows = work.evaluations.filter((evaluation) => evaluation.population === "CRITIC").map(toCritic);
+  const criticMetrics = viewerEvaluation && criticRows.length > 0 ? alignCritics(toPlacement(viewerEvaluation), criticRows) : [];
+  const followedIds = viewer
+    ? new Set(
+        (
+          await prisma.followedReviewer.findMany({
+            where: { userId: viewer.id },
+            select: { reviewerId: true },
+          })
+        ).map((row) => row.reviewerId),
+      )
+    : new Set<string>();
+  const followedHere = work.evaluations
+    .filter((evaluation) => followedIds.has(evaluation.reviewer.id))
+    .map((evaluation) => ({
+      reviewerSlug: evaluation.reviewer.slug,
+      displayName: evaluation.reviewer.displayName,
+      workType: work.workType,
+      workSlug: work.slug,
+      enjoyment: evaluation.enjoyment,
+      execution: evaluation.execution,
+      completion: evaluation.completion,
+    }))
+    .sort((left, right) => left.displayName.localeCompare(right.displayName));
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": work.workType === "MOVIE" ? "Movie" : "VideoGame",
@@ -168,12 +212,15 @@ export async function WorkPage({
         platform={platform}
         platforms={platformOptions}
       />
+      <FollowedOnWork evaluations={followedHere} />
       <ReviewLandscapeView
         critics={landscape.critics}
         audience={landscape.audience}
         filteredNote={filteredNote}
         share={{ title: work.title, path: shareQuery ? `${base}?${shareQuery}` : base }}
       />
+      {audiencePlacement ? <AudiencePlacementView placement={audiencePlacement} /> : null}
+      {criticMetrics.length > 0 ? <CriticAlignmentPanel metrics={criticMetrics} /> : null}
       <ReceptionColumns
         critics={reviews.filter((review) => review.population === "CRITIC")}
         audience={reviews.filter((review) => review.population !== "CRITIC")}
@@ -277,4 +324,38 @@ function href(
   if (value) params.set(key, value);
   const query = params.toString();
   return query ? `${base}?${query}` : base;
+}
+
+function toPlacement(evaluation: FullWork["evaluations"][number]): PlacementEvaluation {
+  return {
+    reviewerId: evaluation.reviewer.id,
+    enjoyment: evaluation.enjoyment,
+    execution: evaluation.execution,
+    lens: evaluation.lens,
+    standard: evaluation.standard,
+    judgments: [...evaluation.judgments]
+      .sort((left, right) => left.dimension.sortOrder - right.dimension.sortOrder)
+      .map((judgment) => ({
+        slug: judgment.dimension.slug,
+        name: judgment.dimension.name,
+        stance: judgment.stance,
+      })),
+  };
+}
+
+function toCritic(evaluation: FullWork["evaluations"][number]): CriticEvaluation {
+  const imported = evaluation.review?.importSourceName?.trim();
+  return {
+    outlet: imported || evaluation.reviewer.displayName,
+    reviewerName: evaluation.reviewer.displayName,
+    enjoyment: evaluation.enjoyment,
+    execution: evaluation.execution,
+    judgments: [...evaluation.judgments]
+      .sort((left, right) => left.dimension.sortOrder - right.dimension.sortOrder)
+      .map((judgment) => ({
+        slug: judgment.dimension.slug,
+        name: judgment.dimension.name,
+        stance: judgment.stance,
+      })),
+  };
 }

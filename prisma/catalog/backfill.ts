@@ -1,17 +1,11 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../../src/generated/prisma/client";
-import {
-  BACKFILL_MIN_REVIEW_CHARS,
-  BACKFILL_PAGE_SIZE,
-  BACKFILL_PAGES,
-  REVIEWS_PER_GAME,
-  THIN_EVALUATION_LIMIT,
-} from "../../src/lib/catalog/config";
+import { AUDIENCE_SAMPLE_TARGET, BACKFILL_MAX_PAGES, BACKFILL_PAGE_SIZE, MIN_REVIEW_CHARS } from "../../src/lib/catalog/config";
 import { catalogIsDryRun } from "../../src/lib/catalog/run-mode";
 import { reviewsStillNeeded } from "../../src/lib/catalog/reviews";
 import { assertGeminiReady } from "./gemini";
-import { ensureEvaluationTaxonomy, importSteamEvaluations, loadSteamReviews } from "./import-reviews";
+import { audienceSteamIds, ensureEvaluationTaxonomy, importSteamEvaluations, loadSteamReviews, type ReviewLoadOptions } from "./import-reviews";
 
 const dryRun = catalogIsDryRun(process.argv, process.env);
 const prisma = new PrismaClient({
@@ -28,34 +22,42 @@ async function main() {
   const pc = await prisma.platform.findUnique({ where: { slug: "pc" } });
   const works = await prisma.work.findMany({
     where: { steamAppId: { not: null }, workType: "GAME" },
-    include: { _count: { select: { evaluations: true } } },
+    include: { _count: { select: { evaluations: { where: { population: "AUDIENCE" } } } } },
   });
-  const thin = works
-    .filter((work) => work.steamAppId !== null && work._count.evaluations < THIN_EVALUATION_LIMIT)
+  const pending = works
+    .filter((work) => work.steamAppId !== null && work._count.evaluations < AUDIENCE_SAMPLE_TARGET)
     .sort((left, right) => left._count.evaluations - right._count.evaluations || left.title.localeCompare(right.title));
 
   console.log(
     dryRun
       ? "Dry run. The database will not be changed."
-      : `Backfill will read further through Steam for games under ${THIN_EVALUATION_LIMIT} evaluations.`,
+      : `Backfill will sample Steam reviews until each game has ${AUDIENCE_SAMPLE_TARGET} audience evaluations.`,
   );
-  console.log(`${thin.length} games have fewer than ${THIN_EVALUATION_LIMIT} evaluations.`);
+  console.log(`${pending.length} games are under ${AUDIENCE_SAMPLE_TARGET} audience evaluations.`);
 
   let imported = 0;
-  for (const work of thin) {
+  for (const work of pending) {
     const steamAppId = work.steamAppId;
     if (steamAppId === null) continue;
-    const options = {
-      pages: BACKFILL_PAGES,
+    const limit = reviewsStillNeeded(work._count.evaluations, AUDIENCE_SAMPLE_TARGET);
+    if (limit === 0) continue;
+    const excludeSteamIds = await audienceSteamIds(prisma, work.id);
+    const options: ReviewLoadOptions = {
+      pages: BACKFILL_MAX_PAGES,
       pageSize: BACKFILL_PAGE_SIZE,
-      minChars: BACKFILL_MIN_REVIEW_CHARS,
-      limit: reviewsStillNeeded(work._count.evaluations, REVIEWS_PER_GAME),
+      minChars: MIN_REVIEW_CHARS,
+      limit,
+      excludeSteamIds,
+      spread: true,
     };
     if (dryRun) {
       try {
         const loaded = await loadSteamReviews(steamAppId, options);
         const total = loaded.total === null ? "an unknown number of" : String(loaded.total);
-        console.log(`${work.title}: ${work._count.evaluations} evaluations, ${loaded.reviews.length} readable reviews out of ${total} on Steam.`);
+        const cap = loaded.capped ? " Scan stopped at the page cap, so this sample is the newest portion of the feed." : "";
+        console.log(
+          `${work.title}: ${work._count.evaluations} audience evaluations, ${loaded.reviews.length} reviews sampled out of ${total} on Steam.${cap}`,
+        );
       } catch (error) {
         console.error(`Could not read reviews for ${work.title}: ${error instanceof Error ? error.message : "request failed"}`);
       }
@@ -67,9 +69,9 @@ async function main() {
       options,
     );
     imported += added;
-    console.log(`${work.title}: ${work._count.evaluations} before, ${added} imported.`);
+    console.log(`${work.title}: ${work._count.evaluations} audience evaluations before, ${added} imported.`);
   }
-  if (!dryRun) console.log(`Imported ${imported} evaluations across ${thin.length} thin games.`);
+  if (!dryRun) console.log(`Imported ${imported} evaluations across ${pending.length} games.`);
 }
 
 main()

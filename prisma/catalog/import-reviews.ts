@@ -8,6 +8,7 @@ import {
   parseSteamReviews,
   playtimeBucket,
   reviewPageState,
+  sampleSteamReviews,
   selectSteamReviews,
   steamProfileUrl,
   steamReviewUrl,
@@ -108,6 +109,10 @@ export type ReviewLoadOptions = {
   pageSize: number;
   minChars: number;
   limit: number;
+  /** Steam ids that already have an audience evaluation. They do not count toward the limit. */
+  excludeSteamIds?: ReadonlySet<string>;
+  /** Walk the recent feed and keep a uniform sample. The catalog run leaves this off and takes the newest reviews. */
+  spread?: boolean;
 };
 
 const defaultLoad: ReviewLoadOptions = {
@@ -133,7 +138,7 @@ function reviewPageUrl(appId: number, pageSize: number, cursor: string | null): 
 export async function loadSteamReviews(
   appId: number,
   options: ReviewLoadOptions,
-): Promise<{ reviews: SteamReview[]; total: number | null }> {
+): Promise<{ reviews: SteamReview[]; total: number | null; capped: boolean }> {
   const gathered: SteamReview[] = [];
   let cursor: string | null = null;
   let total: number | null = null;
@@ -142,11 +147,42 @@ export async function loadSteamReviews(
     const state = reviewPageState(payload);
     if (total === null) total = state.total;
     gathered.push(...parseSteamReviews(payload));
-    if (selectSteamReviews(gathered, options.limit, options.minChars).length >= options.limit) break;
-    if (!state.cursor || state.cursor === cursor) break;
+    const reached =
+      !options.spread &&
+      selectSteamReviews(gathered, options.limit, options.minChars, options.excludeSteamIds).length >= options.limit;
+    if (reached || !state.cursor || state.cursor === cursor) {
+      return { reviews: chooseSteamReviews(gathered, options), total, capped: false };
+    }
     cursor = state.cursor;
   }
-  return { reviews: selectSteamReviews(gathered, options.limit, options.minChars), total };
+  return { reviews: chooseSteamReviews(gathered, options), total, capped: gathered.length > 0 };
+}
+
+function chooseSteamReviews(reviews: SteamReview[], options: ReviewLoadOptions): SteamReview[] {
+  if (options.spread) return sampleSteamReviews(reviews, options.limit, options.minChars, options.excludeSteamIds);
+  return selectSteamReviews(reviews, options.limit, options.minChars, options.excludeSteamIds);
+}
+
+export async function audienceSteamIds(prisma: PrismaClient, workId: string): Promise<Set<string>> {
+  const evaluations = await prisma.evaluation.findMany({
+    where: { workId, population: "AUDIENCE" },
+    select: {
+      reviewer: {
+        select: {
+          user: {
+            select: {
+              identities: { where: { provider: "STEAM" }, select: { providerAccountId: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+  const ids = new Set<string>();
+  for (const evaluation of evaluations) {
+    for (const identity of evaluation.reviewer.user.identities) ids.add(identity.providerAccountId);
+  }
+  return ids;
 }
 
 export async function importSteamEvaluations(
@@ -156,7 +192,8 @@ export async function importSteamEvaluations(
 ): Promise<number> {
   let selected: SteamReview[];
   try {
-    selected = (await loadSteamReviews(input.steamAppId, options)).reviews;
+    const excludeSteamIds = options.excludeSteamIds ?? (await audienceSteamIds(prisma, input.workId));
+    selected = (await loadSteamReviews(input.steamAppId, { ...options, excludeSteamIds })).reviews;
   } catch (error) {
     console.error(`Could not read reviews for ${input.title}: ${error instanceof Error ? error.message : "request failed"}`);
     return 0;
@@ -205,6 +242,7 @@ export async function importSteamEvaluations(
           review: {
             create: {
               body: review.body,
+              impression: reading.impression,
               source: "IMPORTED",
               importSourceName: "Steam",
               importSourceUrl: steamReviewUrl(review.steamId, input.steamAppId),
