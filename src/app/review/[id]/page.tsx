@@ -71,10 +71,14 @@ export default async function ReviewChartPage({ params }: { params: Promise<{ id
 }
 
 function StanceMeter({ label, stance }: { label: string; stance: string }) {
+  const icon = label === "Enjoyment" ? "heart" : label === "Execution" ? "gear" : null;
   return (
     <div className="personal-reading">
       <div className="personal-reading-head">
-        <strong>{label}</strong>
+        <strong>
+          {icon ? <i className="flair-icon" data-icon={icon} aria-hidden="true" /> : null}
+          {label}
+        </strong>
         <span className={stanceClass(stance)}>{stanceLabel[stance] ?? stance}</span>
       </div>
       <div className="personal-meter" aria-hidden="true">

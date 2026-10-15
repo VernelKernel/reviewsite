@@ -43,7 +43,7 @@ At a 1440px viewport on Core, measured on this layout: the shell is about `1267p
 ## Regions, top to bottom
 
 ```text
-[ poster 11rem ]   [ title, synopsis, Evaluate     ] [ fact card, up to 26rem ]
+[ poster 11rem ]   [ title and synopsis, up to 46rem ] [ facts, left border, up to 22rem ]
 [ sticky nav    ]  [ filters, charts, panels, reviews across the main column ]
 ```
 
@@ -55,12 +55,12 @@ The rail is as tall as the main column, so the nav can stick. The poster scrolls
 
 ### Intro
 
-`.work-intro` is a wrapping flex row, `justify-content: space-between`.
+`.work-intro` is a wrapping flex row, `justify-content: flex-start`. The synopsis and the facts sit next to each other. Empty space stays to the right of the facts. Do not pin the facts to the far edge with `space-between`.
 
-- Copy: `flex: 1 1 22rem`, `max-width: 38rem`. Kicker is the work type (`Game`). The title is an `h1` at `--text-h1`, not `--text-display`. The synopsis is `.lede`, also capped at `38rem`. One primary button, `Evaluate this work`, sits under the synopsis and does not stretch.
-- Fact card: `flex: 0 1 26rem`, `width: min(100%, 26rem)`. Rows are Released, Creators, Genres, On Steam, Platforms. Omit a row when the work has no value, and omit the card when none exist. Labels are a `5.5rem` column. Steam links are metadata size under the reception line.
+- Copy: `flex: 1 1 28rem`, `max-width: 46rem`. Kicker is the work type (`Game`). The title is an `h1` at `--text-h1`, not `--text-display`. The synopsis is `.lede` and uses that same column. One primary button, `Evaluate this work`, sits under the synopsis and does not stretch.
+- Facts: `flex: 0 1 22rem`, `width: min(100%, 22rem)`. No fill, radius, or shadow. The only container edge is a left border (`--color-border-strong`) with padding on that side. Rows are Released, Creators, Genres, On Steam, Platforms. Omit a row when the work has no value, and omit the block when none exist. Labels are a `5.5rem` column. Steam links are metadata size under the reception line.
 
-The card is only as tall as its rows. It must not stretch to match the poster, and the poster must not stretch to match the card.
+The facts block is only as tall as its rows. It must not stretch to match the poster, and the poster must not stretch to match the facts.
 
 ### Navigation
 
@@ -115,14 +115,15 @@ Full width of `.work-main`. It is not pulled out to the page grid, and it does n
 
 ## Breakpoints
 
-`1100px`: `.work-intro` becomes one column. The fact card drops under the copy at `min(100%, 28rem)`. The rail stays beside it.
+`1100px`: `.work-intro` becomes one column. The facts drop under the copy at `min(100%, 28rem)`, and the left border becomes a top border. The rail stays beside it.
 
 `860px`: `.work-frame` stacks. The poster is `min(11rem, 46%)`. The nav is a horizontal scroller (`position: static`), and `.work-nav-action` is `width: auto` so Compare does not force a full-width button. Charts and panels stack. `.reading-measure` and `.reception-columns-single` lose their max-width and become full width of the stacked column. Fact rows keep the `5.5rem` label column.
 
 ## Do not
 
 - Do not give the overview a full-bleed hero or reuse `--hero-columns` for this page.
-- Do not make the fact card, approach lists, personal placement, related works, or a single review column the same width as the charts.
+- Do not make the facts, approach lists, personal placement, related works, or a single review column the same width as the charts.
+- Do not put the facts back in a rounded card, and do not push them to the far edge of the main column.
 - Do not stretch enjoyment/execution panels to the chart height.
 - Do not put share icons and the legend across the panel column.
 - Do not add a second work-overview component for a mood. Themes change tokens, including `--hero-ratio` and `--content-focus`.

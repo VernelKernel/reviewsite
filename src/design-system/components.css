@@ -486,14 +486,14 @@ p {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: var(--space-5) var(--space-6);
   min-width: 0;
 }
 
 .work-intro .hero-copy {
-  flex: 1 1 22rem;
-  max-width: 38rem;
+  flex: 1 1 28rem;
+  max-width: 46rem;
   padding-top: 0;
   align-items: flex-start;
 }
@@ -503,17 +503,19 @@ p {
 }
 
 .work-intro .lede {
-  max-width: 38rem;
+  max-width: none;
 }
 
 .fact-card {
-  flex: 0 1 26rem;
-  width: min(100%, 26rem);
-  padding: var(--space-4) var(--space-5);
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  flex: 0 1 22rem;
+  width: min(100%, 22rem);
+  margin: 0;
+  padding: var(--space-1) 0 var(--space-1) var(--space-5);
+  background: transparent;
+  border: 0;
+  border-left: var(--border-width) solid var(--color-border-strong);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .fact-card .steam-links {
@@ -557,7 +559,9 @@ p {
 
 .work-nav-action {
   appearance: none;
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   width: 100%;
   margin: 0;
   padding: var(--space-2) var(--space-3);
@@ -1387,8 +1391,20 @@ button.population-chip[aria-pressed="true"] {
   align-items: baseline;
 }
 
-.dist-head strong {
+.dist-head strong,
+.stance-meter-head strong,
+.personal-reading-head strong {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   font-weight: 620;
+}
+
+.dist-head .flair-icon,
+.stance-meter-head .flair-icon,
+.personal-reading-head .flair-icon {
+  width: 1.05rem;
+  height: 1.05rem;
 }
 
 .dist-bar {
@@ -2619,11 +2635,19 @@ body:has(.mockup-sheet) .page {
 }
 
 .evaluation-nav a {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   color: var(--color-text-secondary);
   text-decoration: none;
+}
+
+.evaluation-nav .flair-icon,
+.work-nav-action .flair-icon {
+  width: 1rem;
+  height: 1rem;
 }
 
 .evaluation-nav a:hover {
@@ -2863,6 +2887,8 @@ body:has(.mockup-sheet) .page {
   background-color: currentColor;
   -webkit-mask: var(--flair-icon) center / contain no-repeat;
   mask: var(--flair-icon) center / contain no-repeat;
+  -webkit-mask-mode: alpha;
+  mask-mode: alpha;
 }
 
 .flair-icon[data-icon="gamepad"] { --flair-icon: url("/media/flair-icons/masks/gamepad.png"); }
@@ -2872,6 +2898,19 @@ body:has(.mockup-sheet) .page {
 .flair-icon[data-icon="lock"] { --flair-icon: url("/media/flair-icons/masks/lock.png"); }
 .flair-icon[data-icon="beacon"] { --flair-icon: url("/media/flair-icons/masks/beacon.png"); }
 .flair-icon[data-icon="warning"] { --flair-icon: url("/media/flair-icons/masks/warning.png"); }
+.flair-icon[data-icon="overview"] { --flair-icon: url("/media/flair-icons/masks/overview.png"); }
+.flair-icon[data-icon="list"] { --flair-icon: url("/media/flair-icons/masks/list.png"); }
+.flair-icon[data-icon="speech"] { --flair-icon: url("/media/flair-icons/masks/speech.png"); }
+.flair-icon[data-icon="graph"] { --flair-icon: url("/media/flair-icons/masks/graph.png"); }
+.flair-icon[data-icon="image"] { --flair-icon: url("/media/flair-icons/masks/image.png"); }
+.flair-icon[data-icon="heart"] {
+  --flair-icon: url("/media/flair-icons/masks/heart.png");
+  color: var(--color-caution);
+}
+.flair-icon[data-icon="gear"] {
+  --flair-icon: url("/media/flair-icons/masks/gear.png");
+  color: var(--color-accent);
+}
 
 .note-card h2 {
   display: flex;
@@ -3287,6 +3326,10 @@ body:has(.mockup-sheet) .page {
 
   .fact-card {
     width: min(100%, 28rem);
+    border-left: 0;
+    padding-left: 0;
+    border-top: var(--border-width) solid var(--color-border-strong);
+    padding-top: var(--space-4);
   }
 
   .evaluation-hero {

@@ -25,6 +25,7 @@ export function CompareButton({
       disabled={disabled}
       onClick={() => (included ? remove(key) : add({ workType, slug, title }))}
     >
+      {appearance === "nav" ? <i className="flair-icon" data-icon="star" aria-hidden="true" /> : null}
       {label}
     </button>
   );

@@ -218,10 +218,14 @@ export function EvaluationRecord({
 }
 
 function StanceMeter({ label, stance }: { label: string; stance: StanceName }) {
+  const icon = label === "Enjoyment" ? "heart" : label === "Execution" ? "gear" : null;
   return (
     <div className="stance-meter">
       <div className="stance-meter-head">
-        <strong>{label}</strong>
+        <strong>
+          {icon ? <i className="flair-icon" data-icon={icon} aria-hidden="true" /> : null}
+          {label}
+        </strong>
         <span className={stanceClass(stance)}>{stanceLabel[stance]}</span>
       </div>
       <div className="stance-meter-track" role="img" aria-label={`${label}: ${stanceLabel[stance]}`}>

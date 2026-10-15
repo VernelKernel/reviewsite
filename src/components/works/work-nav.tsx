@@ -19,10 +19,15 @@ export function WorkNav({ workType, slug, title }: { workType: string; slug: str
   return (
     <nav className="evaluation-nav" aria-label="On this work">
       <a href="#overview" aria-current={reviews ? undefined : "location"} onClick={() => setHash("#overview")}>
+        <i className="flair-icon" data-icon="overview" aria-hidden="true" />
         Overview
       </a>
-      <a href={detailsHref(workType, slug)}>Details</a>
+      <a href={detailsHref(workType, slug)}>
+        <i className="flair-icon" data-icon="list" aria-hidden="true" />
+        Details
+      </a>
       <a href="#reviews" aria-current={reviews ? "location" : undefined} onClick={() => setHash("#reviews")}>
+        <i className="flair-icon" data-icon="speech" aria-hidden="true" />
         Related reviews
       </a>
       <CompareButton appearance="nav" workType={workType} slug={slug} title={title} />

@@ -25,10 +25,15 @@ export function DistributionBar({
       ? emptyCaption(unit)
       : `Positive ${pct.positive}% · Mixed ${pct.mixed}% · Negative ${pct.negative}%`;
 
+  const icon = label === "Enjoyment" ? "heart" : label === "Execution" ? "gear" : null;
+
   return (
     <div className="dist">
       <div className="dist-head">
-        <strong>{label}</strong>
+        <strong>
+          {icon ? <i className="flair-icon" data-icon={icon} aria-hidden="true" /> : null}
+          {label}
+        </strong>
         <span className="meta">{countLabel(distribution.count, unit)}</span>
       </div>
       <div

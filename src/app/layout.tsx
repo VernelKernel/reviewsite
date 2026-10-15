@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Fraunces, IBM_Plex_Sans, Manrope, Source_Sans_3, Source_Serif_4, Space_Grotesk } from "next/font/google";
 import { themeStylesheet } from "@/design-system/theme-css";
+import { ThemeBoot } from "@/design-system/theme-boot";
 import { defaultMode, defaultMood } from "@/design-system/themes";
 import { isColorMode, isThemeId } from "@/design-system/theme-types";
 import { CompareProvider } from "@/components/comparison/compare-provider";
@@ -44,7 +45,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     >
       <head>
         <style dangerouslySetInnerHTML={{ __html: themeStylesheet() }} />
-        <script dangerouslySetInnerHTML={{ __html: boot }} />
+        <ThemeBoot html={boot} />
       </head>
       <body>
         <CompareProvider>
