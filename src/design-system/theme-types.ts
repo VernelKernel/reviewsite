@@ -67,6 +67,7 @@ export type Theme = {
     s8: string;
     page: string;
     contentMax: string;
+    focusMax: string;
     measure: string;
   };
   motion: {

@@ -97,8 +97,9 @@ export const cinematicArchiveTheme: Theme = {
     s6: "1.85rem",
     s7: "2.8rem",
     s8: "4.25rem",
-    page: "1.25rem",
-    contentMax: "76rem",
+    page: "clamp(1.25rem, 3vw, 3rem)",
+    contentMax: "clamp(76rem, 90vw, 116rem)",
+    focusMax: "84rem",
     measure: "66ch",
   },
   motion: {

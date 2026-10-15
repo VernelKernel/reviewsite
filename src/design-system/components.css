@@ -110,9 +110,23 @@ p {
 
 .brand {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
   text-decoration: none;
   min-width: 7rem;
+}
+
+.brand-mark {
+  display: block;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: none;
+}
+
+.brand-lockup {
+  display: flex;
+  flex-direction: column;
 }
 
 .brand:hover {
@@ -2357,7 +2371,16 @@ body:has(.mockup-sheet) .page {
 
 .evaluation-page {
   display: grid;
-  gap: var(--space-6);
+  grid-template-columns: [rail-start] calc(11rem + var(--space-7)) [main-start] minmax(0, var(--content-focus)) [main-end] minmax(0, 1fr);
+  row-gap: var(--space-6);
+}
+
+.evaluation-page > * {
+  grid-column: rail-start / main-end;
+}
+
+.evaluation-page > .share-banner {
+  grid-column: main-start / main-end;
 }
 
 .evaluation-hero {
@@ -2424,7 +2447,7 @@ body:has(.mockup-sheet) .page {
 .evaluation-board {
   display: grid;
   grid-template-columns: 11rem minmax(0, 1fr);
-  gap: var(--space-5);
+  gap: var(--space-5) var(--space-7);
   align-items: start;
 }
 
@@ -2466,11 +2489,27 @@ body:has(.mockup-sheet) .page {
   max-width: none;
 }
 
+.evaluation-cards,
+.evaluation-details,
+.evaluation-related {
+  max-width: min(76%, 58rem);
+}
+
 .evaluation-overview {
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(15rem, 0.8fr);
   gap: var(--space-4);
   align-items: start;
+}
+
+.evaluation-overview > .evaluation-stage,
+.evaluation-overview > .glance-card {
+  grid-column: 1;
+}
+
+.evaluation-overview > .evaluation-side {
+  grid-column: 2;
+  grid-row: 1 / span 2;
 }
 
 .evaluation-panel h2,
@@ -2488,6 +2527,7 @@ body:has(.mockup-sheet) .page {
 .evaluation-stage {
   display: grid;
   gap: var(--space-3);
+  margin: 0;
   padding: var(--space-4);
   border-radius: var(--radius-lg);
   background: linear-gradient(165deg, var(--color-chart-stage), var(--color-chart-stage-end));
@@ -2544,12 +2584,15 @@ body:has(.mockup-sheet) .page {
   inset: 0;
   width: 100%;
   height: 100%;
+  object-fit: contain;
   pointer-events: none;
 }
 
 .evaluation-plot .radar-chart {
   position: relative;
   z-index: 1;
+  display: block;
+  max-height: 25rem;
 }
 
 .radar-outline {
@@ -2652,6 +2695,38 @@ body:has(.mockup-sheet) .page {
   gap: var(--space-3);
 }
 
+.flair-icon {
+  display: inline-block;
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  background-color: currentColor;
+  -webkit-mask: var(--flair-icon) center / contain no-repeat;
+  mask: var(--flair-icon) center / contain no-repeat;
+}
+
+.flair-icon[data-icon="gamepad"] { --flair-icon: url("/media/flair-icons/masks/gamepad.png"); }
+.flair-icon[data-icon="clock"] { --flair-icon: url("/media/flair-icons/masks/clock.png"); }
+.flair-icon[data-icon="replay"] { --flair-icon: url("/media/flair-icons/masks/replay.png"); }
+.flair-icon[data-icon="star"] { --flair-icon: url("/media/flair-icons/masks/star.png"); }
+.flair-icon[data-icon="lock"] { --flair-icon: url("/media/flair-icons/masks/lock.png"); }
+.flair-icon[data-icon="beacon"] { --flair-icon: url("/media/flair-icons/masks/beacon.png"); }
+.flair-icon[data-icon="warning"] { --flair-icon: url("/media/flair-icons/masks/warning.png"); }
+
+.note-card h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.note-card-praise .flair-icon {
+  color: var(--color-positive);
+}
+
+.note-card-criticism .flair-icon {
+  color: var(--color-negative);
+}
+
 .note-card {
   display: grid;
   gap: var(--space-3);
@@ -2686,9 +2761,31 @@ body:has(.mockup-sheet) .page {
   background: currentColor;
 }
 
+.glance-card .glance-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-6);
+}
+
 .glance-list li {
   display: grid;
-  gap: 0.15rem;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--space-2);
+  row-gap: 0.15rem;
+  align-items: center;
+}
+
+.glance-list .flair-icon {
+  grid-row: span 2;
+  color: var(--color-text-secondary);
+}
+
+.glance-card li {
+  padding-left: 0;
+}
+
+.glance-card li::before {
+  content: none;
 }
 
 .glance-list span,
@@ -3012,9 +3109,31 @@ body:has(.mockup-sheet) .page {
   .evaluation-overview {
     grid-template-columns: 1fr;
   }
+
+  .evaluation-overview > .evaluation-stage,
+  .evaluation-overview > .glance-card,
+  .evaluation-overview > .evaluation-side {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .evaluation-cards,
+  .evaluation-details,
+  .evaluation-related {
+    max-width: none;
+  }
 }
 
 @media (max-width: 860px) {
+  .evaluation-page {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .evaluation-page > *,
+  .evaluation-page > .share-banner {
+    grid-column: 1 / -1;
+  }
+
   .evaluation-hero,
   .evaluation-board {
     grid-template-columns: 1fr;

@@ -97,8 +97,9 @@ export const editorialObservatoryTheme: Theme = {
     s6: "2.4rem",
     s7: "3.6rem",
     s8: "5.25rem",
-    page: "1.75rem",
-    contentMax: "68rem",
+    page: "clamp(1.75rem, 3.5vw, 3.5rem)",
+    contentMax: "clamp(68rem, 85vw, 102rem)",
+    focusMax: "76rem",
     measure: "70ch",
   },
   motion: {
@@ -114,6 +115,6 @@ export const editorialObservatoryTheme: Theme = {
     overlayStrength: "0",
     heroBleed: "0px",
     heroRatio: "3 / 4",
-    heroColumns: "minmax(0, 0.78fr) minmax(0, 1.22fr)",
+    heroColumns: "minmax(0, min(39%, 55svh)) minmax(0, 1fr)",
   },
 };

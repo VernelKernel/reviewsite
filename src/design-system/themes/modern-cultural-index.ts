@@ -97,8 +97,9 @@ export const modernCulturalIndexTheme: Theme = {
     s6: "1.7rem",
     s7: "2.4rem",
     s8: "3.5rem",
-    page: "1.25rem",
-    contentMax: "74rem",
+    page: "clamp(1.25rem, 3vw, 3rem)",
+    contentMax: "clamp(74rem, 90vw, 112rem)",
+    focusMax: "82rem",
     measure: "64ch",
   },
   motion: {

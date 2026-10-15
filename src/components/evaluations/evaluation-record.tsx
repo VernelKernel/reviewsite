@@ -118,26 +118,30 @@ export function EvaluationRecord({
                 </section>
               ) : null}
             </div>
+            {glance.length > 0 ? (
+              <section className="panel note-card glance-card" aria-labelledby="at-a-glance">
+                <h2 id="at-a-glance">At a glance</h2>
+                <ul className="glance-list">
+                  {glance.map((item) => (
+                    <li key={item.label}>
+                      <i className="flair-icon" data-icon={item.icon} aria-hidden="true" />
+                      <strong>{item.value}</strong>
+                      <span>{item.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
           </section>
 
-          {glance.length > 0 || strengths.length > 0 || weaknesses.length > 0 ? (
+          {strengths.length > 0 || weaknesses.length > 0 ? (
             <div className="evaluation-cards">
-              {glance.length > 0 ? (
-                <section className="panel note-card" aria-labelledby="at-a-glance">
-                  <h2 id="at-a-glance">At a glance</h2>
-                  <ul className="glance-list">
-                    {glance.map((item) => (
-                      <li key={item.label}>
-                        <strong>{item.value}</strong>
-                        <span>{item.label}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              ) : null}
               {strengths.length > 0 ? (
                 <section className="note-card note-card-praise" aria-labelledby="strengths">
-                  <h2 id="strengths">Strengths</h2>
+                  <h2 id="strengths">
+                    <i className="flair-icon" data-icon="beacon" aria-hidden="true" />
+                    Strengths
+                  </h2>
                   <ul>
                     {strengths.map((item) => (
                       <li key={item}>{item}</li>
@@ -147,7 +151,10 @@ export function EvaluationRecord({
               ) : null}
               {weaknesses.length > 0 ? (
                 <section className="note-card note-card-criticism" aria-labelledby="weaknesses">
-                  <h2 id="weaknesses">Weaknesses</h2>
+                  <h2 id="weaknesses">
+                    <i className="flair-icon" data-icon="warning" aria-hidden="true" />
+                    Weaknesses
+                  </h2>
                   <ul>
                     {weaknesses.map((item) => (
                       <li key={item}>{item}</li>
@@ -224,12 +231,14 @@ function StanceMeter({ label, stance }: { label: string; stance: StanceName }) {
   );
 }
 
-function glanceItems(evaluation: Evaluation): { value: string; label: string }[] {
-  const items: { value: string; label: string }[] = [];
-  if (evaluation.platform) items.push({ value: evaluation.platform.name, label: "Platform" });
-  if (evaluation.playtime !== "UNKNOWN") items.push({ value: playtimeLabel[evaluation.playtime], label: "Playtime" });
-  if (evaluation.completion !== "UNKNOWN") items.push({ value: completionLabel[evaluation.completion], label: "Completion" });
-  if (evaluation.lens) items.push({ value: lensLabel[evaluation.lens], label: "Lens" });
-  if (evaluation.ownership) items.push({ value: ownershipLabel[evaluation.ownership], label: "Access" });
+type GlanceItem = { value: string; label: string; icon: "gamepad" | "clock" | "replay" | "star" | "lock" };
+
+function glanceItems(evaluation: Evaluation): GlanceItem[] {
+  const items: GlanceItem[] = [];
+  if (evaluation.platform) items.push({ value: evaluation.platform.name, label: "Platform", icon: "gamepad" });
+  if (evaluation.playtime !== "UNKNOWN") items.push({ value: playtimeLabel[evaluation.playtime], label: "Playtime", icon: "clock" });
+  if (evaluation.completion !== "UNKNOWN") items.push({ value: completionLabel[evaluation.completion], label: "Completion", icon: "replay" });
+  if (evaluation.lens) items.push({ value: lensLabel[evaluation.lens], label: "Lens", icon: "star" });
+  if (evaluation.ownership) items.push({ value: ownershipLabel[evaluation.ownership], label: "Access", icon: "lock" });
   return items;
 }

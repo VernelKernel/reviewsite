@@ -97,8 +97,9 @@ export const coreTheme: Theme = {
     s6: "2rem",
     s7: "3rem",
     s8: "4.5rem",
-    page: "1.5rem",
-    contentMax: "70rem",
+    page: "clamp(1.5rem, 3vw, 3rem)",
+    contentMax: "clamp(70rem, 88vw, 108rem)",
+    focusMax: "80rem",
     measure: "68ch",
   },
   motion: {
@@ -114,6 +115,6 @@ export const coreTheme: Theme = {
     overlayStrength: "0",
     heroBleed: "0px",
     heroRatio: "3 / 4",
-    heroColumns: "minmax(0, 0.86fr) minmax(0, 1.14fr)",
+    heroColumns: "minmax(0, min(43%, 55svh)) minmax(0, 1fr)",
   },
 };

@@ -66,6 +66,7 @@ function themeBlock(theme: Theme, mode: ColorMode): string {
     `--space-8: ${theme.spacing.s8}`,
     `--page-gutter: ${theme.spacing.page}`,
     `--content-max: ${theme.spacing.contentMax}`,
+    `--content-focus: ${theme.spacing.focusMax}`,
     `--measure: ${theme.spacing.measure}`,
     `--motion-fast: ${theme.motion.fast}`,
     `--motion-normal: ${theme.motion.normal}`,

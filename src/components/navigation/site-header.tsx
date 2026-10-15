@@ -7,8 +7,11 @@ export function SiteHeader({ mood, mode, account = null }: { mood: string; mode:
     <header className="site-header">
       <div className="shell header-inner">
         <a className="brand" href="/">
-          <span className="brand-name">FRAME</span>
-          <span className="brand-kicker">Evaluations, not scores</span>
+          <img className="brand-mark" src="/brand/mark.png" alt="" width={40} height={40} />
+          <span className="brand-lockup">
+            <span className="brand-name">FRAME</span>
+            <span className="brand-kicker">Evaluations, not scores</span>
+          </span>
         </a>
         <NavLinks />
         <div className="header-tools">

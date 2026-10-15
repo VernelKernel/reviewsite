@@ -97,8 +97,9 @@ export const gameNativeTheme: Theme = {
     s6: "1.8rem",
     s7: "2.6rem",
     s8: "3.8rem",
-    page: "1.35rem",
-    contentMax: "72rem",
+    page: "clamp(1.35rem, 3vw, 3rem)",
+    contentMax: "clamp(72rem, 88vw, 110rem)",
+    focusMax: "80rem",
     measure: "66ch",
   },
   motion: {
