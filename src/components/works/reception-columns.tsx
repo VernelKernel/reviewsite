@@ -20,7 +20,11 @@ export function ReceptionColumns({
   show?: "both" | "critics" | "audience";
 }) {
   return (
-    <section className={show === "both" ? "reception-columns" : "reception-columns reception-columns-single"} aria-label="Reviews">
+    <section
+      id="reviews"
+      className={show === "both" ? "reception-columns" : "reception-columns reception-columns-single"}
+      aria-label="Reviews"
+    >
       {show !== "audience" ? (
         <ReviewColumn
           title="Critics"

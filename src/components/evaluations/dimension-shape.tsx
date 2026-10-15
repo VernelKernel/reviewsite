@@ -50,7 +50,6 @@ export function DimensionShape({
 
   return (
     <div className="dimension-shape">
-      <h3>Where judgments land</h3>
       {rows.map((population) => {
         const landscape = population === "critics" ? critics : audience;
         return (

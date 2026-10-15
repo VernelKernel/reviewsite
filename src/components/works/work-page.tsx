@@ -1,12 +1,11 @@
 import { notFound } from "next/navigation";
 import type { WorkType } from "@/generated/prisma/client";
-import { CompareButton } from "@/components/comparison/compare-controls";
 import { AudiencePlacementView } from "@/components/comparison/audience-placement";
 import { CriticAlignmentPanel } from "@/components/comparison/critic-alignment-panel";
 import { FollowedOnWork } from "@/components/comparison/followed-on-work";
-import { PopulationGauges } from "@/components/evaluations/population-gauges";
 import { FilterForm, type FilterGroup } from "@/components/works/filter-form";
 import { HeroArt } from "@/components/works/work-art";
+import { WorkNav } from "@/components/works/work-nav";
 import { WorkReading } from "@/components/works/work-reading";
 import { toReview } from "@/components/works/work-record";
 import { splitLandscapes } from "@/lib/aggregation/landscape";
@@ -18,7 +17,6 @@ import {
   audienceHref,
   completionLabel,
   criticsHref,
-  detailsHref,
   evaluateHref,
   lensLabel,
   standardLabel,
@@ -27,7 +25,6 @@ import {
 import { filterEvaluations } from "@/lib/works/filter-evaluations";
 import { getWork, worksSharingCreator, type FullWork } from "@/lib/works/queries";
 import {
-  landscapesFor,
   relatedLinks,
   releaseYear,
   roleName,
@@ -64,7 +61,6 @@ export async function WorkPage({
   const platform = platformOptions.find((item) => item.slug === one(searchParams.platform))?.slug;
   const filtered = filterEvaluations(work.evaluations, { lens, standard, completion, platform });
   const landscape = splitLandscapes(filtered.map(toLandscapeInput));
-  const overall = landscapesFor(work);
   const art = workArt(work.media);
   const year = releaseYear(work.releases);
   const developerIds = work.creators.filter((creator) => creator.role === "DEVELOPER").map((creator) => creator.creatorId);
@@ -163,119 +159,125 @@ export async function WorkPage({
     datePublished: year ? String(year) : undefined,
   };
 
+  const hasFacts = Boolean(year || work.creators.length || work.genres.length || work.steamReception || work.platforms.length);
+  const personal = Boolean(audiencePlacement || criticMetrics.length > 0);
+
   return (
-    <article className="page shell">
+    <article className="page shell work-page">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <header className="work-hero">
-        <HeroArt art={art} />
-        <div className="hero-copy">
-          <p className="kicker">{workTypeLabel[work.workType]}</p>
-          <h1 className="hero-title">{work.title}</h1>
-          {work.synopsis ? <p className="lede">{work.synopsis}</p> : null}
-          <dl className="fact-list">
-            {year ? (
-              <div>
-                <dt>Released</dt>
-                <dd>{year}</dd>
-              </div>
+      <div className="work-frame">
+        <div className="work-rail">
+          <HeroArt art={art} className="work-poster" />
+          <WorkNav workType={work.workType} slug={work.slug} title={work.title} />
+        </div>
+        <div className="work-main">
+          <header className="work-intro">
+            <div className="hero-copy">
+              <p className="kicker">{workTypeLabel[work.workType]}</p>
+              <h1>{work.title}</h1>
+              {work.synopsis ? <p className="lede">{work.synopsis}</p> : null}
+              <a className="btn btn-primary" href={evaluateHref(work.workType, work.slug)}>
+                Evaluate this work
+              </a>
+            </div>
+            {hasFacts ? (
+              <aside className="fact-card">
+                <dl className="fact-list">
+                  {year ? (
+                    <div>
+                      <dt>Released</dt>
+                      <dd>{year}</dd>
+                    </div>
+                  ) : null}
+                  {work.creators.length > 0 ? (
+                    <div>
+                      <dt>Creators</dt>
+                      <dd>{work.creators.map((creator) => `${creator.creator.name} (${roleName(creator.role)})`).join(", ")}</dd>
+                    </div>
+                  ) : null}
+                  {work.genres.length > 0 ? (
+                    <div>
+                      <dt>Genres</dt>
+                      <dd>
+                        {[...work.genres]
+                          .sort((left, right) => Number(right.isPrimary) - Number(left.isPrimary))
+                          .map((genre) => genre.genre.name)
+                          .join(", ")}
+                      </dd>
+                    </div>
+                  ) : null}
+                  {work.steamReception ? (
+                    <div>
+                      <dt>On Steam</dt>
+                      <dd>
+                        {work.steamReception.label}
+                        {work.steamReception.totalCount > 0
+                          ? ` · ${work.steamReception.totalCount.toLocaleString("en-US")} reviews`
+                          : ""}
+                        <span className="steam-links">
+                          <a href={work.steamReception.storeUrl}>Store page</a>
+                          <a href={work.steamReception.reviewsUrl}>Read the reviews on Steam</a>
+                        </span>
+                      </dd>
+                    </div>
+                  ) : null}
+                  {work.platforms.length > 0 ? (
+                    <div>
+                      <dt>Platforms</dt>
+                      <dd>{work.platforms.map((item) => item.platform.name).join(", ")}</dd>
+                    </div>
+                  ) : null}
+                </dl>
+              </aside>
             ) : null}
-            {work.creators.length > 0 ? (
-              <div>
-                <dt>Creators</dt>
-                <dd>{work.creators.map((creator) => `${creator.creator.name} (${roleName(creator.role)})`).join(", ")}</dd>
-              </div>
-            ) : null}
-            {work.genres.length > 0 ? (
-              <div>
-                <dt>Genres</dt>
-                <dd>
-                  {[...work.genres]
-                    .sort((left, right) => Number(right.isPrimary) - Number(left.isPrimary))
-                    .map((genre) => genre.genre.name)
-                    .join(", ")}
-                </dd>
-              </div>
-            ) : null}
-            {work.steamReception ? (
-              <div>
-                <dt>On Steam</dt>
-                <dd>
-                  {work.steamReception.label}
-                  {work.steamReception.totalCount > 0
-                    ? ` · ${work.steamReception.totalCount.toLocaleString("en-US")} reviews`
-                    : ""}
-                  <span className="steam-links">
-                    <a href={work.steamReception.storeUrl}>Store page</a>
-                    <a href={work.steamReception.reviewsUrl}>Read the reviews on Steam</a>
-                  </span>
-                </dd>
-              </div>
-            ) : null}
-            {work.platforms.length > 0 ? (
-              <div>
-                <dt>Platforms</dt>
-                <dd>{work.platforms.map((platform) => platform.platform.name).join(", ")}</dd>
-              </div>
-            ) : null}
-          </dl>
-          <PopulationGauges
-            critics={overall.critics}
-            audience={overall.audience}
+          </header>
+          {followedHere.length > 0 ? (
+            <div className="reading-measure">
+              <FollowedOnWork evaluations={followedHere} />
+            </div>
+          ) : null}
+          <WorkReading
+            critics={landscape.critics}
+            audience={landscape.audience}
+            totalEvaluations={work.evaluations.length}
+            clearHref={base}
+            filteredNote={filteredNote}
+            toolbar={<FilterForm key="filters" base={base} groups={filterGroups} />}
+            share={{ title: work.title, path: shareQuery ? `${base}?${shareQuery}` : base }}
+            card={{
+              kind: workTypeLabel[work.workType],
+              period: snapshotPeriod(filtered.map((evaluation) => evaluation.reviewedOn ?? evaluation.createdAt)),
+              filters: activeFilters,
+            }}
+            criticReviews={reviews.filter((review) => review.population === "CRITIC")}
+            audienceReviews={reviews.filter((review) => review.population !== "CRITIC")}
             criticHref={criticsHref(work.workType, work.slug)}
             audienceHref={audienceHref(work.workType, work.slug)}
-          />
-        </div>
-        <div className="hero-actions">
-          <a className="btn btn-primary" href={evaluateHref(work.workType, work.slug)}>
-            Evaluate this work
-          </a>
-          <a className="btn btn-secondary" href={audienceHref(work.workType, work.slug)}>
-            Read evaluations
-          </a>
-          <a className="btn btn-secondary" href={detailsHref(work.workType, work.slug)}>
-            Details
-          </a>
-          <CompareButton workType={work.workType} slug={work.slug} title={work.title} />
-        </div>
-      </header>
+          >
+            {personal ? (
+              <div className="reading-measure">
+                {audiencePlacement ? <AudiencePlacementView placement={audiencePlacement} /> : null}
+                {criticMetrics.length > 0 ? <CriticAlignmentPanel metrics={criticMetrics} /> : null}
+              </div>
+            ) : null}
+          </WorkReading>
 
-      <FollowedOnWork evaluations={followedHere} />
-      <WorkReading
-        critics={landscape.critics}
-        audience={landscape.audience}
-        totalEvaluations={work.evaluations.length}
-        clearHref={base}
-        filteredNote={filteredNote}
-        toolbar={<FilterForm key="filters" base={base} groups={filterGroups} />}
-        share={{ title: work.title, path: shareQuery ? `${base}?${shareQuery}` : base }}
-        card={{
-          kind: workTypeLabel[work.workType],
-          period: snapshotPeriod(filtered.map((evaluation) => evaluation.reviewedOn ?? evaluation.createdAt)),
-          filters: activeFilters,
-        }}
-        criticReviews={reviews.filter((review) => review.population === "CRITIC")}
-        audienceReviews={reviews.filter((review) => review.population !== "CRITIC")}
-        criticHref={criticsHref(work.workType, work.slug)}
-        audienceHref={audienceHref(work.workType, work.slug)}
-      >
-        {audiencePlacement ? <AudiencePlacementView placement={audiencePlacement} /> : null}
-        {criticMetrics.length > 0 ? <CriticAlignmentPanel metrics={criticMetrics} /> : null}
-      </WorkReading>
-
-      {related.length > 0 ? (
-        <section className="section">
-          <h2>Related works</h2>
-          <ul className="evidence-list">
-            {related.map((item) => (
-              <li key={`${item.phrase}-${item.href}`}>
-                <a href={item.href}>
-                  {item.phrase} {item.title}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+          {related.length > 0 ? (
+            <section className="section reading-measure">
+              <h2>Related works</h2>
+              <ul className="evidence-list">
+                {related.map((item) => (
+                  <li key={`${item.phrase}-${item.href}`}>
+                    <a href={item.href}>
+                      {item.phrase} {item.title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+        </div>
+      </div>
     </article>
   );
 }

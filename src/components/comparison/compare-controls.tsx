@@ -5,21 +5,27 @@ import { usePathname, useRouter } from "next/navigation";
 import { COMPARE_LIMIT, compareHref, compareKey, type CompareRef } from "@/lib/comparison/selection";
 import { useCompare } from "./compare-provider";
 
-export function CompareButton({ workType, slug, title }: CompareRef) {
+export function CompareButton({
+  workType,
+  slug,
+  title,
+  appearance = "button",
+}: CompareRef & { appearance?: "button" | "nav" }) {
   const { items, add, remove, full } = useCompare();
   const key = compareKey({ workType, slug });
   const included = items.some((item) => compareKey(item) === key);
   const disabled = full && !included;
+  const label = included ? "Remove from comparison" : disabled ? "Comparison is full" : "Compare";
 
   return (
     <button
       type="button"
-      className="btn btn-ghost"
+      className={appearance === "nav" ? "work-nav-action" : "btn btn-ghost"}
       aria-pressed={included}
       disabled={disabled}
       onClick={() => (included ? remove(key) : add({ workType, slug, title }))}
     >
-      {included ? "Remove from comparison" : disabled ? "Comparison is full" : "Compare"}
+      {label}
     </button>
   );
 }
