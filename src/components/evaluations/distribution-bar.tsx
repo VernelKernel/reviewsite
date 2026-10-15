@@ -1,4 +1,5 @@
 import { distributionLabel, percentages, type Distribution } from "@/lib/aggregation/landscape";
+import { ShapeMark } from "@/components/evaluations/shape-mark";
 
 function countLabel(count: number, unit: "judgment" | "outlet"): string {
   if (count === 0) return unit === "outlet" ? "0 outlets" : "0 judgments";
@@ -72,14 +73,24 @@ export function DistributionTrack({
       : `Positive ${pct.positive}% · Mixed ${pct.mixed}% · Negative ${pct.negative}%`;
   const verdict = distribution.count === 0 ? emptyCaption(unit) : distributionLabel(distribution);
 
+  if (dense) {
+    return (
+      <div className="paired-track paired-track-dense">
+        <ShapeMark distribution={distribution} />
+        <span className="track-label">{name}</span>
+        <span className="track-verdict">{verdict}</span>
+      </div>
+    );
+  }
+
   return (
-    <div className={dense ? "paired-track paired-track-dense" : "paired-track"}>
+    <div className="paired-track">
       <span className="track-label">{name}</span>
       <div className="paired-track-body">
         <div
           className="dist-bar"
           role="img"
-          aria-label={`${name}: ${dense ? verdict : caption}, from ${countLabel(distribution.count, unit)}.`}
+          aria-label={`${name}: ${caption}, from ${countLabel(distribution.count, unit)}.`}
         >
           {distribution.count > 0 ? (
             <>
@@ -89,14 +100,10 @@ export function DistributionTrack({
             </>
           ) : null}
         </div>
-        {dense ? (
-          <span className="meta">{verdict}</span>
-        ) : (
-          <div className="dist-head">
-            <p className="dist-caption">{caption}</p>
-            <span className="meta">{countLabel(distribution.count, unit)}</span>
-          </div>
-        )}
+        <div className="dist-head">
+          <p className="dist-caption">{caption}</p>
+          <span className="meta">{countLabel(distribution.count, unit)}</span>
+        </div>
       </div>
     </div>
   );
@@ -119,7 +126,7 @@ export function PairedDistribution({
 }) {
   return (
     <div className="paired-dist">
-      <strong>{label}</strong>
+      <strong className="paired-heading">{label}</strong>
       {showCritics ? <DistributionTrack name="Critics" distribution={critics} unit="outlet" dense={dense} /> : null}
       {showAudience ? <DistributionTrack name="Audience" distribution={audience} unit="judgment" dense={dense} /> : null}
     </div>

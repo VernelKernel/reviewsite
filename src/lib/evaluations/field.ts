@@ -113,7 +113,14 @@ export function illuminatedFieldColor(model: FieldModel, x: number, y: number): 
   return lab ? labToRgb(vary(lab, x, y, model)) : null;
 }
 
-export function paintField(ctx: CanvasRenderingContext2D, model: FieldModel) {
+export type FieldPaintOptions = {
+  /** Raster supersampling. Defaults to 2, matching the full-size chart. */
+  scale?: number;
+  /** Soft edge and vertex glow. Defaults to on. */
+  edge?: boolean;
+};
+
+export function paintField(ctx: CanvasRenderingContext2D, model: FieldModel, options?: FieldPaintOptions) {
   const { vertices } = model;
   let minX = model.cx;
   let maxX = model.cx;
@@ -132,7 +139,7 @@ export function paintField(ctx: CanvasRenderingContext2D, model: FieldModel) {
   const bottom = Math.ceil(maxY + pad);
   const width = Math.max(1, right - left);
   const height = Math.max(1, bottom - top);
-  const scale = 2;
+  const scale = options?.scale ?? 2;
   const image = ctx.createImageData(width * scale, height * scale);
   for (let y = 0; y < height * scale; y += 1) {
     for (let x = 0; x < width * scale; x += 1) {
@@ -149,7 +156,7 @@ export function paintField(ctx: CanvasRenderingContext2D, model: FieldModel) {
     }
   }
   ctx.drawImage(rasterCanvas(image), left, top, width, height);
-  paintEdgeEnergy(ctx, model);
+  if (options?.edge !== false) paintEdgeEnergy(ctx, model);
 }
 
 function anchor(rgb: RGB): Lab {
