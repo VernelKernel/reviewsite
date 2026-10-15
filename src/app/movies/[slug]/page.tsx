@@ -12,6 +12,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: `${work.title} evaluations`,
     description: work.synopsis ?? `How reviewers evaluated ${work.title}.`,
     alternates: { canonical: workHref(work.workType, work.slug) },
+    openGraph: {
+      title: `${work.title} evaluations`,
+      description: work.synopsis ?? undefined,
+    },
+    twitter: { card: "summary_large_image" },
   };
 }
 

@@ -5,9 +5,9 @@ import { AudiencePlacementView } from "@/components/comparison/audience-placemen
 import { CriticAlignmentPanel } from "@/components/comparison/critic-alignment-panel";
 import { FollowedOnWork } from "@/components/comparison/followed-on-work";
 import { PopulationGauges } from "@/components/evaluations/population-gauges";
-import { ReviewLandscapeView } from "@/components/evaluations/review-landscape";
-import { ReceptionColumns } from "@/components/works/reception-columns";
+import { FilterForm, type FilterGroup } from "@/components/works/filter-form";
 import { HeroArt } from "@/components/works/work-art";
+import { WorkReading } from "@/components/works/work-reading";
 import { toReview } from "@/components/works/work-record";
 import { splitLandscapes } from "@/lib/aggregation/landscape";
 import { alignCritics, type CriticEvaluation } from "@/lib/comparison/critic-alignment";
@@ -31,6 +31,7 @@ import {
   relatedLinks,
   releaseYear,
   roleName,
+  snapshotPeriod,
   toLandscapeInput,
   workArt,
 } from "@/lib/works/present";
@@ -81,6 +82,41 @@ export async function WorkPage({
   if (completion) shareParams.set("completion", completion);
   if (platform) shareParams.set("platform", platform);
   const shareQuery = shareParams.toString();
+  const platformName = platformOptions.find((item) => item.slug === platform)?.name;
+  const activeFilters = [
+    lens ? lensLabel[lens] : null,
+    standard ? standardLabel[standard] : null,
+    completion ? completionLabel[completion] : null,
+    platformName ?? null,
+  ].filter((item): item is string => Boolean(item));
+  const filterGroups: FilterGroup[] = [
+    { name: "lens", label: "Approach", anyLabel: "Any approach", value: lens, options: lenses.map((value) => ({ value, label: lensLabel[value] })) },
+    {
+      name: "standard",
+      label: "Standard",
+      anyLabel: "Any standard",
+      value: standard,
+      options: standards.map((value) => ({ value, label: standardLabel[value] })),
+    },
+    {
+      name: "completion",
+      label: "Experience",
+      anyLabel: "Any experience",
+      value: completion,
+      options: completions.map((value) => ({ value, label: completionLabel[value] })),
+    },
+    ...(platformOptions.length > 0
+      ? [
+          {
+            name: "platform",
+            label: "Platform",
+            anyLabel: "Any platform",
+            value: platform,
+            options: platformOptions.map((item) => ({ value: item.slug, label: item.name })),
+          },
+        ]
+      : []),
+  ];
   const reviews = filtered.map((evaluation) => toReview(work.workType, work.slug, evaluation));
   const viewer = await getCurrentUser();
   const viewerId = viewer?.profile?.id;
@@ -203,29 +239,28 @@ export async function WorkPage({
         </div>
       </header>
 
-      <FilterBar
-        base={base}
-        lens={lens}
-        standard={standard}
-        completion={completion}
-        platform={platform}
-        platforms={platformOptions}
-      />
       <FollowedOnWork evaluations={followedHere} />
-      <ReviewLandscapeView
+      <WorkReading
         critics={landscape.critics}
         audience={landscape.audience}
+        totalEvaluations={work.evaluations.length}
+        clearHref={base}
         filteredNote={filteredNote}
+        toolbar={<FilterForm key="filters" base={base} groups={filterGroups} />}
         share={{ title: work.title, path: shareQuery ? `${base}?${shareQuery}` : base }}
-      />
-      {audiencePlacement ? <AudiencePlacementView placement={audiencePlacement} /> : null}
-      {criticMetrics.length > 0 ? <CriticAlignmentPanel metrics={criticMetrics} /> : null}
-      <ReceptionColumns
-        critics={reviews.filter((review) => review.population === "CRITIC")}
-        audience={reviews.filter((review) => review.population !== "CRITIC")}
+        card={{
+          kind: workTypeLabel[work.workType],
+          period: snapshotPeriod(filtered.map((evaluation) => evaluation.reviewedOn ?? evaluation.createdAt)),
+          filters: activeFilters,
+        }}
+        criticReviews={reviews.filter((review) => review.population === "CRITIC")}
+        audienceReviews={reviews.filter((review) => review.population !== "CRITIC")}
         criticHref={criticsHref(work.workType, work.slug)}
         audienceHref={audienceHref(work.workType, work.slug)}
-      />
+      >
+        {audiencePlacement ? <AudiencePlacementView placement={audiencePlacement} /> : null}
+        {criticMetrics.length > 0 ? <CriticAlignmentPanel metrics={criticMetrics} /> : null}
+      </WorkReading>
 
       {related.length > 0 ? (
         <section className="section">
@@ -243,86 +278,6 @@ export async function WorkPage({
       ) : null}
     </article>
   );
-}
-
-function FilterBar({
-  base,
-  lens,
-  standard,
-  completion,
-  platform,
-  platforms,
-}: {
-  base: string;
-  lens?: string;
-  standard?: string;
-  completion?: string;
-  platform?: string;
-  platforms: { slug: string; name: string }[];
-}) {
-  const current = { lens, standard, completion, platform };
-  return (
-    <div className="filters" aria-label="Filter evaluations">
-      <a className="chip" href={href(base, current, "lens")} aria-current={!lens ? "true" : undefined}>
-        Any approach
-      </a>
-      {lenses.map((value) => (
-        <a key={value} className="chip" href={href(base, current, "lens", value)} aria-current={lens === value ? "true" : undefined}>
-          {lensLabel[value]}
-        </a>
-      ))}
-      {standards.map((value) => (
-        <a
-          key={value}
-          className="chip"
-          href={href(base, current, "standard", value)}
-          aria-current={standard === value ? "true" : undefined}
-        >
-          {standardLabel[value]}
-        </a>
-      ))}
-      {completions.map((value) => (
-        <a
-          key={value}
-          className="chip"
-          href={href(base, current, "completion", value)}
-          aria-current={completion === value ? "true" : undefined}
-        >
-          {completionLabel[value]}
-        </a>
-      ))}
-      {platforms.length > 0 ? (
-        <a className="chip" href={href(base, current, "platform")} aria-current={!platform ? "true" : undefined}>
-          Any platform
-        </a>
-      ) : null}
-      {platforms.map((item) => (
-        <a
-          key={item.slug}
-          className="chip"
-          href={href(base, current, "platform", item.slug)}
-          aria-current={platform === item.slug ? "true" : undefined}
-        >
-          {item.name}
-        </a>
-      ))}
-    </div>
-  );
-}
-
-function href(
-  base: string,
-  current: { lens?: string; standard?: string; completion?: string; platform?: string },
-  key: string,
-  value?: string,
-) {
-  const params = new URLSearchParams();
-  for (const [name, existing] of Object.entries(current)) {
-    if (existing && name !== key) params.set(name, existing);
-  }
-  if (value) params.set(key, value);
-  const query = params.toString();
-  return query ? `${base}?${query}` : base;
 }
 
 function toPlacement(evaluation: FullWork["evaluations"][number]): PlacementEvaluation {

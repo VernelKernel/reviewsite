@@ -134,4 +134,13 @@ export function formatDate(value: Date | null): string | null {
   return new Intl.DateTimeFormat("en", { month: "long", year: "numeric", timeZone: "UTC" }).format(value);
 }
 
+/** Month span covered by the given evaluation dates, or null when there are none. */
+export function snapshotPeriod(dates: Date[]): string | null {
+  if (dates.length === 0) return null;
+  const times = dates.map((date) => date.getTime());
+  const first = formatDate(new Date(Math.min(...times)));
+  const last = formatDate(new Date(Math.max(...times)));
+  return first === last ? first : `${first} to ${last}`;
+}
+
 export type { CardWork, FullWork };

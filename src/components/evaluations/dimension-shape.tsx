@@ -1,119 +1,275 @@
 "use client";
 
-import { useId } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { DistributionBar } from "@/components/evaluations/distribution-bar";
 import { ShapeShare } from "@/components/evaluations/shape-share";
 import {
+  criticCoverage,
   distributionLabel,
-  dominantKey,
+  gapSentence,
   pairedDimensions,
+  percentages,
+  shapePoints,
   type ReviewLandscape,
-  type ShapeMode,
+  type ShapePoint,
 } from "@/lib/aggregation/landscape";
+import { fieldModelFrom, guideRings, paintField, type FieldPalette } from "@/lib/evaluations/field";
+import { radarPoint } from "@/lib/evaluations/radar";
 
-const MODES: { value: ShapeMode; label: string }[] = [
-  { value: "both", label: "Both" },
-  { value: "audience", label: "Audience" },
-  { value: "critics", label: "Critics" },
-];
+export type Focus = "critics" | "audience";
+
+const WIDTH = 640;
+const HEIGHT = 520;
+const CX = 320;
+const CY = 258;
+const RADIUS = 156;
+
+const NAMES: Record<Focus, string> = { critics: "Critics", audience: "Audience" };
 
 export function DimensionShape({
   critics,
   audience,
+  rows,
+  focus,
+  onFocus,
   share,
-  mode,
-  onMode,
 }: {
   critics: ReviewLandscape;
   audience: ReviewLandscape;
+  rows: Focus[];
+  focus: Focus | null;
+  onFocus: (population: Focus) => void;
   share?: { title: string; path: string };
-  mode: ShapeMode;
-  onMode: (mode: ShapeMode) => void;
 }) {
   const noteId = useId();
-  const axes = pairedDimensions(critics, audience)
-    .filter((dimension) => dimension.audience.count > 0 || dimension.critics.count > 0)
-    .sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name));
-  if (axes.length < 3) return null;
-
-  const showAudience = mode !== "critics";
-  const showCritics = mode !== "audience";
+  const points = useMemo(() => {
+    const dimensions = pairedDimensions(critics, audience);
+    return { critics: shapePoints(dimensions, "critics"), audience: shapePoints(dimensions, "audience") };
+  }, [critics, audience]);
+  const selectable = rows.length > 1;
 
   return (
     <div className="dimension-shape">
-      <div className="section-head">
-        <h3>Where judgments land</h3>
-        <div className="shape-segment" role="radiogroup" aria-label="Population">
-          {MODES.map((item) => (
-            <button
-              key={item.value}
-              type="button"
-              role="radio"
-              aria-checked={mode === item.value}
-              onClick={() => onMode(item.value)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="shape-stage">
-        <figure>
-          <ShapeChart axes={axes} showAudience={showAudience} showCritics={showCritics} labelledBy={noteId} />
-          <figcaption className="shape-note" id={noteId}>
-            Distance from the center is the share of positive judgments among people who judged that dimension. Dot color is the
-            stance reading.
-          </figcaption>
-          {share ? (
-            <ShapeShare
-              title={share.title}
-              path={share.path}
-              axes={axes}
-              audience={audience}
-              critics={critics}
-              showAudience={showAudience}
-              showCritics={showCritics}
+      <h3>Where judgments land</h3>
+      {rows.map((population) => {
+        const landscape = population === "critics" ? critics : audience;
+        return (
+          <div key={population} className="shape-row">
+            <PopulationStage
+              population={population}
+              landscape={landscape}
+              points={points[population]}
+              selectable={selectable}
+              focused={focus === population}
+              onToggle={() => onFocus(population)}
+              noteId={noteId}
             />
-          ) : null}
-        </figure>
-        <div className="panel shape-summary">
-          {showAudience ? (
-            <>
-              <h3>Enjoyment</h3>
-              <DistributionBar label="Audience" distribution={audience.enjoyment} />
-              {showCritics ? <DistributionBar label="Critics" distribution={critics.enjoyment} unit="outlet" /> : null}
-            </>
-          ) : (
-            <>
-              <h3>Enjoyment</h3>
-              <DistributionBar label="Critics" distribution={critics.enjoyment} unit="outlet" />
-            </>
-          )}
-          <h3>Execution</h3>
-          {showAudience ? <DistributionBar label="Audience" distribution={audience.execution} /> : null}
-          {showCritics ? <DistributionBar label="Critics" distribution={critics.execution} unit="outlet" /> : null}
-        </div>
-      </div>
-      <ShapeLegend showAudience={showAudience} showCritics={showCritics} />
+            <GapPanel population={population} landscape={landscape} />
+          </div>
+        );
+      })}
+      <p className="shape-note" id={noteId}>
+        Distance from the center is the share of positive judgments among people who judged that dimension. Color is the stance
+        reading.
+        {selectable ? " Select a graph to focus the share card and the evaluations below on that group." : null}
+      </p>
+      {share ? <ShapeShare title={share.title} path={share.path} /> : null}
+      <ShapeLegend />
     </div>
   );
 }
 
-function ShapeLegend({ showAudience, showCritics }: { showAudience: boolean; showCritics: boolean }) {
+function PopulationStage({
+  population,
+  landscape,
+  points,
+  selectable,
+  focused,
+  onToggle,
+  noteId,
+}: {
+  population: Focus;
+  landscape: ReviewLandscape;
+  points: ShapePoint[];
+  selectable: boolean;
+  focused: boolean;
+  onToggle: () => void;
+  noteId: string;
+}) {
+  const name = NAMES[population];
+  const sample =
+    population === "critics" ? `Based on ${criticCoverage(landscape.coverageCount)}` : landscape.sampleNote.replace(/\.$/, "");
+
+  return (
+    <figure
+      className="population-stage"
+      data-selectable={selectable ? "true" : undefined}
+      data-focused={focused ? "true" : undefined}
+      onClick={selectable ? onToggle : undefined}
+    >
+      <figcaption className="population-stage-label">Impression</figcaption>
+      {points.length >= 3 ? (
+        <ShapeChart points={points} label={`${name} shape`} describedBy={noteId} />
+      ) : (
+        <ShapeList points={points} />
+      )}
+      <div className="population-stage-foot">
+        {selectable ? (
+          <button
+            type="button"
+            className="population-chip"
+            aria-pressed={focused}
+            aria-label={`Focus on ${name.toLowerCase()}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggle();
+            }}
+          >
+            {name}
+          </button>
+        ) : (
+          <span className="population-chip">{name}</span>
+        )}
+        <span className="population-sample">{sample}</span>
+      </div>
+    </figure>
+  );
+}
+
+function ShapeChart({ points, label, describedBy }: { points: ShapePoint[]; label: string; describedBy: string }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [active, setActive] = useState<number | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const draw = () => {
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      canvas.width = WIDTH * dpr;
+      canvas.height = HEIGHT * dpr;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, WIDTH, HEIGHT);
+      const model = fieldModelFrom(points, CX, CY, RADIUS, readPalette());
+      if (model) paintField(ctx, model);
+    };
+    draw();
+    const observer = new MutationObserver(draw);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-mood", "data-mode"] });
+    return () => observer.disconnect();
+  }, [points]);
+
+  const tip = active === null ? null : points[active];
+  const tipPoint = active === null ? null : radarPoint(CX, CY, RADIUS + 36, active, points.length, 1);
+
+  return (
+    <div className="evaluation-plot shape-plot">
+      <canvas ref={canvasRef} className="evaluation-field" width={WIDTH} height={HEIGHT} aria-hidden="true" />
+      <svg className="radar-chart" viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label={label} aria-describedby={describedBy}>
+        {guideRings().map((ring) => (
+          <circle key={ring} className="radar-ring" cx={CX} cy={CY} r={RADIUS * ring} />
+        ))}
+        {points.map((point, index) => {
+          const end = radarPoint(CX, CY, RADIUS, index, points.length, 1);
+          return <line key={`${point.slug}-spoke`} className="radar-spoke" x1={CX} y1={CY} x2={end.x} y2={end.y} />;
+        })}
+        <polygon
+          className="radar-outline"
+          points={points
+            .map((point, index) => {
+              const at = radarPoint(CX, CY, RADIUS, index, points.length, point.distance);
+              return `${at.x},${at.y}`;
+            })
+            .join(" ")}
+        />
+        {points.map((point, index) => {
+          const at = radarPoint(CX, CY, RADIUS, index, points.length, point.distance);
+          return (
+            <circle key={`${point.slug}-dot`} className={`radar-dot radar-dot-${point.tone}`} cx={at.x} cy={at.y} r={6}>
+              <title>{`${point.name}: ${distributionLabel(point.distribution)}`}</title>
+            </circle>
+          );
+        })}
+        {points.map((point, index) => {
+          const at = radarPoint(CX, CY, RADIUS + 36, index, points.length, 1);
+          const cos = Math.cos(at.angle);
+          const anchor = cos > 0.35 ? "start" : cos < -0.35 ? "end" : "middle";
+          return (
+            <text
+              key={`${point.slug}-label`}
+              className="radar-label radar-label-hit"
+              x={at.x}
+              y={at.y}
+              textAnchor={anchor}
+              dominantBaseline="middle"
+              tabIndex={0}
+              role="button"
+              aria-label={`${point.name}: ${percentLine(point)}`}
+              onMouseEnter={() => setActive(index)}
+              onMouseLeave={() => setActive((current) => (current === index ? null : current))}
+              onFocus={() => setActive(index)}
+              onBlur={() => setActive((current) => (current === index ? null : current))}
+              onClick={(event) => {
+                event.stopPropagation();
+                setActive((current) => (current === index ? null : index));
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") setActive(null);
+              }}
+            >
+              {point.name}
+            </text>
+          );
+        })}
+      </svg>
+      {tip && tipPoint ? (
+        <div
+          className="shape-tip"
+          aria-hidden="true"
+          style={{ left: `${(tipPoint.x / WIDTH) * 100}%`, top: `${(tipPoint.y / HEIGHT) * 100}%` }}
+        >
+          {percentLine(tip)}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ShapeList({ points }: { points: ShapePoint[] }) {
+  if (points.length === 0) return <p className="population-stage-empty">No dimension judgments in this view yet.</p>;
+  return (
+    <div className="population-stage-list">
+      <p>A shape needs three judged dimensions. These are the readings so far.</p>
+      <ul>
+        {points.map((point) => (
+          <li key={point.slug}>
+            <span>{point.name}</span>
+            <span>{distributionLabel(point.distribution)}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function GapPanel({ population, landscape }: { population: Focus; landscape: ReviewLandscape }) {
+  const unit = population === "critics" ? "outlet" : "judgment";
+  return (
+    <div className="panel shape-gap">
+      <h3>
+        {NAMES[population]} · Enjoyment and execution
+      </h3>
+      <DistributionBar label="Enjoyment" distribution={landscape.enjoyment} unit={unit} />
+      <DistributionBar label="Execution" distribution={landscape.execution} unit={unit} />
+      <p className="shape-gap-note">{gapSentence(landscape) ?? "Fewer than four evaluations, so the gap is not shown."}</p>
+    </div>
+  );
+}
+
+function ShapeLegend() {
   return (
     <ul className="shape-legend">
-      {showAudience ? (
-        <li>
-          <i className="shape-swatch shape-swatch-audience" />
-          Audience · share of positive judgments
-        </li>
-      ) : null}
-      {showCritics ? (
-        <li>
-          <i className="shape-swatch shape-swatch-critics" />
-          Critics · share of positive judgments
-        </li>
-      ) : null}
       <li>
         <i className="shape-swatch shape-swatch-positive" />
         Positive reading
@@ -134,138 +290,17 @@ function ShapeLegend({ showAudience, showCritics }: { showAudience: boolean; sho
   );
 }
 
-type Axis = ReturnType<typeof pairedDimensions>[number];
-
-function ShapeChart({
-  axes,
-  showAudience,
-  showCritics,
-  labelledBy,
-}: {
-  axes: Axis[];
-  showAudience: boolean;
-  showCritics: boolean;
-  labelledBy: string;
-}) {
-  const width = 720;
-  const height = 640;
-  const cx = 360;
-  const cy = 312;
-  const radius = 176;
-
-  return (
-    <svg className="radar-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby={labelledBy}>
-      {[0.25, 0.5, 0.75, 1].map((tick) => (
-        <circle key={tick} className="radar-ring" cx={cx} cy={cy} r={radius * tick} />
-      ))}
-      {[0.25, 0.5, 0.75].map((tick) => (
-        <text key={tick} className="radar-tick" x={cx + 8} y={cy - radius * tick + 4}>
-          {`${tick * 100}%`}
-        </text>
-      ))}
-      {axes.map((axis, index) => {
-        const end = polar(cx, cy, radius, index, axes.length, 1);
-        return <line key={axis.slug} className="radar-spoke" x1={cx} y1={cy} x2={end.x} y2={end.y} />;
-      })}
-      {showCritics ? <ShapePolygon axes={axes} population="critics" cx={cx} cy={cy} radius={radius} /> : null}
-      {showAudience ? <ShapePolygon axes={axes} population="audience" cx={cx} cy={cy} radius={radius} /> : null}
-      {showCritics
-        ? axes.map((axis, index) => (
-            <ShapeDot key={`critics-${axis.slug}`} axis={axis} index={index} total={axes.length} population="critics" cx={cx} cy={cy} radius={radius} hollow={showAudience} />
-          ))
-        : null}
-      {showAudience
-        ? axes.map((axis, index) => (
-            <ShapeDot key={`audience-${axis.slug}`} axis={axis} index={index} total={axes.length} population="audience" cx={cx} cy={cy} radius={radius} hollow={false} />
-          ))
-        : null}
-      {axes.map((axis, index) => {
-        const point = polar(cx, cy, radius + 56, index, axes.length, 1);
-        const cos = Math.cos(point.angle);
-        const anchor = cos > 0.35 ? "start" : cos < -0.35 ? "end" : "middle";
-        return (
-          <text key={axis.slug} className="radar-label" x={point.x} y={point.y} textAnchor={anchor} dominantBaseline="middle">
-            {axis.name}
-          </text>
-        );
-      })}
-    </svg>
-  );
+function percentLine(point: ShapePoint): string {
+  const pct = percentages(point.distribution);
+  return `Positive ${pct.positive}% · Mixed ${pct.mixed}% · Negative ${pct.negative}%`;
 }
 
-function ShapePolygon({
-  axes,
-  population,
-  cx,
-  cy,
-  radius,
-}: {
-  axes: Axis[];
-  population: "audience" | "critics";
-  cx: number;
-  cy: number;
-  radius: number;
-}) {
-  const points = axes.flatMap((axis, index) => {
-    const distribution = axis[population];
-    if (distribution.count === 0) return [];
-    const point = polar(cx, cy, radius, index, axes.length, distribution.positive / distribution.count);
-    return [`${point.x},${point.y}`];
-  });
-  if (points.length < 3) return null;
-  return <polygon className={population === "audience" ? "radar-audience" : "radar-critics"} points={points.join(" ")} />;
-}
-
-function ShapeDot({
-  axis,
-  index,
-  total,
-  population,
-  cx,
-  cy,
-  radius,
-  hollow,
-}: {
-  axis: Axis;
-  index: number;
-  total: number;
-  population: "audience" | "critics";
-  cx: number;
-  cy: number;
-  radius: number;
-  hollow: boolean;
-}) {
-  const distribution = axis[population];
-  if (distribution.count === 0) return null;
-  const share = distribution.positive / distribution.count;
-  const placed = share < 0.08 ? 0.08 : share;
-  const point = polar(cx, cy, radius, index, total, placed);
-  const tone = dotTone(distribution);
-  return (
-    <circle
-      className={`radar-dot radar-dot-${tone}${hollow ? " radar-dot-hollow" : ""}`}
-      cx={point.x}
-      cy={point.y}
-      r={hollow ? 7 : 5.5}
-    >
-      <title>{`${axis.name}, ${population}: ${distributionLabel(distribution)}`}</title>
-    </circle>
-  );
-}
-
-function dotTone(distribution: { positive: number; mixed: number; negative: number; count: number }): string {
-  if (distribution.count < 4) return "divided";
-  const key = dominantKey(distribution);
-  if (!key) return "divided";
-  if (distribution[key] / distribution.count < 0.5) return "divided";
-  return key;
-}
-
-function polar(cx: number, cy: number, radius: number, index: number, total: number, value: number) {
-  const angle = -Math.PI / 2 + (index * 2 * Math.PI) / total;
+function readPalette(): FieldPalette {
+  const style = getComputedStyle(document.documentElement);
+  const read = (name: string, fallback: string) => style.getPropertyValue(name).trim() || fallback;
   return {
-    x: cx + Math.cos(angle) * radius * value,
-    y: cy + Math.sin(angle) * radius * value,
-    angle,
+    positive: read("--color-positive", "#1F7A4D"),
+    mixed: read("--color-caution", "#E7B008"),
+    negative: read("--color-negative", "#E15A4A"),
   };
 }

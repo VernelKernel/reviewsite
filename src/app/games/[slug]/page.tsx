@@ -19,6 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
       title: `${work.title} evaluations`,
       description: work.synopsis ?? undefined,
     },
+    twitter: { card: "summary_large_image" },
   };
 }
 

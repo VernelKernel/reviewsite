@@ -515,3 +515,78 @@ export function stanceShareGaps(landscape: ReviewLandscape): {
 }
 
 export type ShapeMode = "both" | "audience" | "critics";
+
+export type ShapeTone = "positive" | "mixed" | "negative" | "divided";
+
+export type ShapePoint = {
+  slug: string;
+  name: string;
+  distribution: Distribution;
+  /** Positive share, floored so a point never sits on the center. */
+  distance: number;
+  /** Mean stance position: 0 negative, 0.5 mixed, 1 positive. */
+  t: number;
+  tone: ShapeTone;
+};
+
+/** Stance reading for a dot. Fewer than four judgments, ties, or no majority read as divided. */
+export function shapeTone(distribution: Distribution): ShapeTone {
+  if (distribution.count < 4) return "divided";
+  const key = dominantKey(distribution);
+  if (!key || distribution[key] / distribution.count < 0.5) return "divided";
+  return key;
+}
+
+/** Radar points for one population, in dimension order, skipping dimensions that population did not judge. */
+export function shapePoints(dimensions: PairedDimension[], population: "critics" | "audience"): ShapePoint[] {
+  return dimensions
+    .filter((dimension) => dimension[population].count > 0)
+    .sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name))
+    .map((dimension) => {
+      const distribution = dimension[population];
+      return {
+        slug: dimension.slug,
+        name: dimension.name,
+        distribution,
+        distance: Math.max(0.08, distribution.positive / distribution.count),
+        t: (distribution.positive + distribution.mixed * 0.5) / distribution.count,
+        tone: shapeTone(distribution),
+      };
+    });
+}
+
+/** One sentence on how far enjoyment's positive share sits from execution's. Null below four evaluations. */
+export function gapSentence(landscape: ReviewLandscape): string | null {
+  const gaps = stanceShareGaps(landscape);
+  if (!gaps) return null;
+  const points = Math.abs(gaps.positive);
+  if (points < 5) return "Positive readings of enjoyment and execution are within 5 points of each other.";
+  const unit = points === 1 ? "point" : "points";
+  return gaps.positive > 0
+    ? `Positive enjoyment readings run ${points} ${unit} ahead of execution.`
+    : `Positive execution readings run ${points} ${unit} ahead of enjoyment.`;
+}
+
+/** Agreement and disagreement lines for the populations in view, prefixed by population when both speak. */
+export function summaryLines(
+  critics: ReviewLandscape,
+  audience: ReviewLandscape,
+  showCritics: boolean,
+  showAudience: boolean,
+): { agreement: string[]; disagreement: string[] } {
+  const both = showCritics && showAudience && critics.sampleSize > 0 && audience.sampleSize > 0;
+  const cross = showCritics && showAudience ? crossPopulationNotes(critics, audience) : { agreement: [], disagreement: [] };
+  const label = (lines: string[], name: string) => (both ? lines.map((line) => `${name}: ${line}`) : lines);
+  return {
+    agreement: [
+      ...cross.agreement,
+      ...(showCritics ? label(critics.agreement, "Critics") : []),
+      ...(showAudience ? label(audience.agreement, "Audience") : []),
+    ],
+    disagreement: [
+      ...cross.disagreement,
+      ...(showCritics ? label(critics.disagreement, "Critics") : []),
+      ...(showAudience ? label(audience.disagreement, "Audience") : []),
+    ],
+  };
+}

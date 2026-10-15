@@ -8,7 +8,12 @@ import {
   distributionLabel,
   emptyDistribution,
   enjoymentExecutionGap,
+  gapSentence,
+  pairedDimensions,
   pairedSampleNote,
+  shapePoints,
+  shapeTone,
+  summaryLines,
   populationShapeNote,
   splitLandscapes,
   stanceShareGaps,
@@ -187,5 +192,56 @@ describe("review landscape", () => {
     expect(landscape.agreement).toEqual([]);
     expect(landscape.disagreement).toEqual([]);
     expect(enjoymentExecutionGap(landscape)).toBeNull();
+  });
+});
+
+describe("population shapes", () => {
+  function judged(stance: "POSITIVE" | "MIXED" | "NEGATIVE", population: "CRITIC" | "AUDIENCE", slug = "story"): PopulatedEvaluation {
+    return {
+      ...evaluation(),
+      population,
+      judgments: [{ dimensionSlug: slug, dimensionName: slug, stance, sortOrder: slug === "story" ? 1 : 2 }],
+    };
+  }
+
+  it("places each population only on the dimensions it judged, in dimension order", () => {
+    const paired = splitLandscapes([
+      judged("POSITIVE", "AUDIENCE", "music"),
+      judged("MIXED", "AUDIENCE", "story"),
+      judged("POSITIVE", "CRITIC", "story"),
+    ]);
+    const dimensions = pairedDimensions(paired.critics, paired.audience);
+    expect(shapePoints(dimensions, "audience").map((point) => point.slug)).toEqual(["story", "music"]);
+    expect(shapePoints(dimensions, "critics").map((point) => point.slug)).toEqual(["story"]);
+    const story = shapePoints(dimensions, "audience")[0];
+    expect(story.distance).toBe(0.08);
+    expect(story.t).toBe(0.5);
+  });
+
+  it("reads small or split samples as divided", () => {
+    expect(shapeTone({ positive: 3, mixed: 0, negative: 0, count: 3 })).toBe("divided");
+    expect(shapeTone({ positive: 2, mixed: 2, negative: 0, count: 4 })).toBe("divided");
+    expect(shapeTone({ positive: 3, mixed: 1, negative: 0, count: 4 })).toBe("positive");
+  });
+
+  it("describes the enjoyment and execution gap only from four evaluations", () => {
+    const few = buildLandscape([evaluation(), evaluation({ execution: "NEGATIVE" })]);
+    expect(gapSentence(few)).toBeNull();
+    const ahead = buildLandscape([
+      evaluation(),
+      evaluation(),
+      evaluation({ execution: "MIXED" }),
+      evaluation({ execution: "NEGATIVE" }),
+    ]);
+    expect(gapSentence(ahead)).toBe("Positive enjoyment readings run 50 points ahead of execution.");
+    const level = buildLandscape([evaluation(), evaluation(), evaluation(), evaluation()]);
+    expect(gapSentence(level)).toBe("Positive readings of enjoyment and execution are within 5 points of each other.");
+  });
+
+  it("labels summary lines by population only when both speak", () => {
+    const critics = buildLandscape([evaluation(), evaluation(), evaluation(), evaluation()]);
+    const audience = buildLandscape([evaluation(), evaluation(), evaluation(), evaluation()]);
+    expect(summaryLines(critics, audience, true, false).agreement[0]).not.toMatch(/^Critics: /);
+    expect(summaryLines(critics, audience, true, true).agreement.some((line) => line.startsWith("Audience: "))).toBe(true);
   });
 });

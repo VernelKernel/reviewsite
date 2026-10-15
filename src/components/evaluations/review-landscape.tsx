@@ -1,56 +1,58 @@
 "use client";
 
-import { useState } from "react";
+import type { ReactNode } from "react";
 import {
-  criticCoverage,
-  crossPopulationNotes,
   pairedDimensions,
   pairedSampleNote,
-  type Population,
+  summaryLines,
   type ReviewLandscape,
   type ShapeMode,
 } from "@/lib/aggregation/landscape";
 import { completionLabel, lensLabel, standardLabel } from "@/lib/domain/labels";
 import { PairedDistribution } from "./distribution-bar";
-import { DimensionShape } from "./dimension-shape";
+import { DimensionShape, type Focus } from "./dimension-shape";
+
+const MODES: { value: ShapeMode; label: string }[] = [
+  { value: "both", label: "Both" },
+  { value: "audience", label: "Audience" },
+  { value: "critics", label: "Critics" },
+];
 
 export function ReviewLandscapeView({
   critics,
   audience,
-  population,
+  mode,
+  onMode,
+  focus,
+  onFocus,
+  totalEvaluations,
+  clearHref,
   filteredNote,
+  toolbar,
   share,
 }: {
   critics: ReviewLandscape;
   audience: ReviewLandscape;
-  population?: Population;
+  mode: ShapeMode;
+  onMode: (mode: ShapeMode) => void;
+  focus: Focus | null;
+  onFocus: (population: Focus) => void;
+  /** Published evaluations before filters, to tell an empty work from an empty filter. */
+  totalEvaluations: number;
+  clearHref: string;
   filteredNote?: string;
+  toolbar?: ReactNode;
   share?: { title: string; path: string };
 }) {
-  const [mode, setMode] = useState<ShapeMode>("both");
-  const showCritics = population !== "AUDIENCE" && mode !== "audience";
-  const showAudience = population !== "CRITIC" && mode !== "critics";
-  const bothPopulated = showCritics && showAudience && critics.sampleSize > 0 && audience.sampleSize > 0;
+  const showCritics = mode !== "audience";
+  const showAudience = mode !== "critics";
+  const rows: Focus[] = [];
+  if (showCritics && critics.sampleSize > 0) rows.push("critics");
+  if (showAudience && audience.sampleSize > 0) rows.push("audience");
   const dimensions = pairedDimensions(critics, audience);
-  const cross = showCritics && showAudience ? crossPopulationNotes(critics, audience) : { agreement: [], disagreement: [] };
-  const agreement = [
-    ...cross.agreement,
-    ...(showCritics ? labelLines(critics.agreement, "Critics", bothPopulated) : []),
-    ...(showAudience ? labelLines(audience.agreement, "Audience", bothPopulated) : []),
-  ];
-  const disagreement = [
-    ...cross.disagreement,
-    ...(showCritics ? labelLines(critics.disagreement, "Critics", bothPopulated) : []),
-    ...(showAudience ? labelLines(audience.disagreement, "Audience", bothPopulated) : []),
-  ];
-  const note =
-    filteredNote ??
-    (population === "CRITIC"
-      ? `Critics ${criticCoverage(critics.coverageCount)}.`
-      : population === "AUDIENCE"
-        ? audience.sampleNote
-        : pairedSampleNote(critics, audience));
-  const showApproach = (showAudience && audience.sampleSize > 0) || (showCritics && critics.sampleSize > 0);
+  const { agreement, disagreement } = summaryLines(critics, audience, showCritics, showAudience);
+  const note = filteredNote ?? pairedSampleNote(critics, audience);
+  const empty = critics.sampleSize === 0 && audience.sampleSize === 0;
 
   return (
     <section className="section" aria-labelledby="landscape-heading">
@@ -59,13 +61,48 @@ export function ReviewLandscapeView({
           <p className="kicker">From the evidence</p>
           <h2 id="landscape-heading">What these evaluations say</h2>
         </div>
-        <p>{note}</p>
+        {totalEvaluations > 0 ? <p>{note}</p> : null}
       </div>
-      {critics.sampleSize === 0 && audience.sampleSize === 0 ? (
-        <p className="empty">No published evaluations match this view yet.</p>
+      {totalEvaluations > 0 ? (
+        <div className="landscape-toolbar">
+          <div className="shape-segment" role="radiogroup" aria-label="Population">
+            {MODES.map((item) => {
+              const missing =
+                (item.value === "critics" && critics.sampleSize === 0) || (item.value === "audience" && audience.sampleSize === 0);
+              return (
+                <button
+                  key={item.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={mode === item.value}
+                  disabled={missing}
+                  title={missing ? `No ${item.label.toLowerCase()} evaluations in this view` : undefined}
+                  onClick={() => onMode(item.value)}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+          {toolbar}
+        </div>
+      ) : null}
+      {empty ? (
+        <div className="landscape-empty">
+          {totalEvaluations === 0 ? (
+            <p>No evaluations currently for this entry.</p>
+          ) : (
+            <>
+              <p>No evaluations match these filters.</p>
+              <a className="btn btn-secondary" href={clearHref}>
+                Clear filters
+              </a>
+            </>
+          )}
+        </div>
       ) : (
         <div className="landscape">
-          <DimensionShape critics={critics} audience={audience} share={share} mode={mode} onMode={setMode} />
+          <DimensionShape critics={critics} audience={audience} rows={rows} focus={focus} onFocus={onFocus} share={share} />
           <div className="split">
             <div className="panel">
               <h3>What reviewers agree on</h3>
@@ -107,25 +144,20 @@ export function ReviewLandscapeView({
                 showAudience={showAudience}
               />
             ))}
-          {showApproach && showAudience && audience.sampleSize > 0 ? (
+          {showAudience && audience.sampleSize > 0 ? (
             <ApproachSplit
               approachTitle={critics.sampleSize > 0 ? "Audience approach" : "Approach"}
               experienceTitle={critics.sampleSize > 0 ? "How much the audience experienced" : "How much they experienced"}
               landscape={audience}
             />
           ) : null}
-          {showApproach && showCritics && critics.sampleSize > 0 ? (
+          {showCritics && critics.sampleSize > 0 ? (
             <ApproachSplit approachTitle="Critic approach" experienceTitle="How much critics experienced" landscape={critics} />
           ) : null}
         </div>
       )}
     </section>
   );
-}
-
-function labelLines(lines: string[], label: string, both: boolean): string[] {
-  if (!both) return lines;
-  return lines.map((line) => `${label}: ${line}`);
 }
 
 function ApproachSplit({

@@ -11,28 +11,34 @@ export function ReceptionColumns({
   audience,
   criticHref,
   audienceHref,
+  show = "both",
 }: {
   critics: ReviewCardModel[];
   audience: ReviewCardModel[];
   criticHref: string;
   audienceHref: string;
+  show?: "both" | "critics" | "audience";
 }) {
   return (
-    <section className="reception-columns" aria-label="Reviews">
-      <ReviewColumn
-        title="Critics"
-        href={criticHref}
-        reviews={recent(critics)}
-        empty="No core outlets have a reading in this view yet."
-        kind="critic"
-      />
-      <ReviewColumn
-        title="Audience"
-        href={audienceHref}
-        reviews={recent(audience)}
-        empty="No audience evaluations in this view yet."
-        kind="audience"
-      />
+    <section className={show === "both" ? "reception-columns" : "reception-columns reception-columns-single"} aria-label="Reviews">
+      {show !== "audience" ? (
+        <ReviewColumn
+          title="Critics"
+          href={criticHref}
+          reviews={recent(critics)}
+          empty="No core outlets have a reading in this view yet."
+          kind="critic"
+        />
+      ) : null}
+      {show !== "critics" ? (
+        <ReviewColumn
+          title="Audience"
+          href={audienceHref}
+          reviews={recent(audience)}
+          empty="No audience evaluations in this view yet."
+          kind="audience"
+        />
+      ) : null}
     </section>
   );
 }

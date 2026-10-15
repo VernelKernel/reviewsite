@@ -69,16 +69,33 @@ export function fieldModel(
   radius: number,
   palette: FieldPalette,
 ): FieldModel | null {
-  if (!canCloseField(axes.length)) return null;
-  const vertices = axes.map((axis, index) => {
-    const point = radarPoint(cx, cy, radius, index, axes.length, stanceDistance(axis.stance));
-    return { x: point.x, y: point.y, t: STANCE_T[axis.stance] };
+  return fieldModelFrom(
+    axes.map((axis) => ({ distance: stanceDistance(axis.stance), t: STANCE_T[axis.stance] })),
+    cx,
+    cy,
+    radius,
+    palette,
+  );
+}
+
+/** Field from explicit points: distance from center (0 to 1) and stance position t (0 negative, 1 positive). */
+export function fieldModelFrom(
+  points: { distance: number; t: number }[],
+  cx: number,
+  cy: number,
+  radius: number,
+  palette: FieldPalette,
+): FieldModel | null {
+  if (!canCloseField(points.length)) return null;
+  const vertices = points.map((item, index) => {
+    const point = radarPoint(cx, cy, radius, index, points.length, item.distance);
+    return { x: point.x, y: point.y, t: item.t };
   });
   return {
     cx,
     cy,
     radius,
-    centerT: centerStance(axes.map((axis) => axis.stance)),
+    centerT: points.reduce((sum, item) => sum + item.t, 0) / points.length,
     vertices,
     negative: anchor(parseColor(palette.negative)),
     mixed: anchor(parseColor(palette.mixed)),
