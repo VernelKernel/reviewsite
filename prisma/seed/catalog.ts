@@ -92,7 +92,14 @@ export const topics = [
   ["interface", "Interface"],
 ] as const;
 
-export const dimensions: { slug: string; name: string; sortOrder: number; appliesTo: ("GAME" | "MOVIE")[] }[] = [
+export const dimensions: {
+  slug: string;
+  name: string;
+  sortOrder: number;
+  appliesTo: ("GAME" | "MOVIE")[];
+  family?: "WORK" | "ENJOYMENT";
+  description?: string;
+}[] = [
   { slug: "gameplay", name: "Gameplay", sortOrder: 1, appliesTo: ["GAME"] },
   { slug: "story", name: "Story", sortOrder: 2, appliesTo: ["GAME"] },
   { slug: "music", name: "Music", sortOrder: 3, appliesTo: ["GAME", "MOVIE"] },
@@ -106,6 +113,78 @@ export const dimensions: { slug: string; name: string; sortOrder: number; applie
   { slug: "cinematography", name: "Cinematography", sortOrder: 2, appliesTo: ["MOVIE"] },
   { slug: "writing", name: "Writing", sortOrder: 3, appliesTo: ["MOVIE"] },
   { slug: "editing", name: "Editing", sortOrder: 4, appliesTo: ["MOVIE"] },
+  {
+    slug: "engagement",
+    name: "Engagement",
+    description: "Did it hold your attention?",
+    sortOrder: 1,
+    appliesTo: ["GAME", "MOVIE"],
+    family: "ENJOYMENT",
+  },
+  {
+    slug: "fun",
+    name: "Fun",
+    description: "Was the moment-to-moment experience enjoyable?",
+    sortOrder: 2,
+    appliesTo: ["GAME"],
+    family: "ENJOYMENT",
+  },
+  {
+    slug: "pacing",
+    name: "Pacing",
+    description: "Did the moment-to-moment flow feel good to sit inside?",
+    sortOrder: 2,
+    appliesTo: ["MOVIE"],
+    family: "ENJOYMENT",
+  },
+  {
+    slug: "immersion",
+    name: "Immersion",
+    description: "Did you feel inside the work?",
+    sortOrder: 3,
+    appliesTo: ["GAME", "MOVIE"],
+    family: "ENJOYMENT",
+  },
+  {
+    slug: "investment",
+    name: "Investment",
+    description: "Did you care about the people, and about what happened to them?",
+    sortOrder: 4,
+    appliesTo: ["MOVIE"],
+    family: "ENJOYMENT",
+  },
+  {
+    slug: "emotional-impact",
+    name: "Emotional impact",
+    description: "Did it make you feel something that mattered to you?",
+    sortOrder: 5,
+    appliesTo: ["GAME", "MOVIE"],
+    family: "ENJOYMENT",
+  },
+  {
+    slug: "replay-appeal",
+    name: "Replay Value",
+    description: "Would you want to experience it again?",
+    sortOrder: 6,
+    appliesTo: ["GAME"],
+    family: "ENJOYMENT",
+  },
+  {
+    slug: "resonance",
+    name: "Resonance",
+    description: "After it ended, did the experience linger or feel complete?",
+    sortOrder: 6,
+    appliesTo: ["MOVIE"],
+    family: "ENJOYMENT",
+  },
+  {
+    slug: "satisfaction",
+    name: "Satisfaction",
+    description: "Did the experience feel rewarding or worthwhile?",
+    sortOrder: 7,
+    appliesTo: ["GAME"],
+    family: "ENJOYMENT",
+  },
 ];
 
 type CreatorRoleName = "DEVELOPER" | "PUBLISHER" | "DIRECTOR";

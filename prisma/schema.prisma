@@ -81,6 +81,11 @@ enum Stance {
   NEGATIVE
 }
 
+enum DimensionFamily {
+  WORK
+  ENJOYMENT
+}
+
 enum CompletionStatus {
   JUST_STARTED
   EARLY
@@ -491,12 +496,13 @@ model Review {
 }
 
 model Dimension {
-  id          String     @id @default(cuid())
-  slug        String     @unique
+  id          String          @id @default(cuid())
+  slug        String          @unique
   name        String
   description String?
-  sortOrder   Int        @default(0)
+  sortOrder   Int             @default(0)
   appliesTo   WorkType[]
+  family      DimensionFamily @default(WORK)
 
   judgments EvaluationJudgment[]
 }

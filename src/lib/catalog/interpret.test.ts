@@ -101,9 +101,21 @@ describe("review interpretation", () => {
   });
 
   it("uses the same dimensions and topics as the seed catalog", () => {
-    const gameDimensions = dimensions.filter((dimension) => dimension.appliesTo.includes("GAME")).map((dimension) => dimension.slug);
+    const gameDimensions = dimensions
+      .filter((dimension) => dimension.appliesTo.includes("GAME") && dimension.family !== "ENJOYMENT")
+      .map((dimension) => dimension.slug);
     expect([...GAME_DIMENSION_SLUGS]).toEqual(gameDimensions);
     expect([...OBSERVATION_TOPICS]).toEqual(topics.map(([slug]) => slug));
+  });
+
+  it("keeps enjoyment dimensions in experience order for each work type", () => {
+    const slugs = (workType: "GAME" | "MOVIE") =>
+      dimensions
+        .filter((dimension) => dimension.family === "ENJOYMENT" && dimension.appliesTo.includes(workType))
+        .sort((left, right) => left.sortOrder - right.sortOrder)
+        .map((dimension) => dimension.slug);
+    expect(slugs("GAME")).toEqual(["engagement", "fun", "immersion", "emotional-impact", "replay-appeal", "satisfaction"]);
+    expect(slugs("MOVIE")).toEqual(["engagement", "pacing", "immersion", "investment", "emotional-impact", "resonance"]);
   });
 
   it("names the game and includes the review as evidence", () => {

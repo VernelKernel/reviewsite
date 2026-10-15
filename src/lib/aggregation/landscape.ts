@@ -1,4 +1,5 @@
 export type StanceValue = "POSITIVE" | "MIXED" | "NEGATIVE";
+export type DimensionFamilyValue = "WORK" | "ENJOYMENT";
 export type LensValue = "EXPERIENCE" | "EXECUTION" | "MIXED";
 export type StandardValue = "ABSOLUTE" | "CONTEXTUAL" | "MIXED";
 export type PolarityValue = "PRAISE" | "CRITICISM";
@@ -18,7 +19,13 @@ export type LandscapeEvaluation = {
   completion: string;
   /** Outlet name for a critic reading. Audience rows leave this empty. */
   outletName?: string | null;
-  judgments: { dimensionSlug: string; dimensionName: string; stance: StanceValue; sortOrder?: number }[];
+  judgments: {
+    dimensionSlug: string;
+    dimensionName: string;
+    stance: StanceValue;
+    sortOrder?: number;
+    family?: DimensionFamilyValue;
+  }[];
   observations: { topicSlug: string; topicName: string; polarity: PolarityValue }[];
 };
 
@@ -50,6 +57,7 @@ export type ReviewLandscape = {
   enjoyment: Distribution;
   execution: Distribution;
   dimensions: DimensionLandscape[];
+  enjoymentDimensions: DimensionLandscape[];
   lenses: CountShare[];
   standards: CountShare[];
   completions: CountShare[];
@@ -172,11 +180,13 @@ export function buildLandscape(evaluations: LandscapeEvaluation[]): ReviewLandsc
   const execution = executionDistribution(evaluations);
 
   const dimensionMap = new Map<string, DimensionLandscape>();
+  const enjoymentMap = new Map<string, DimensionLandscape>();
   const topicMap = new Map<string, TopicLandscape>();
 
   for (const evaluation of evaluations) {
     for (const judgment of evaluation.judgments) {
-      const current = dimensionMap.get(judgment.dimensionSlug) ?? {
+      const bucket = judgment.family === "ENJOYMENT" ? enjoymentMap : dimensionMap;
+      const current = bucket.get(judgment.dimensionSlug) ?? {
         slug: judgment.dimensionSlug,
         name: judgment.dimensionName,
         sortOrder: judgment.sortOrder ?? 0,
@@ -184,7 +194,7 @@ export function buildLandscape(evaluations: LandscapeEvaluation[]): ReviewLandsc
       };
       if (judgment.sortOrder != null) current.sortOrder = judgment.sortOrder;
       current.distribution = addStance(current.distribution, judgment.stance);
-      dimensionMap.set(judgment.dimensionSlug, current);
+      bucket.set(judgment.dimensionSlug, current);
     }
     for (const observation of evaluation.observations) {
       const current = topicMap.get(observation.topicSlug) ?? {
@@ -202,6 +212,9 @@ export function buildLandscape(evaluations: LandscapeEvaluation[]): ReviewLandsc
   }
 
   const dimensions = [...dimensionMap.values()].sort((a, b) => b.distribution.count - a.distribution.count);
+  const enjoymentDimensions = [...enjoymentMap.values()].sort(
+    (a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name),
+  );
   const topics = [...topicMap.values()].sort((a, b) => b.total - a.total);
   const agreement: string[] = [];
   const disagreement: string[] = [];
@@ -295,6 +308,7 @@ export function buildLandscape(evaluations: LandscapeEvaluation[]): ReviewLandsc
     enjoyment,
     execution,
     dimensions,
+    enjoymentDimensions,
     lenses: countGroup(
       evaluations.flatMap((evaluation) => {
         if (!evaluation.lens) return [];

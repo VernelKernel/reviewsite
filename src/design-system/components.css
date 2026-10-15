@@ -1083,6 +1083,16 @@ button.population-chip[aria-pressed="true"] {
   color: var(--color-text-secondary);
 }
 
+.shape-gap-enjoyment {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.shape-gap-enjoyment h4 {
+  margin: 0;
+  font-size: var(--text-body);
+}
+
 .shape-segment {
   display: inline-flex;
   border: var(--border-width) solid var(--color-border-strong);
@@ -1966,6 +1976,11 @@ fieldset {
   align-items: center;
   padding-block: var(--space-2);
   border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.dimension-row > span {
+  display: grid;
+  gap: var(--space-1);
 }
 
 .dimension-row select {

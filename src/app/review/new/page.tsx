@@ -29,7 +29,15 @@ export default async function NewReviewPage({ searchParams }: { searchParams: Pr
   const options = await evaluationFormOptions(workType);
   return (
     <main className="page shell">
-      <IntakeForm workType={workType} dimensions={options.dimensions.map((dimension) => ({ id: dimension.id, name: dimension.name }))} />
+      <IntakeForm
+        workType={workType}
+        dimensions={options.dimensions.map((dimension) => ({
+          id: dimension.id,
+          name: dimension.name,
+          family: dimension.family,
+          description: dimension.description,
+        }))}
+      />
     </main>
   );
 }

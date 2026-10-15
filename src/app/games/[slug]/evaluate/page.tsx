@@ -36,7 +36,12 @@ export async function EvaluateScreen({
         workType={workType}
         slug={slug}
         title={title}
-        dimensions={options.dimensions.map((dimension) => ({ id: dimension.id, name: dimension.name }))}
+        dimensions={options.dimensions.map((dimension) => ({
+          id: dimension.id,
+          name: dimension.name,
+          family: dimension.family,
+          description: dimension.description,
+        }))}
         topics={options.topics.map((topic) => ({ id: topic.id, name: topic.name }))}
         platforms={work.platforms.map((platform) => ({ id: platform.platform.id, name: platform.platform.name }))}
         defaults={

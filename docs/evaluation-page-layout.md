@@ -65,7 +65,7 @@ Current item comes from the hash. Empty hash means Overview.
 `.evaluation-overview` is `minmax(0, 1.45fr)` and `minmax(15rem, 0.8fr)`, `align-items: start`. The work overview's `.dimension-shape` uses this same ratio.
 
 - Column 1: the evaluation graph (`#graph`), then the "At a glance" card (platform, playtime, completion, lens, access). Glance is omitted when nothing qualifies.
-- Column 2: `.evaluation-side` spans both rows. "Key impressions" is enjoyment and execution meters. "Dimension breakdown" lists each judged dimension and its stance. The side column is as tall as those panels. It does not stretch into an empty card beside the graph.
+- Column 2: `.evaluation-side` spans both rows. "Key impressions" is enjoyment and execution meters. Judged enjoyment dimensions sit under the enjoyment meter. "Dimension breakdown" lists each judged work dimension and its stance. The side column is as tall as those panels. It does not stretch into an empty card beside the graph. The graph plots work dimensions. Enjoyment dimensions stay off it.
 
 ### Narrow text
 

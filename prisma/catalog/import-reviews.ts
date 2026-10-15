@@ -95,7 +95,13 @@ export async function ensureEvaluationTaxonomy(prisma: PrismaClient) {
   for (const dimension of dimensions) {
     await prisma.dimension.upsert({
       where: { slug: dimension.slug },
-      update: { name: dimension.name, sortOrder: dimension.sortOrder, appliesTo: dimension.appliesTo },
+      update: {
+        name: dimension.name,
+        sortOrder: dimension.sortOrder,
+        appliesTo: dimension.appliesTo,
+        family: dimension.family ?? "WORK",
+        description: dimension.description ?? null,
+      },
       create: dimension,
     });
   }

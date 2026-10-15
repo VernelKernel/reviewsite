@@ -3,11 +3,10 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import type { WorkType } from "@/generated/prisma/client";
+import { DimensionChoices, type DimensionOption } from "@/components/evaluations/dimension-fields";
 import { createIntake, type IntakeActionState } from "@/lib/intake/actions";
 
-type Dimension = { id: string; name: string };
-
-export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimensions: Dimension[] }) {
+export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimensions: DimensionOption[] }) {
   const [state, action] = useActionState(createIntake, {} as IntakeActionState);
   const noun = workType === "MOVIE" ? "movie" : "game";
 
@@ -51,28 +50,20 @@ export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimen
         <legend className="legend">Did you enjoy it?</legend>
         <StanceChoices name="enjoyment" />
       </fieldset>
+      <DimensionChoices
+        legend="Enjoyment, if you want to be more specific"
+        note="Leave a row as “Not judged” when you don’t have a view. These are optional, and they stay separate from the headline."
+        dimensions={dimensions.filter((dimension) => dimension.family === "ENJOYMENT")}
+      />
       <fieldset>
         <legend className="legend">Did you think it was well executed?</legend>
         <StanceChoices name="execution" />
       </fieldset>
-
-      {dimensions.length > 0 ? (
-        <fieldset>
-          <legend className="legend">Dimensions, if you want to be more specific</legend>
-          <p className="meta">Leave a row as “Not judged” when you don’t have a view. Three or more judged dimensions draw the radar.</p>
-          {dimensions.map((dimension) => (
-            <div className="dimension-row" key={dimension.id}>
-              <span>{dimension.name}</span>
-              <select name={`judgment:${dimension.id}`} defaultValue="" aria-label={dimension.name}>
-                <option value="">Not judged</option>
-                <option value="POSITIVE">Positive</option>
-                <option value="MIXED">Mixed</option>
-                <option value="NEGATIVE">Negative</option>
-              </select>
-            </div>
-          ))}
-        </fieldset>
-      ) : null}
+      <DimensionChoices
+        legend="Execution, if you want to be more specific"
+        note="Leave a row as “Not judged” when you don’t have a view. Three or more judged dimensions draw the radar."
+        dimensions={dimensions.filter((dimension) => dimension.family !== "ENJOYMENT")}
+      />
 
       <label className="field">
         <span>A note, optional</span>

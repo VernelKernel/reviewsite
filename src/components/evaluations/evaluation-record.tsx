@@ -34,9 +34,14 @@ export function EvaluationRecord({
   const path = reviewHref(work.workType, work.slug, evaluation.reviewer.slug);
   const enjoyment = evaluation.enjoyment as StanceName;
   const execution = evaluation.execution as StanceName;
-  const axes: RadarAxis[] = evaluation.judgments
+  const judged = evaluation.judgments
     .slice()
-    .sort((left, right) => left.dimension.sortOrder - right.dimension.sortOrder || left.dimension.name.localeCompare(right.dimension.name))
+    .sort((left, right) => left.dimension.sortOrder - right.dimension.sortOrder || left.dimension.name.localeCompare(right.dimension.name));
+  const axes: RadarAxis[] = judged
+    .filter((judgment) => judgment.dimension.family !== "ENJOYMENT")
+    .map((judgment) => ({ name: judgment.dimension.name, stance: judgment.stance as StanceName }));
+  const enjoymentAxes: RadarAxis[] = judged
+    .filter((judgment) => judgment.dimension.family === "ENJOYMENT")
     .map((judgment) => ({ name: judgment.dimension.name, stance: judgment.stance as StanceName }));
   const strengths = evaluation.observations.filter((item) => item.polarity === "PRAISE").map((item) => item.content);
   const weaknesses = evaluation.observations.filter((item) => item.polarity === "CRITICISM").map((item) => item.content);
@@ -101,6 +106,17 @@ export function EvaluationRecord({
               <section className="panel evaluation-panel" aria-labelledby="key-impressions">
                 <h2 id="key-impressions">Key impressions</h2>
                 <StanceMeter label="Enjoyment" stance={enjoyment} />
+                {enjoymentAxes.length > 0 ? (
+                  <ul className="dimension-breakdown" aria-label="Enjoyment dimensions">
+                    {enjoymentAxes.map((axis) => (
+                      <li key={axis.name}>
+                        <i className={`dimension-dot dimension-dot-${axis.stance.toLowerCase()}`} aria-hidden="true" />
+                        <span>{axis.name}</span>
+                        <span className={stanceClass(axis.stance)}>{stanceLabel[axis.stance]}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
                 <StanceMeter label="Execution" stance={execution} />
               </section>
               {axes.length > 0 ? (

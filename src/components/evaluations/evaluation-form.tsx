@@ -3,6 +3,7 @@
 import { useActionState, useState, type Dispatch, type SetStateAction } from "react";
 import { useFormStatus } from "react-dom";
 import type { WorkType } from "@/generated/prisma/client";
+import { DimensionChoices, type DimensionOption } from "@/components/evaluations/dimension-fields";
 import { saveEvaluation, type ActionState } from "@/lib/evaluation/actions";
 import {
   completionLabel,
@@ -39,7 +40,7 @@ export function EvaluationForm({
   workType: WorkType;
   slug: string;
   title: string;
-  dimensions: Option[];
+  dimensions: DimensionOption[];
   topics: Option[];
   platforms: Option[];
   defaults: {
@@ -133,6 +134,13 @@ export function EvaluationForm({
         <StanceChoices name="enjoyment" selected={defaults?.enjoyment ?? ""} />
       </fieldset>
 
+      <DimensionChoices
+        legend="Enjoyment, if you want to be more specific"
+        note="Leave a row as “Not judged” when you don’t have a view. These are optional, and they stay separate from the headline."
+        dimensions={dimensions.filter((dimension) => dimension.family === "ENJOYMENT")}
+        stanceFor={stanceFor}
+      />
+
       <fieldset>
         <legend className="legend">Did you think it was well executed?</legend>
         <StanceChoices name="execution" selected={defaults?.execution ?? ""} />
@@ -184,23 +192,12 @@ export function EvaluationForm({
         </label>
       </fieldset>
 
-      {dimensions.length > 0 ? (
-        <fieldset>
-          <legend className="legend">Dimensions, if you want to be more specific</legend>
-          <p className="meta">Leave a row as “Not judged” when you don’t have a view. These are optional.</p>
-          {dimensions.map((dimension) => (
-            <div className="dimension-row" key={dimension.id}>
-              <span>{dimension.name}</span>
-              <select name={`judgment:${dimension.id}`} defaultValue={stanceFor(dimension.id)} aria-label={dimension.name}>
-                <option value="">Not judged</option>
-                <option value="POSITIVE">Positive</option>
-                <option value="MIXED">Mixed</option>
-                <option value="NEGATIVE">Negative</option>
-              </select>
-            </div>
-          ))}
-        </fieldset>
-      ) : null}
+      <DimensionChoices
+        legend="Execution, if you want to be more specific"
+        note="Leave a row as “Not judged” when you don’t have a view. These are optional."
+        dimensions={dimensions.filter((dimension) => dimension.family !== "ENJOYMENT")}
+        stanceFor={stanceFor}
+      />
 
       <fieldset>
         <legend className="legend">Tell us why. What worked? What didn’t?</legend>

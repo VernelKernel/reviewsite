@@ -109,6 +109,20 @@ describe("review landscape", () => {
     });
   });
 
+  it("keeps enjoyment dimensions out of the work shape", () => {
+    const landscape = buildLandscape([
+      evaluation({
+        judgments: [
+          { dimensionSlug: "gameplay", dimensionName: "Gameplay", stance: "POSITIVE", family: "WORK" },
+          { dimensionSlug: "fun", dimensionName: "Fun", stance: "NEGATIVE", family: "ENJOYMENT", sortOrder: 2 },
+          { dimensionSlug: "engagement", dimensionName: "Engagement", stance: "POSITIVE", family: "ENJOYMENT", sortOrder: 1 },
+        ],
+      }),
+    ]);
+    expect(landscape.dimensions.map((dimension) => dimension.slug)).toEqual(["gameplay"]);
+    expect(landscape.enjoymentDimensions.map((dimension) => dimension.slug)).toEqual(["engagement", "fun"]);
+  });
+
   it("notes when standards groups describe execution differently", () => {
     const landscape = buildLandscape([
       evaluation({ standard: "CONTEXTUAL", execution: "POSITIVE" }),

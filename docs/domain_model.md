@@ -980,6 +980,32 @@ Execution: POSITIVE
 
 The platform must preserve this distinction.
 
+Enjoyment can be broken into dimensions of the experience. These are optional judgments under the headline Enjoyment stance. They are not averaged into a score, and they are not work dimensions such as Gameplay or Cinematography.
+
+Shared:
+
+```text
+Engagement — Did it hold your attention?
+Immersion — Did you feel inside the work?
+Emotional impact — Did it make you feel something that mattered to you?
+```
+
+Games:
+
+```text
+Fun — Was the moment-to-moment experience enjoyable?
+Replay Value — Would you want to experience it again?
+Satisfaction — Did the experience feel rewarding or worthwhile?
+```
+
+Movies:
+
+```text
+Pacing — Did the moment-to-moment flow feel good to sit inside?
+Investment — Did you care about the people, and about what happened to them?
+Resonance — After it ended, did the experience linger or feel complete?
+```
+
 ---
 
 # 32. Execution
@@ -1027,6 +1053,15 @@ Technical Quality
 ```
 
 Dimensions are reusable.
+
+A Dimension belongs to a family:
+
+```text
+WORK — how an aspect of the work performed
+ENJOYMENT — what the experience felt like
+```
+
+The two families stay separate in presentation. A work-dimension reading and an enjoyment-dimension reading are different evidence.
 
 A Dimension is not synonymous with a Review.
 

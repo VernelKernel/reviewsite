@@ -23,10 +23,12 @@ export default async function ReviewChartPage({ params }: { params: Promise<{ id
       })
     : [];
   const stanceById = new Map(stored.map((judgment) => [judgment.dimensionId, judgment.stance]));
-  const axes = dimensions.flatMap((dimension) => {
+  const readings = dimensions.flatMap((dimension) => {
     const stance = stanceById.get(dimension.id);
-    return stance ? [{ name: dimension.name, stance }] : [];
+    return stance ? [{ name: dimension.name, stance, family: dimension.family }] : [];
   });
+  const axes = readings.filter((reading) => reading.family !== "ENJOYMENT");
+  const enjoymentAxes = readings.filter((reading) => reading.family === "ENJOYMENT");
   const headline = personalHeadline(intake.enjoyment, intake.execution);
   const verified = Boolean(intake.user?.emailVerified);
   const headingId = "personal-chart-title";
@@ -44,6 +46,17 @@ export default async function ReviewChartPage({ params }: { params: Promise<{ id
           </div>
           <div className="personal-readings">
             <StanceMeter label="Enjoyment" stance={intake.enjoyment} />
+            {enjoymentAxes.length > 0 ? (
+              <ul className="dimension-breakdown" aria-label="Enjoyment dimensions">
+                {enjoymentAxes.map((axis) => (
+                  <li key={axis.name}>
+                    <i className={`dimension-dot dimension-dot-${axis.stance.toLowerCase()}`} aria-hidden="true" />
+                    <span>{axis.name}</span>
+                    <span className={stanceClass(axis.stance)}>{stanceLabel[axis.stance]}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             <StanceMeter label="Execution" stance={intake.execution} />
             {intake.rawPlatform ? <p className="meta">Platform: {intake.rawPlatform}</p> : null}
             {intake.rawGenre ? <p className="meta">Genre: {intake.rawGenre}</p> : null}

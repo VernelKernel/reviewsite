@@ -262,6 +262,14 @@ function GapPanel({ population, landscape }: { population: Focus; landscape: Rev
       <DistributionBar label="Enjoyment" distribution={landscape.enjoyment} unit={unit} />
       <DistributionBar label="Execution" distribution={landscape.execution} unit={unit} />
       <p className="shape-gap-note">{gapSentence(landscape) ?? "Fewer than four evaluations, so the gap is not shown."}</p>
+      {landscape.enjoymentDimensions.length > 0 ? (
+        <div className="shape-gap-enjoyment">
+          <h4>Enjoyment dimensions</h4>
+          {landscape.enjoymentDimensions.map((dimension) => (
+            <DistributionBar key={dimension.slug} label={dimension.name} distribution={dimension.distribution} unit={unit} />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
