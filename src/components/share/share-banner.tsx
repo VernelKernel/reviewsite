@@ -28,12 +28,19 @@ export function ShareBanner({
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [status, setStatus] = useState("");
+  const [editorOpen, setEditorOpen] = useState(false);
 
   useEffect(() => {
     return () => {
       if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!editorOpen) return;
+    const dialog = dialogRef.current;
+    if (dialog && !dialog.open) dialog.showModal();
+  }, [editorOpen]);
 
   async function create() {
     setPending(true);
@@ -45,9 +52,7 @@ export function ShareBanner({
       previewUrl.current = url;
       setFile(next);
       setPreview(url);
-      const dialog = dialogRef.current;
-      if (dialog?.open) dialog.close();
-      dialog?.showModal();
+      setEditorOpen(true);
     } catch {
       setStatus("Could not prepare the card.");
     } finally {
@@ -76,16 +81,21 @@ export function ShareBanner({
           {status}
         </p>
       ) : null}
-      <ShareCardEditor
-        dialogRef={dialogRef}
-        heading={dialogHeading}
-        note={dialogNote}
-        title={title}
-        path={path}
-        file={file}
-        preview={preview}
-        onClose={() => buttonRef.current?.focus()}
-      />
+      {editorOpen ? (
+        <ShareCardEditor
+          dialogRef={dialogRef}
+          heading={dialogHeading}
+          note={dialogNote}
+          title={title}
+          path={path}
+          file={file}
+          preview={preview}
+          onClose={() => {
+            setEditorOpen(false);
+            buttonRef.current?.focus();
+          }}
+        />
+      ) : null}
     </section>
   );
 }

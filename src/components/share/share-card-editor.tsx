@@ -24,15 +24,15 @@ export function ShareCardEditor({
   onClose: () => void;
 }) {
   const headingId = useId();
-  const [origin, setOrigin] = useState("");
+  const [origin] = useState(() => (typeof window === "undefined" ? "" : window.location.origin));
   const [canShareFile, setCanShareFile] = useState(false);
-  const [canCopyImage, setCanCopyImage] = useState(false);
+  const [canCopyImage] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      typeof ClipboardItem !== "undefined" &&
+      typeof navigator.clipboard?.write === "function",
+  );
   const [status, setStatus] = useState("");
-
-  useEffect(() => {
-    setOrigin(window.location.origin);
-    setCanCopyImage(typeof ClipboardItem !== "undefined" && typeof navigator.clipboard?.write === "function");
-  }, []);
 
   useEffect(() => {
     setStatus("");
