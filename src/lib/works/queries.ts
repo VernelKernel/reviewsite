@@ -160,6 +160,17 @@ export async function recentEvaluations(take = 4) {
   });
 }
 
+export async function reviewerEvaluation(workId: string, reviewerId: string) {
+  return prisma.evaluation.findUnique({
+    where: { reviewerId_workId: { reviewerId, workId } },
+    include: {
+      review: true,
+      judgments: true,
+      observations: true,
+    },
+  });
+}
+
 export async function evaluationFormOptions(workType: WorkType) {
   const [dimensions, topics, platforms] = await Promise.all([
     prisma.dimension.findMany({

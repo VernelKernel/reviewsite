@@ -10,7 +10,7 @@ import { evaluateHref, reviewHref, workHref } from "../domain/labels";
 import { parseEvaluationForm } from "../validation/evaluation";
 import { assertSubmissionRate } from "./rate-limit";
 
-export type ActionState = { error?: string };
+export type ActionState = { error?: string; draftSaved?: boolean };
 
 export async function saveEvaluation(
   workType: WorkType,
@@ -20,6 +20,7 @@ export async function saveEvaluation(
 ): Promise<ActionState> {
   const parsed = parseEvaluationForm(formData);
   if (!parsed.ok) return { error: parsed.message };
+  const publishing = parsed.intent === "publish";
 
   try {
     const input = parsed.data;
@@ -57,40 +58,37 @@ export async function saveEvaluation(
     if (existing && (existing.status === "HIDDEN" || existing.status === "REMOVED")) {
       return { error: "This evaluation is not open for changes." };
     }
+    if (!publishing && existing && existing.status !== "DRAFT") {
+      return { error: "This evaluation is already published. Update it to keep it published." };
+    }
 
-    const evaluation = await prisma.$transaction(async (tx) => {
+    const status = publishing ? "PUBLISHED" : "DRAFT";
+    const reviewedOn = publishing ? (existing?.reviewedOn ?? new Date()) : (existing?.reviewedOn ?? null);
+    const savedFields = {
+      status,
+      lens: input.lens ?? null,
+      standard: input.standard ?? null,
+      standardNote: input.standardNote ?? null,
+      enjoyment: input.enjoyment,
+      execution: input.execution,
+      completion: input.completion,
+      playtime: input.playtime ?? "UNKNOWN",
+      ownership: input.ownership ?? null,
+      platformId: input.platformId ?? null,
+      reviewedOn,
+    } as const;
+
+    await prisma.$transaction(async (tx) => {
       const saved = existing
         ? await tx.evaluation.update({
             where: { id: existing.id },
-            data: {
-              status: "PUBLISHED",
-              lens: input.lens,
-              standard: input.standard,
-              standardNote: input.standardNote ?? null,
-              enjoyment: input.enjoyment,
-              execution: input.execution,
-              completion: input.completion,
-              playtime: input.playtime ?? "UNKNOWN",
-              ownership: input.ownership ?? null,
-              platformId: input.platformId ?? null,
-              reviewedOn: existing.reviewedOn ?? new Date(),
-            },
+            data: savedFields,
           })
         : await tx.evaluation.create({
             data: {
               workId: work.id,
               reviewerId: reviewer.id,
-              status: "PUBLISHED",
-              lens: input.lens,
-              standard: input.standard,
-              standardNote: input.standardNote ?? null,
-              enjoyment: input.enjoyment,
-              execution: input.execution,
-              completion: input.completion,
-              playtime: input.playtime ?? "UNKNOWN",
-              ownership: input.ownership ?? null,
-              platformId: input.platformId ?? null,
-              reviewedOn: new Date(),
+              ...savedFields,
             },
           });
 
@@ -145,17 +143,19 @@ export async function saveEvaluation(
       return saved;
     });
 
-    revalidatePath(workHref(work.workType, work.slug));
     revalidatePath(evaluateHref(work.workType, work.slug));
+    if (!publishing) return { draftSaved: true };
+
+    revalidatePath(workHref(work.workType, work.slug));
     revalidatePath(reviewHref(work.workType, work.slug, reviewer.slug));
     revalidatePath("/");
     revalidatePath("/discover");
     revalidatePath("/games");
-    redirect(reviewHref(work.workType, work.slug, reviewer.slug) + `?saved=${evaluation.id ? "1" : "1"}`);
+    redirect(reviewHref(work.workType, work.slug, reviewer.slug) + "?saved=1");
   } catch (error) {
     if (error instanceof DomainError) return { error: error.message };
     if (typeof error === "object" && error && "digest" in error) throw error;
     console.error(error);
-    return { error: "We couldn't save this evaluation. Nothing was published." };
+    return { error: publishing ? "We couldn't save this evaluation. Nothing was published." : "We couldn't save this draft. Nothing was saved." };
   }
 }

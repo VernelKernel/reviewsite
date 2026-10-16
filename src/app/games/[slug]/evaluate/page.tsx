@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EvaluationForm } from "@/components/evaluations/evaluation-form";
 import { getCurrentUser } from "@/lib/auth/session";
-import { evaluationFormOptions, getWork } from "@/lib/works/queries";
+import { workArt } from "@/lib/works/present";
+import { evaluationFormOptions, getWork, reviewerEvaluation } from "@/lib/works/queries";
 
 export const metadata: Metadata = { title: "Evaluate" };
 
@@ -28,7 +29,10 @@ export async function EvaluateScreen({
     evaluationFormOptions(workType),
   ]);
   if (!work) notFound();
-  const existing = user?.profile ? work.evaluations.find((evaluation) => evaluation.reviewerId === user.profile?.id) : undefined;
+  const existing = user?.profile ? await reviewerEvaluation(work.id, user.profile.id) : null;
+  const genres = [...work.genres]
+    .sort((left, right) => Number(right.isPrimary) - Number(left.isPrimary))
+    .map((item) => ({ name: item.genre.name, slug: item.genre.slug }));
 
   return (
     <main className="page shell">
@@ -36,6 +40,10 @@ export async function EvaluateScreen({
         workType={workType}
         slug={slug}
         title={title}
+        art={workArt(work.media)}
+        genres={genres}
+        canDraft={!existing || existing.status === "DRAFT"}
+        hasEvaluation={Boolean(existing)}
         dimensions={options.dimensions.map((dimension) => ({
           id: dimension.id,
           name: dimension.name,

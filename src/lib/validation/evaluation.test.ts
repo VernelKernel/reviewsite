@@ -52,4 +52,29 @@ describe("evaluation validation", () => {
     const result = parseEvaluationForm(form({ ...base, reviewBody: "", imported: "on" }));
     expect(result.ok).toBe(false);
   });
+
+  it("requires a lens and a standard to publish", () => {
+    const result = parseEvaluationForm(form({ ...base, lens: "", standard: "" }));
+    expect(result.ok).toBe(false);
+  });
+
+  it("accepts a draft that has not chosen a lens yet", () => {
+    const result = parseEvaluationForm(form({ ...base, lens: "", standard: "", intent: "draft" }));
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.intent).toBe("draft");
+      expect(result.data.lens).toBeUndefined();
+    }
+  });
+
+  it("still checks an observation that is present on a draft", () => {
+    const result = parseEvaluationForm(
+      form({ ...base, lens: "", standard: "", intent: "draft" }, (data) => {
+        data.append("observationTopic", "topic-1");
+        data.append("observationPolarity", "PRAISE");
+        data.append("observationContent", "Nope");
+      }),
+    );
+    expect(result.ok).toBe(false);
+  });
 });
