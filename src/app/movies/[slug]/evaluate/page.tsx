@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EvaluateScreen } from "@/app/games/[slug]/evaluate/page";
 import { getWork } from "@/lib/works/queries";
+
+export const metadata: Metadata = { title: "Create your review" };
 
 export default async function EvaluateMoviePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

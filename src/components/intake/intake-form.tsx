@@ -78,7 +78,7 @@ export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimen
     <form className="evaluation-builder" action={action}>
       <header className="builder-intro">
         <p className="kicker">Create your review</p>
-        <h1>{workType === "MOVIE" ? "Movies" : "Games"}</h1>
+        <h1>{workType === "MOVIE" ? "Movie" : "Game"}</h1>
       </header>
 
       <nav className="builder-track" aria-label="Review sections">

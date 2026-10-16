@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { workArt } from "@/lib/works/present";
 import { evaluationFormOptions, getWork, reviewerEvaluation } from "@/lib/works/queries";
 
-export const metadata: Metadata = { title: "Evaluate" };
+export const metadata: Metadata = { title: "Create your review" };
 
 export default async function EvaluateGamePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

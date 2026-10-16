@@ -140,8 +140,8 @@ export function EvaluationForm({
   return (
     <form className="evaluation-builder" action={formAction}>
       <header className="builder-intro">
-        <p className="kicker">Evaluate</p>
-        <h1>{hasEvaluation ? "Update your evaluation" : "Create your evaluation"}</h1>
+        <p className="kicker">Create your review</p>
+        <h1>{workType === "MOVIE" ? "Movie" : "Game"}</h1>
       </header>
 
       <nav className="builder-track" aria-label="Evaluation sections">
