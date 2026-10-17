@@ -160,6 +160,33 @@ export async function recentEvaluations(take = 4) {
   });
 }
 
+export async function homeRecentEvaluations(take = 12) {
+  return prisma.evaluation.findMany({
+    where: { status: "PUBLISHED", review: { isNot: null } },
+    orderBy: { reviewedOn: "desc" },
+    take,
+    include: {
+      reviewer: { select: { displayName: true, slug: true } },
+      work: {
+        select: {
+          title: true,
+          slug: true,
+          workType: true,
+          media: {
+            where: { visibility: "PUBLIC" },
+            orderBy: { sortOrder: "asc" },
+            select: { kind: true, src: true, alt: true, isPrimary: true },
+          },
+          releases: {
+            orderBy: { releasedOn: "asc" },
+            select: { releasedOn: true },
+          },
+        },
+      },
+    },
+  });
+}
+
 export async function reviewerEvaluation(workId: string, reviewerId: string) {
   return prisma.evaluation.findUnique({
     where: { reviewerId_workId: { reviewerId, workId } },
