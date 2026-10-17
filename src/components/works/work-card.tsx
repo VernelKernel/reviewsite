@@ -1,14 +1,13 @@
 import { criticCoverage } from "@/lib/aggregation/landscape";
 import { CompareButton } from "@/components/comparison/compare-controls";
-import { PairedDistribution } from "@/components/evaluations/distribution-bar";
-import { audienceHref, criticsHref, workHref, workTypeLabel } from "@/lib/domain/labels";
+import { audienceHref, criticsHref, workHref } from "@/lib/domain/labels";
 import { ArtImage } from "@/components/works/work-art";
-import { creatorLine, landscapesFor, releaseYear, workArt, type CardWork } from "@/lib/works/present";
+import { WorkCardCounts, WorkCardGroups } from "@/components/works/work-card-reading";
+import { landscapesFor, workArt, type CardWork } from "@/lib/works/present";
 
 export function WorkCard({ work }: { work: CardWork }) {
   const art = workArt(work.media);
   const landscapes = landscapesFor(work);
-  const year = releaseYear(work.releases);
   return (
     <article className="work-card">
       <a className="work-card-link" href={workHref(work.workType, work.slug)}>
@@ -16,32 +15,19 @@ export function WorkCard({ work }: { work: CardWork }) {
           <ArtImage art={art} shape="wide" />
         </div>
         <div className="work-card-body">
-          <p className="meta">
-            {workTypeLabel[work.workType]}
-            {year ? ` · ${year}` : ""}
-            {creatorLine(work.creators) ? ` · ${creatorLine(work.creators)}` : ""}
-          </p>
           <h3>{work.title}</h3>
-          <div className="snapshot">
-            <PairedDistribution
-              label="Enjoyment"
-              critics={landscapes.critics.enjoyment}
-              audience={landscapes.audience.enjoyment}
-              dense
-            />
-            <PairedDistribution
-              label="Execution"
-              critics={landscapes.critics.execution}
-              audience={landscapes.audience.execution}
-              dense
-            />
-          </div>
+          <WorkCardGroups
+            critics={{ enjoyment: landscapes.critics.enjoyment, execution: landscapes.critics.execution }}
+            audience={{ enjoyment: landscapes.audience.enjoyment, execution: landscapes.audience.execution }}
+          />
         </div>
       </a>
-      <p className="card-counts">
-        <a href={criticsHref(work.workType, work.slug)}>{`Based on ${criticCoverage(landscapes.critics.coverageCount)}`}</a>
-        <a href={audienceHref(work.workType, work.slug)}>{landscapes.audience.sampleNote.replace(/\.$/, "")}</a>
-      </p>
+      <WorkCardCounts
+        criticHref={criticsHref(work.workType, work.slug)}
+        audienceHref={audienceHref(work.workType, work.slug)}
+        criticLabel={`Based on ${criticCoverage(landscapes.critics.coverageCount)}`}
+        audienceLabel={landscapes.audience.sampleNote.replace(/\.$/, "")}
+      />
       <div className="work-card-actions">
         <CompareButton workType={work.workType} slug={work.slug} title={work.title} />
       </div>

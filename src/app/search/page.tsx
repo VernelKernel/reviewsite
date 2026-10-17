@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { WorkCard } from "@/components/works/work-card";
+import { WorkList } from "@/components/works/work-list";
 import { searchWorks } from "@/lib/works/queries";
 
 export const metadata: Metadata = {
@@ -34,11 +34,7 @@ export default async function SearchPage({
       ) : results.length === 0 ? (
         <p className="empty">Nothing in the catalog matches “{query}”.</p>
       ) : (
-        <div className="grid-cards">
-          {results.map((work) => (
-            <WorkCard key={work.id} work={work} />
-          ))}
-        </div>
+        <WorkList works={results} />
       )}
     </main>
   );

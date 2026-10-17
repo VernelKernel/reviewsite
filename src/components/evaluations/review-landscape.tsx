@@ -4,12 +4,7 @@ import type { ReactNode } from "react";
 import { pairedSampleNote, type ReviewLandscape, type ShapeMode } from "@/lib/aggregation/landscape";
 import { completionLabel, lensLabel, standardLabel } from "@/lib/domain/labels";
 import { DimensionShape, type Focus } from "./dimension-shape";
-
-const MODES: { value: ShapeMode; label: string }[] = [
-  { value: "both", label: "Both" },
-  { value: "audience", label: "Audience" },
-  { value: "critics", label: "Critics" },
-];
+import { PopulationSegment } from "./population-segment";
 
 export function ReviewLandscapeView({
   critics,
@@ -52,25 +47,12 @@ export function ReviewLandscapeView({
       </h2>
       {totalEvaluations > 0 ? (
         <div className="landscape-toolbar">
-          <div className="shape-segment" role="radiogroup" aria-label="Population">
-            {MODES.map((item) => {
-              const missing =
-                (item.value === "critics" && critics.sampleSize === 0) || (item.value === "audience" && audience.sampleSize === 0);
-              return (
-                <button
-                  key={item.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={mode === item.value}
-                  disabled={missing}
-                  title={missing ? `No ${item.label.toLowerCase()} evaluations in this view` : undefined}
-                  onClick={() => onMode(item.value)}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
-          </div>
+          <PopulationSegment
+            mode={mode}
+            onMode={onMode}
+            criticsAvailable={critics.sampleSize > 0}
+            audienceAvailable={audience.sampleSize > 0}
+          />
           {toolbar}
         </div>
       ) : null}

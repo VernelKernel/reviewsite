@@ -46,12 +46,6 @@ export function workArt(media: { kind: string; src: string; alt: string; isPrima
   return { wide: pick(wideKinds), tall: pick(tallKinds) };
 }
 
-export function creatorLine(creators: { role: string; creator: { name: string } }[]): string {
-  const developers = creators.filter((creator) => creator.role === "DEVELOPER" || creator.role === "DIRECTOR");
-  const names = (developers.length > 0 ? developers : creators).map((creator) => creator.creator.name);
-  return [...new Set(names)].join(", ");
-}
-
 export function toLandscapeInput(evaluation: {
   lens: LandscapeEvaluation["lens"];
   standard: LandscapeEvaluation["standard"];

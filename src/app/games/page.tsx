@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { WorkCard } from "@/components/works/work-card";
+import { WorkList } from "@/components/works/work-list";
 import { listWorks } from "@/lib/works/queries";
 
 export const metadata: Metadata = {
@@ -16,11 +16,7 @@ export default async function GamesPage() {
       <p className="lede" style={{ margin: "1rem 0 2rem" }}>
         Each card shows enjoyment and execution separately, with the number of evaluations behind the picture.
       </p>
-      <div className="grid-cards">
-        {works.map((work) => (
-          <WorkCard key={work.id} work={work} />
-        ))}
-      </div>
+      <WorkList works={works} />
     </main>
   );
 }
