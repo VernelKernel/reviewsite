@@ -16,7 +16,10 @@ export async function workOgImage(workType: WorkType, slug: string): Promise<Ima
   const colors = themes[defaultMood()].colors.light;
   const work = await getWork(workType, slug);
   if (!work || work.status !== "PUBLISHED") {
-    return new ImageResponse(<Frame colors={colors} kind="Evaluations, not scores" title={WATERMARK_NAME} />, OG_SIZE);
+    return new ImageResponse(
+      <Frame colors={colors} kind="Games. Movies. What shape will your review take?" title={WATERMARK_NAME} />,
+      OG_SIZE,
+    );
   }
   const { critics, audience } = landscapesFor(work);
   const rows: { name: string; landscape: ReviewLandscape; count: string }[] = [];

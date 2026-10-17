@@ -10,7 +10,7 @@ export function SiteHeader({ mood, mode, account = null }: { mood: string; mode:
           <img className="brand-mark" src="/brand/mark.png" alt="" width={40} height={40} />
           <span className="brand-lockup">
             <span className="brand-name">FRAME</span>
-            <span className="brand-kicker">Evaluations, not scores</span>
+            <span className="brand-kicker">Games. Movies. Let your review take shape.</span>
           </span>
         </a>
         <NavLinks />

@@ -698,7 +698,7 @@ function initWork() {
     const frame = el("article", { class: "share-card" });
     const header = el("header");
     const mark = el("p", { class: "wordmark", text: "FRAME" });
-    mark.append(el("small", { text: "Evaluations, not scores" }));
+    mark.append(el("small", { text: "Games. Movies. What shape will your review take?" }));
     header.append(mark, el("p", { class: "meta", text: "Audience · 86 evaluations" }));
     frame.append(header);
     frame.append(el("h2", { class: "work-title", text: work.title }));
@@ -765,7 +765,7 @@ function initCompare() {
     const frame = el("article", { class: "share-card crop" });
     const header = el("header");
     const mark = el("p", { class: "wordmark", text: "FRAME" });
-    mark.append(el("small", { text: "Evaluations, not scores" }));
+    mark.append(el("small", { text: "Games. Movies. What shape will your review take?" }));
     header.append(mark, el("p", { class: "meta", text: "Audience crop" }));
     frame.append(header);
     frame.append(el("h2", { text: "Three games, five dimensions" }));
