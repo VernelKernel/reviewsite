@@ -1792,6 +1792,11 @@ button.population-chip[aria-pressed="true"] {
   border-top: var(--border-width) solid var(--color-border);
 }
 
+.landscape .evidence-list li {
+  color: var(--color-text-muted);
+  font-size: var(--text-meta);
+}
+
 .evidence-list small {
   display: block;
   color: var(--color-text-muted);
@@ -1929,8 +1934,16 @@ button.chip[aria-pressed="true"] {
 }
 
 .excerpt-stances,
-.excerpt-body {
-  color: var(--color-text-secondary);
+.excerpt-body,
+.critic-reading a,
+.excerpt-foot a {
+  color: var(--color-text-muted);
+  font-size: var(--text-meta);
+}
+
+.critic-reading a:hover,
+.excerpt-foot a:hover {
+  color: var(--color-accent);
 }
 
 .excerpt-foot a {
@@ -3049,6 +3062,11 @@ body:has(.mockup-sheet) .page {
 
 .evaluation-details .prose {
   max-width: none;
+  font-size: var(--text-meta);
+}
+
+.evaluation-details > p:not(.provenance):not(.meta) {
+  font-size: var(--text-meta);
 }
 
 .evaluation-cards,
@@ -3283,6 +3301,46 @@ body:has(.mockup-sheet) .page {
   align-items: center;
 }
 
+.evaluation-side .evaluation-panel {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.evaluation-side .evaluation-panel h2 {
+  font-family: var(--font-body);
+  font-weight: 650;
+  line-height: var(--leading-body);
+}
+
+.evaluation-side .dimension-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--space-5);
+  row-gap: var(--space-2);
+}
+
+.evaluation-side .dimension-breakdown li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.evaluation-side .dimension-breakdown li > span {
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--color-text-secondary);
+}
+
+.evaluation-side .dimension-breakdown li > span:not(.stance) {
+  color: var(--color-text-muted);
+  font-weight: 560;
+}
+
 .dimension-dot {
   width: 0.7rem;
   height: 0.7rem;
@@ -3370,6 +3428,11 @@ body:has(.mockup-sheet) .page {
 
 .note-card-criticism {
   background: var(--color-negative-soft);
+}
+
+.note-card-praise li,
+.note-card-criticism li {
+  font-size: var(--text-meta);
 }
 
 .note-card li {
