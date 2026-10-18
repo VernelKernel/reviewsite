@@ -1,5 +1,54 @@
+import type { CSSProperties } from "react";
 import { distributionLabel, percentages, type Distribution } from "@/lib/aggregation/landscape";
 import { ShapeMark } from "@/components/evaluations/shape-mark";
+
+const BLEND = 5;
+
+type Share = { positive: number; mixed: number; negative: number };
+
+/** Soft join only where two stance colors actually meet, so a single reading stays flat. */
+export function distributionGradient(share: Share): string {
+  const segments = [
+    { width: share.positive, color: "var(--color-positive)" },
+    { width: share.mixed, color: "var(--color-caution)" },
+    { width: share.negative, color: "var(--color-negative)" },
+  ].filter((segment) => segment.width > 0);
+
+  if (segments.length === 0) return "transparent";
+  if (segments.length === 1) return segments[0].color;
+
+  const stops: string[] = [];
+  let cursor = 0;
+  for (let index = 0; index < segments.length; index += 1) {
+    const segment = segments[index];
+    const start = cursor;
+    const end = cursor + segment.width;
+    const blendBefore = index === 0 ? 0 : blendWidth(segments[index - 1].width, segment.width);
+    const blendAfter = index === segments.length - 1 ? 0 : blendWidth(segment.width, segments[index + 1].width);
+    const solidStart = start + blendBefore;
+    const solidEnd = end - blendAfter;
+    if (index === 0) stops.push(`${segment.color} 0%`);
+    else stops.push(`${segment.color} ${formatStop(solidStart)}%`);
+    if (index === segments.length - 1) stops.push(`${segment.color} 100%`);
+    else if (solidEnd > solidStart + 0.05) stops.push(`${segment.color} ${formatStop(solidEnd)}%`);
+    cursor = end;
+  }
+
+  return `linear-gradient(in oklab to right, ${stops.join(", ")})`;
+}
+
+function blendWidth(left: number, right: number): number {
+  return Math.min(BLEND, left * 0.4, right * 0.4);
+}
+
+function formatStop(value: number): string {
+  return (Math.round(value * 10) / 10).toString();
+}
+
+export function DistributionFill({ share }: { share: Share }) {
+  const style = { "--dist-gradient": distributionGradient(share) } as CSSProperties;
+  return <span className="dist-fill" style={style} />;
+}
 
 function countLabel(count: number, unit: "judgment" | "outlet"): string {
   if (count === 0) return unit === "outlet" ? "0 outlets" : "0 judgments";
@@ -47,13 +96,7 @@ export function DistributionBar({
       role="img"
       aria-label={`${label}: ${caption}, from ${count}.`}
     >
-      {distribution.count > 0 ? (
-        <>
-          <span className="dist-positive" style={{ width: `${pct.positive}%` }} />
-          <span className="dist-mixed" style={{ width: `${pct.mixed}%` }} />
-          <span className="dist-negative" style={{ width: `${pct.negative}%` }} />
-        </>
-      ) : null}
+      {distribution.count > 0 ? <DistributionFill share={pct} /> : null}
     </div>
   );
 
@@ -126,13 +169,7 @@ export function DistributionTrack({
           role="img"
           aria-label={`${name}: ${caption}, from ${countLabel(distribution.count, unit)}.`}
         >
-          {distribution.count > 0 ? (
-            <>
-              <span className="dist-positive" style={{ width: `${pct.positive}%` }} />
-              <span className="dist-mixed" style={{ width: `${pct.mixed}%` }} />
-              <span className="dist-negative" style={{ width: `${pct.negative}%` }} />
-            </>
-          ) : null}
+          {distribution.count > 0 ? <DistributionFill share={pct} /> : null}
         </div>
         <div className="dist-head">
           <p className="dist-caption">{caption}</p>

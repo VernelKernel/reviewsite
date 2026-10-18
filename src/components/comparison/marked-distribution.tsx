@@ -1,3 +1,4 @@
+import { DistributionFill } from "@/components/evaluations/distribution-bar";
 import { percentages, type Distribution, type StanceValue } from "@/lib/aggregation/landscape";
 import { stanceLabel } from "@/lib/domain/labels";
 
@@ -28,13 +29,7 @@ export function MarkedDistribution({
           role="img"
           aria-label={`${label}: you are ${stance.toLowerCase()}. ${caption} From ${distribution.count} ${unit === "outlet" ? "outlets" : "evaluations"}.`}
         >
-          {distribution.count > 0 ? (
-            <>
-              <span className="dist-positive" style={{ width: `${pct.positive}%` }} />
-              <span className="dist-mixed" style={{ width: `${pct.mixed}%` }} />
-              <span className="dist-negative" style={{ width: `${pct.negative}%` }} />
-            </>
-          ) : null}
+          {distribution.count > 0 ? <DistributionFill share={pct} /> : null}
         </div>
       </div>
     </div>
