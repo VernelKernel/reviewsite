@@ -10,6 +10,7 @@ import {
   enjoymentExecutionGap,
   gapSentence,
   pairedDimensions,
+  pairedEnjoymentDimensions,
   pairedSampleNote,
   shapePoints,
   shapeTone,
@@ -230,6 +231,26 @@ describe("population shapes", () => {
     const story = shapePoints(dimensions, "audience")[0];
     expect(story.distance).toBe(0.08);
     expect(story.t).toBe(0.5);
+  });
+
+  it("keeps enjoyment dimensions on their own chart", () => {
+    const paired = splitLandscapes([
+      {
+        ...evaluation(),
+        population: "AUDIENCE",
+        judgments: [
+          { dimensionSlug: "story", dimensionName: "Story", stance: "POSITIVE", sortOrder: 1, family: "WORK" },
+          { dimensionSlug: "fun", dimensionName: "Fun", stance: "MIXED", sortOrder: 2, family: "ENJOYMENT" },
+        ],
+      },
+    ]);
+    expect(shapePoints(pairedDimensions(paired.critics, paired.audience), "audience").map((point) => point.slug)).toEqual([
+      "story",
+    ]);
+    expect(shapePoints(pairedEnjoymentDimensions(paired.critics, paired.audience), "audience").map((point) => point.slug)).toEqual([
+      "fun",
+    ]);
+    expect(shapePoints(pairedDimensions(paired.critics, paired.audience), "critics")).toEqual([]);
   });
 
   it("reads small or split samples as divided", () => {

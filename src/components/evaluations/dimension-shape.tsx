@@ -6,10 +6,13 @@ import { ShapeShare } from "@/components/evaluations/shape-share";
 import {
   criticCoverage,
   distributionLabel,
-  gapSentence,
+  dominantKey,
   pairedDimensions,
+  pairedEnjoymentDimensions,
   percentages,
   shapePoints,
+  type DimensionLandscape,
+  type Distribution,
   type ReviewLandscape,
   type ShapePoint,
 } from "@/lib/aggregation/landscape";
@@ -18,11 +21,11 @@ import { radarPoint } from "@/lib/evaluations/radar";
 
 export type Focus = "critics" | "audience";
 
-const WIDTH = 640;
-const HEIGHT = 520;
-const CX = 320;
-const CY = 258;
-const RADIUS = 156;
+const WIDTH = 560;
+const HEIGHT = 460;
+const CX = 280;
+const CY = 220;
+const RADIUS = 108;
 
 const NAMES: Record<Focus, string> = { critics: "Critics", audience: "Audience" };
 
@@ -43,8 +46,12 @@ export function DimensionShape({
 }) {
   const noteId = useId();
   const points = useMemo(() => {
-    const dimensions = pairedDimensions(critics, audience);
-    return { critics: shapePoints(dimensions, "critics"), audience: shapePoints(dimensions, "audience") };
+    const work = pairedDimensions(critics, audience);
+    const enjoyment = pairedEnjoymentDimensions(critics, audience);
+    return {
+      critics: { execution: shapePoints(work, "critics"), enjoyment: shapePoints(enjoyment, "critics") },
+      audience: { execution: shapePoints(work, "audience"), enjoyment: shapePoints(enjoyment, "audience") },
+    };
   }, [critics, audience]);
   const selectable = rows.length > 1;
 
@@ -57,7 +64,8 @@ export function DimensionShape({
             <PopulationStage
               population={population}
               landscape={landscape}
-              points={points[population]}
+              execution={points[population].execution}
+              enjoyment={points[population].enjoyment}
               selectable={selectable}
               focused={focus === population}
               onToggle={() => onFocus(population)}
@@ -68,8 +76,8 @@ export function DimensionShape({
         );
       })}
       <p className="shape-note" id={noteId}>
-        Distance from the center is the share of positive judgments among people who judged that dimension. Color is the stance
-        reading.
+        The execution chart plots work dimensions. The enjoyment chart plots enjoyment dimensions. Distance from the center is
+        the share of positive judgments among people who judged that dimension. Color is the stance reading.
         {selectable ? " Select a graph to focus the share card and the evaluations below on that group." : null}
       </p>
       {share ? <ShapeShare title={share.title} path={share.path} /> : null}
@@ -81,7 +89,8 @@ export function DimensionShape({
 function PopulationStage({
   population,
   landscape,
-  points,
+  execution,
+  enjoyment,
   selectable,
   focused,
   onToggle,
@@ -89,7 +98,8 @@ function PopulationStage({
 }: {
   population: Focus;
   landscape: ReviewLandscape;
-  points: ShapePoint[];
+  execution: ShapePoint[];
+  enjoyment: ShapePoint[];
   selectable: boolean;
   focused: boolean;
   onToggle: () => void;
@@ -106,12 +116,10 @@ function PopulationStage({
       data-focused={focused ? "true" : undefined}
       onClick={selectable ? onToggle : undefined}
     >
-      <figcaption className="population-stage-label">Impression</figcaption>
-      {points.length >= 3 ? (
-        <ShapeChart points={points} label={`${name} shape`} describedBy={noteId} />
-      ) : (
-        <ShapeList points={points} />
-      )}
+      <div className="shape-charts">
+        <FamilyChart title={familyTitle("Execution", landscape.execution)} points={execution} describedBy={noteId} />
+        <FamilyChart title={familyTitle("Enjoyment", landscape.enjoyment)} points={enjoyment} describedBy={noteId} />
+      </div>
       <div className="population-stage-foot">
         {selectable ? (
           <button
@@ -135,13 +143,30 @@ function PopulationStage({
   );
 }
 
+function FamilyChart({ title, points, describedBy }: { title: string; points: ShapePoint[]; describedBy: string }) {
+  const labelId = useId();
+  return (
+    <div className="shape-chart" role="group" aria-labelledby={labelId}>
+      <p className="shape-chart-title" id={labelId}>
+        {title}
+      </p>
+      {points.length > 0 ? (
+        <ShapeChart points={points} label={title} describedBy={describedBy} />
+      ) : (
+        <p className="population-stage-empty">No dimensions judged.</p>
+      )}
+    </div>
+  );
+}
+
 function ShapeChart({ points, label, describedBy }: { points: ShapePoint[]; label: string; describedBy: string }) {
+  const closed = points.length >= 3;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [active, setActive] = useState<number | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !closed) return;
     const draw = () => {
       const dpr = Math.min(2, window.devicePixelRatio || 1);
       canvas.width = WIDTH * dpr;
@@ -157,15 +182,15 @@ function ShapeChart({ points, label, describedBy }: { points: ShapePoint[]; labe
     const observer = new MutationObserver(draw);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-mood", "data-mode"] });
     return () => observer.disconnect();
-  }, [points]);
+  }, [points, closed]);
 
   const tip = active === null ? null : points[active];
-  const tipPoint = active === null ? null : radarPoint(CX, CY, RADIUS + 36, active, points.length, 1);
+  const tipPoint = active === null ? null : radarPoint(CX, CY, RADIUS + 34, active, points.length, 1);
 
   return (
     <div className="evaluation-plot shape-plot">
-      <canvas ref={canvasRef} className="evaluation-field" width={WIDTH} height={HEIGHT} aria-hidden="true" />
-      <svg className="radar-chart" viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label={label} aria-describedby={describedBy}>
+      {closed ? <canvas ref={canvasRef} className="evaluation-field" width={WIDTH} height={HEIGHT} aria-hidden="true" /> : null}
+      <svg className="radar-chart" viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label={summary(label, points)} aria-describedby={describedBy}>
         {guideRings().map((ring) => (
           <circle key={ring} className="radar-ring" cx={CX} cy={CY} r={RADIUS * ring} />
         ))}
@@ -173,15 +198,17 @@ function ShapeChart({ points, label, describedBy }: { points: ShapePoint[]; labe
           const end = radarPoint(CX, CY, RADIUS, index, points.length, 1);
           return <line key={`${point.slug}-spoke`} className="radar-spoke" x1={CX} y1={CY} x2={end.x} y2={end.y} />;
         })}
-        <polygon
-          className="radar-outline"
-          points={points
-            .map((point, index) => {
-              const at = radarPoint(CX, CY, RADIUS, index, points.length, point.distance);
-              return `${at.x},${at.y}`;
-            })
-            .join(" ")}
-        />
+        {closed ? (
+          <polygon
+            className="radar-outline"
+            points={points
+              .map((point, index) => {
+                const at = radarPoint(CX, CY, RADIUS, index, points.length, point.distance);
+                return `${at.x},${at.y}`;
+              })
+              .join(" ")}
+          />
+        ) : null}
         {points.map((point, index) => {
           const at = radarPoint(CX, CY, RADIUS, index, points.length, point.distance);
           return (
@@ -191,9 +218,11 @@ function ShapeChart({ points, label, describedBy }: { points: ShapePoint[]; labe
           );
         })}
         {points.map((point, index) => {
-          const at = radarPoint(CX, CY, RADIUS + 36, index, points.length, 1);
+          const at = radarPoint(CX, CY, RADIUS + 34, index, points.length, 1);
           const cos = Math.cos(at.angle);
           const anchor = cos > 0.35 ? "start" : cos < -0.35 ? "end" : "middle";
+          const lines = labelLines(point.name);
+          const above = Math.sin(at.angle) < -0.2;
           return (
             <text
               key={`${point.slug}-label`}
@@ -217,7 +246,11 @@ function ShapeChart({ points, label, describedBy }: { points: ShapePoint[]; labe
                 if (event.key === "Escape") setActive(null);
               }}
             >
-              {point.name}
+              {lines.map((line, lineIndex) => (
+                <tspan key={line} x={at.x} dy={lineIndex === 0 ? (above && lines.length > 1 ? "-1.1em" : 0) : "1.15em"}>
+                  {line}
+                </tspan>
+              ))}
             </text>
           );
         })}
@@ -235,42 +268,71 @@ function ShapeChart({ points, label, describedBy }: { points: ShapePoint[]; labe
   );
 }
 
-function ShapeList({ points }: { points: ShapePoint[] }) {
-  if (points.length === 0) return <p className="population-stage-empty">No dimension judgments in this view yet.</p>;
+function GapPanel({ population, landscape }: { population: Focus; landscape: ReviewLandscape }) {
+  const unit = population === "critics" ? "outlet" : "judgment";
+  const executionDimensions = ordered(landscape.dimensions);
+  const enjoymentDimensions = ordered(landscape.enjoymentDimensions);
+  const headingId = `${population}-reading`;
   return (
-    <div className="population-stage-list">
-      <p>A shape needs three judged dimensions. These are the readings so far.</p>
-      <ul>
-        {points.map((point) => (
-          <li key={point.slug}>
-            <span>{point.name}</span>
-            <span>{distributionLabel(point.distribution)}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <section className="panel shape-gap" aria-labelledby={headingId}>
+      <h3 id={headingId}>{NAMES[population]}</h3>
+      <DistributionBar label="Enjoyment" distribution={landscape.enjoyment} unit={unit} layout="under" />
+      {enjoymentDimensions.length > 0 ? (
+        <DimensionBreakdown dimensions={enjoymentDimensions} />
+      ) : null}
+      <hr className="shape-section-rule" />
+      <DistributionBar label="Execution" distribution={landscape.execution} unit={unit} layout="under" />
+      {executionDimensions.length > 0 ? (
+        <DimensionBreakdown dimensions={executionDimensions} />
+      ) : null}
+    </section>
   );
 }
 
-function GapPanel({ population, landscape }: { population: Focus; landscape: ReviewLandscape }) {
-  const unit = population === "critics" ? "outlet" : "judgment";
+function DimensionBreakdown({ dimensions }: { dimensions: DimensionLandscape[] }) {
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
   return (
-    <div className="panel shape-gap">
-      <h3>
-        {NAMES[population]} · Enjoyment and execution
-      </h3>
-      <DistributionBar label="Enjoyment" distribution={landscape.enjoyment} unit={unit} />
-      <DistributionBar label="Execution" distribution={landscape.execution} unit={unit} />
-      <p className="shape-gap-note">{gapSentence(landscape) ?? "Fewer than four evaluations, so the gap is not shown."}</p>
-      {landscape.enjoymentDimensions.length > 0 ? (
-        <div className="shape-gap-enjoyment">
-          <h4>Enjoyment dimensions</h4>
-          {landscape.enjoymentDimensions.map((dimension) => (
-            <DistributionBar key={dimension.slug} label={dimension.name} distribution={dimension.distribution} unit={unit} />
+    <div className="shape-breakdown">
+      <button
+        type="button"
+        className="shape-breakdown-toggle"
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <BreakdownArrow up={open} />
+        <span className="shape-breakdown-label">{open ? "Collapse" : "See breakdown"}</span>
+      </button>
+      {open ? (
+        <div id={panelId} className="shape-breakdown-list">
+          {dimensions.map((dimension) => (
+            <DistributionBar
+              key={dimension.slug}
+              label={dimension.name}
+              distribution={dimension.distribution}
+              layout="under"
+              countAs="participant"
+            />
           ))}
         </div>
       ) : null}
     </div>
+  );
+}
+
+function BreakdownArrow({ up }: { up: boolean }) {
+  return (
+    <svg className="shape-breakdown-arrow" viewBox="0 0 12 12" aria-hidden="true">
+      <path
+        d={up ? "M2.2 7.6 L6 3.8 L9.8 7.6" : "M2.2 4.4 L6 8.2 L9.8 4.4"}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
@@ -295,6 +357,30 @@ function ShapeLegend() {
       </li>
     </ul>
   );
+}
+
+function ordered(dimensions: DimensionLandscape[]): DimensionLandscape[] {
+  return [...dimensions].sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name));
+}
+
+/** Headline stance, only once four or more evaluations share a dominant reading. */
+function familyTitle(label: string, distribution: Distribution): string {
+  if (distribution.count < 4) return label;
+  const dominant = dominantKey(distribution);
+  if (!dominant) return label;
+  return `${label}: ${dominant.charAt(0).toUpperCase()}${dominant.slice(1)}`;
+}
+
+function summary(label: string, points: ShapePoint[]): string {
+  if (points.length === 0) return `${label}. No dimensions judged.`;
+  return [label, points.map((point) => `${point.name} ${distributionLabel(point.distribution)}`).join(", ")].join(". ");
+}
+
+function labelLines(name: string): string[] {
+  if (!name.includes(" ") || name.length < 12) return [name];
+  const words = name.split(" ");
+  const midpoint = Math.ceil(words.length / 2);
+  return [words.slice(0, midpoint).join(" "), words.slice(midpoint).join(" ")];
 }
 
 function percentLine(point: ShapePoint): string {

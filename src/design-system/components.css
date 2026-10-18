@@ -548,7 +548,7 @@ p {
 
 .work-intro .hero-copy {
   flex: 1 1 28rem;
-  max-width: 46rem;
+  max-width: 38rem;
   padding-top: 0;
   align-items: flex-start;
 }
@@ -562,8 +562,9 @@ p {
 }
 
 .fact-card {
-  flex: 0 1 22rem;
-  width: min(100%, 22rem);
+  flex: 1 1 22rem;
+  width: auto;
+  min-width: 0;
   margin: 0;
   padding: var(--space-1) 0 var(--space-1) var(--space-5);
   background: transparent;
@@ -819,6 +820,17 @@ p {
   align-items: start;
 }
 
+.shape-row {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  align-items: start;
+}
+
+.shape-row > * {
+  min-width: 0;
+}
+
 .dimension-shape > :not(.shape-row) {
   grid-column: 1;
   min-width: 0;
@@ -915,21 +927,10 @@ p {
   white-space: nowrap;
 }
 
-.shape-row {
-  display: grid;
-  grid-template-columns: subgrid;
-  grid-column: 1 / -1;
-  align-items: start;
-}
-
-.shape-row > * {
-  min-width: 0;
-}
-
 .population-stage {
   position: relative;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto;
   gap: var(--space-3);
   margin: 0;
   padding: var(--space-4);
@@ -971,7 +972,40 @@ p {
 }
 
 .population-stage .radar-label {
-  font-size: 16px;
+  font-size: 14px;
+}
+
+.shape-charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  min-width: 0;
+}
+
+.shape-chart {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.shape-chart + .shape-chart {
+  margin-inline-start: var(--space-3);
+  padding-inline-start: var(--space-3);
+  border-inline-start: 1px solid color-mix(in srgb, var(--color-chart-grid) 45%, transparent);
+}
+
+.shape-chart-title {
+  margin: 0;
+  color: var(--color-chart-label);
+  font-size: var(--text-micro);
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.shape-chart .population-stage-empty {
+  min-height: 8rem;
 }
 
 .population-stage .radar-dot {
@@ -1101,19 +1135,96 @@ button.population-chip[aria-pressed="true"] {
   margin-bottom: var(--space-3);
 }
 
-.shape-gap-note {
+.shape-section-rule {
   margin: 0;
-  color: var(--color-text-secondary);
+  border: 0;
+  border-top: var(--border-width) solid var(--color-border-strong);
 }
 
-.shape-gap-enjoyment {
+.shape-breakdown {
   display: grid;
+  justify-items: center;
   gap: var(--space-4);
 }
 
-.shape-gap-enjoyment h4 {
+.shape-breakdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
   margin: 0;
-  font-size: var(--text-body);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--text-meta);
+  cursor: pointer;
+}
+
+.shape-breakdown-arrow {
+  width: 0.85em;
+  height: 0.85em;
+  color: var(--color-accent);
+}
+
+.shape-breakdown-label {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.shape-breakdown-list {
+  display: grid;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.dist-under {
+  gap: 0.4rem;
+}
+
+.dist-under .dist-bar {
+  height: 0.85rem;
+}
+
+.dist-under .dist-head strong:not(:has(.flair-icon)) {
+  color: var(--color-text-muted);
+  font-size: var(--text-meta);
+  font-weight: 560;
+}
+
+.dist-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.dist-under .dist-caption {
+  margin: 0;
+}
+
+.dist-beside {
+  gap: 0.35rem;
+}
+
+.dist-readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+}
+
+.dist-beside .dist-bar {
+  flex: 1 1 4.5rem;
+  height: 0.7rem;
+}
+
+.dist-beside .dist-caption {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: var(--text-micro);
+  white-space: nowrap;
 }
 
 .shape-segment {
@@ -3400,6 +3511,7 @@ body:has(.mockup-sheet) .page {
   .header-inner,
   .dimension-shape,
   .shape-row,
+  .shape-charts,
   .personal-layout,
   .home-entry {
     grid-template-columns: 1fr;
@@ -3415,6 +3527,15 @@ body:has(.mockup-sheet) .page {
   .work-intro .hero-copy {
     max-width: none;
     width: 100%;
+  }
+
+  .shape-chart + .shape-chart {
+    margin-inline-start: 0;
+    padding-inline-start: 0;
+    border-inline-start: 0;
+    margin-block-start: var(--space-3);
+    padding-block-start: var(--space-3);
+    border-block-start: 1px solid color-mix(in srgb, var(--color-chart-grid) 45%, transparent);
   }
 
   .home-sweep {
@@ -3630,7 +3751,7 @@ body:has(.mockup-sheet) .page {
   }
 
   .fact-card {
-    width: min(100%, 28rem);
+    width: 100%;
     border-left: 0;
     padding-left: 0;
     border-top: var(--border-width) solid var(--color-border-strong);

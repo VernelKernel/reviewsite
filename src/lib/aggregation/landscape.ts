@@ -477,9 +477,9 @@ export type PairedDimension = {
   audience: Distribution;
 };
 
-export function pairedDimensions(critics: ReviewLandscape, audience: ReviewLandscape): PairedDimension[] {
+function pairDimensionLists(critics: DimensionLandscape[], audience: DimensionLandscape[]): PairedDimension[] {
   const rows = new Map<string, PairedDimension>();
-  for (const dimension of critics.dimensions) {
+  for (const dimension of critics) {
     rows.set(dimension.slug, {
       slug: dimension.slug,
       name: dimension.name,
@@ -488,7 +488,7 @@ export function pairedDimensions(critics: ReviewLandscape, audience: ReviewLands
       audience: emptyDistribution(),
     });
   }
-  for (const dimension of audience.dimensions) {
+  for (const dimension of audience) {
     const current = rows.get(dimension.slug);
     if (current) {
       current.audience = dimension.distribution;
@@ -506,6 +506,16 @@ export function pairedDimensions(critics: ReviewLandscape, audience: ReviewLands
   return [...rows.values()].sort(
     (left, right) => right.critics.count + right.audience.count - (left.critics.count + left.audience.count),
   );
+}
+
+/** Work-family dimensions judged by either population. */
+export function pairedDimensions(critics: ReviewLandscape, audience: ReviewLandscape): PairedDimension[] {
+  return pairDimensionLists(critics.dimensions, audience.dimensions);
+}
+
+/** Enjoyment-family dimensions judged by either population. */
+export function pairedEnjoymentDimensions(critics: ReviewLandscape, audience: ReviewLandscape): PairedDimension[] {
+  return pairDimensionLists(critics.enjoymentDimensions, audience.enjoymentDimensions);
 }
 
 export function enjoymentExecutionGap(landscape: ReviewLandscape): number | null {

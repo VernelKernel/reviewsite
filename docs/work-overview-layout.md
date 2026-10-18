@@ -43,7 +43,7 @@ At a 1440px viewport on Core, measured on this layout: the shell is about `1267p
 ## Regions, top to bottom
 
 ```text
-[ poster 11rem ]   [ title and synopsis, up to 46rem ] [ facts, left border, up to 22rem ]
+[ poster 11rem ]   [ title and synopsis, up to 38rem ] [ facts, left border, through the main column's right edge ]
 [ sticky nav    ]  [ filters, charts, panels, reviews across the main column ]
 ```
 
@@ -55,10 +55,10 @@ The rail is as tall as the main column, so the nav can stick. The poster scrolls
 
 ### Intro
 
-`.work-intro` is a wrapping flex row, `justify-content: flex-start`. The synopsis and the facts sit next to each other. Empty space stays to the right of the facts. Do not pin the facts to the far edge with `space-between`.
+`.work-intro` is a wrapping flex row, `justify-content: flex-start`. The synopsis and the facts sit next to each other. The facts grow into the space beside the synopsis so their right edge lines up with the main column, which is also the right edge of the platform filter.
 
-- Copy: `flex: 1 1 28rem`, `max-width: 46rem`. Kicker is the work type (`Game`). The title is an `h1` at `--text-h1`, not `--text-display`. The synopsis is `.lede` and uses that same column. One primary button, `Evaluate this work`, sits under the synopsis and does not stretch.
-- Facts: `flex: 0 1 22rem`, `width: min(100%, 22rem)`. No fill, radius, or shadow. The only container edge is a left border (`--color-border-strong`) with padding on that side. Rows are Released, Creators, Genres, On Steam, Platforms. Omit a row when the work has no value, and omit the block when none exist. Labels are a `5.5rem` column. Steam links are metadata size under the reception line.
+- Copy: `flex: 1 1 28rem`, `max-width: 38rem`. Kicker is the work type (`Game`). The title is an `h1` at `--text-h1`, not `--text-display`. The synopsis is `.lede` and uses that same column. One primary button, `Evaluate this work`, sits under the synopsis and does not stretch.
+- Facts: `flex: 1 1 22rem`, no max width. No fill, radius, or shadow. The only container edge is a left border (`--color-border-strong`) with padding on that side. Rows are Released, Creators, Genres, On Steam, Platforms. Omit a row when the work has no value, and omit the block when none exist. Labels are a `5.5rem` column. Steam links are metadata size under the reception line.
 
 The facts block is only as tall as its rows. It must not stretch to match the poster, and the poster must not stretch to match the facts.
 
@@ -96,8 +96,9 @@ No large "What these evaluations say" heading. The heading is screen-reader only
 
 - Toolbar: Both / Audience / Critics, then the filter selects (approach, standard, experience, platform). Filters sit at the end of the row and wrap.
 - One muted sample line, `max-width: 46rem`. Filtered views replace it with the filtered count.
-- `.dimension-shape`: `minmax(0, 1.45fr)` and `minmax(15rem, 0.8fr)`, the same ratio as `.evaluation-overview`. Rows use subgrid so the gap panels share a column. `align-items: start`, so a panel is as tall as its bars and sentence, not as tall as the chart.
-- Critics row, then audience row, according to the toggle. Each row is a chart stage and a panel titled "{Critics|Audience} · Enjoyment and execution".
+- `.dimension-shape`: `minmax(0, 1.45fr)` and `minmax(15rem, 0.8fr)`, the same ratio as `.evaluation-overview`. Rows use subgrid. `align-items: start`, so a panel stays beside its own chart stage and is only as tall as its bars.
+- Critics stage, then audience stage, according to the toggle. Each stage holds two charts. Execution plots the work dimensions that population judged. Enjoyment plots the enjoyment dimensions. A chart title adds the headline stance when four or more evaluations share a dominant reading. Fewer than three judged dimensions stay open. None says so.
+- The side panel is titled with the population. Enjoyment comes first, then an underlined Breakdown and the enjoyment dimensions that population judged. Execution follows the same way. Each row is a full-width bar with the percentage line on the left and the count on the right. Omit a Breakdown when that family has no judgments.
 - The shape note, share icons, and legend are `grid-column: 1`. They sit under the charts. They do not run under the panels.
 - Approach and experience splits (`.split.reading-measure`) come after the charts. Two columns inside the narrow measure: approach, then how much of the work that population experienced. Audience first, then critics, when both are in view.
 
@@ -115,15 +116,15 @@ Full width of `.work-main`. It is not pulled out to the page grid, and it does n
 
 ## Breakpoints
 
-`1100px`: `.work-intro` becomes one column. The facts drop under the copy at `min(100%, 28rem)`, and the left border becomes a top border. The rail stays beside it.
+`1100px`: `.work-intro` becomes one column. The facts drop under the copy at the full column width, and the left border becomes a top border. The rail stays beside it.
 
-`860px`: `.work-frame` stacks. The poster is `min(11rem, 46%)`. The nav is a horizontal scroller (`position: static`), and `.work-nav-action` is `width: auto` so Compare does not force a full-width button. Charts and panels stack. `.reading-measure` and `.reception-columns-single` lose their max-width and become full width of the stacked column. Fact rows keep the `5.5rem` label column.
+`860px`: `.work-frame` stacks. The poster is `min(11rem, 46%)`. The nav is a horizontal scroller (`position: static`), and `.work-nav-action` is `width: auto` so Compare does not force a full-width button. Each reading panel drops under its own chart stage, and the two charts in a stage stack. `.reading-measure` and `.reception-columns-single` lose their max-width and become full width of the stacked column. Fact rows keep the `5.5rem` label column.
 
 ## Do not
 
 - Do not give the overview a full-bleed hero or reuse `--hero-columns` for this page.
 - Do not make the facts, approach lists, personal placement, related works, or a single review column the same width as the charts.
-- Do not put the facts back in a rounded card, and do not push them to the far edge of the main column.
+- Do not put the facts back in a rounded card.
 - Do not stretch enjoyment/execution panels to the chart height.
 - Do not put share icons and the legend across the panel column.
 - Do not add a second work-overview component for a mood. Themes change tokens, including `--hero-ratio` and `--content-focus`.
