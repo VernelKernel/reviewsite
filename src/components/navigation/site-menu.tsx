@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { logout } from "@/lib/auth/actions";
 
 const browse = [
-  { href: "/games", label: "Works" },
+  { href: "/games", label: "Games" },
   { href: "/discover", label: "Discover" },
   { href: "/about", label: "About" },
 ];

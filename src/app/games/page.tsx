@@ -3,7 +3,7 @@ import { WorkList } from "@/components/works/work-list";
 import { listWorks } from "@/lib/works/queries";
 
 export const metadata: Metadata = {
-  title: "Works",
+  title: "Games",
   description: "Games and other works with structured evaluations instead of a single score.",
 };
 
@@ -12,10 +12,7 @@ export default async function GamesPage() {
   return (
     <main className="page shell">
       <p className="kicker">Catalog</p>
-      <h1>Works</h1>
-      <p className="lede" style={{ margin: "1rem 0 2rem" }}>
-        Each card shows enjoyment and execution separately, with the number of evaluations behind the picture.
-      </p>
+      <h1>Games</h1>
       <WorkList works={works} />
     </main>
   );
