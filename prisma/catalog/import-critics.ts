@@ -3,6 +3,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../../src/generated/prisma/client";
 import { articleText } from "../../src/lib/catalog/article-text";
 import { attachReviewedPlatform } from "./attach-platform";
+import { asUtcDate } from "../../src/lib/catalog/dates";
 import { catalogIsDryRun } from "../../src/lib/catalog/run-mode";
 import { expandOutlets } from "../../src/lib/catalog/expand-outlets";
 import { archiveOutlet, articleLocations, mergeOutlets, outletsForGame, pickReviewLink, postSitemapUrls, type Outlet } from "../../src/lib/catalog/outlets";
@@ -15,6 +16,19 @@ const prisma = new PrismaClient({
 
 const dryRun = catalogIsDryRun(process.argv, process.env);
 const MIN_ARTICLE_CHARS = 400;
+
+function option(name: string): string | null {
+  const index = process.argv.indexOf(name);
+  if (index === -1) return null;
+  const value = process.argv[index + 1];
+  if (!value || value.startsWith("--")) return null;
+  return value;
+}
+
+function isoDate(value: string, label: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new Error(`${label} must be YYYY-MM-DD.`);
+  return value;
+}
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -77,21 +91,32 @@ async function outletReviewer(outlet: Outlet) {
 }
 
 async function main() {
+  const anchorArg = option("--anchor");
+  const floorArg = option("--floor");
+  const windowed = Boolean(anchorArg || floorArg);
+  if (windowed && (!anchorArg || !floorArg)) throw new Error("A window import needs both --anchor and --floor.");
+  const floor = floorArg ? isoDate(floorArg, "Floor") : null;
+  const anchor = anchorArg ? isoDate(anchorArg, "Anchor") : null;
+  if (floor && anchor && floor > anchor) throw new Error(`Floor ${floor} is after anchor ${anchor}.`);
+
   if (!dryRun) {
     await assertGeminiReady();
     await ensureEvaluationTaxonomy(prisma);
-    const enabled = await prisma.outletExpansion.findMany({ where: { enabled: true }, select: { workId: true } });
-    if (enabled.length > 0) {
-      const expansion = await expandOutlets(prisma, enabled.map((item) => item.workId));
-      if (expansion.error) console.error(expansion.error);
-      else console.log(`Outlet pass · ${expansion.added.length} publications added across ${expansion.checkedGames} games.`);
-    }
   }
-  const tracked = await prisma.trackedOutlet.findMany({ where: { lookup: "sitemap", archiveUrl: { not: null } } });
-  const extraOutlets: Outlet[] = tracked.flatMap((row) => (row.archiveUrl ? [archiveOutlet(row.slug, row.name, row.host, row.archiveUrl)] : []));
 
   const games = await prisma.work.findMany({
-    where: { status: "PUBLISHED", workType: "GAME" },
+    where: {
+      status: "PUBLISHED",
+      workType: "GAME",
+      ...(windowed
+        ? {
+            releases: {
+              some: { releasedOn: { gte: asUtcDate(floor!), lte: asUtcDate(anchor!) } },
+              none: { releasedOn: { lt: asUtcDate(floor!) } },
+            },
+          }
+        : {}),
+    },
     orderBy: { title: "asc" },
     select: {
       id: true,
@@ -105,6 +130,26 @@ async function main() {
       },
     },
   });
+
+  console.log(
+    windowed
+      ? `Critic import for ${games.length} games released ${floor} through ${anchor}.`
+      : `Critic import for ${games.length} games.`,
+  );
+
+  if (!dryRun) {
+    const enabled = await prisma.outletExpansion.findMany({
+      where: { enabled: true, workId: { in: games.map((game) => game.id) } },
+      select: { workId: true },
+    });
+    if (enabled.length > 0) {
+      const expansion = await expandOutlets(prisma, enabled.map((item) => item.workId));
+      if (expansion.error) console.error(expansion.error);
+      else console.log(`Outlet pass · ${expansion.added.length} publications added across ${expansion.checkedGames} games.`);
+    }
+  }
+  const tracked = await prisma.trackedOutlet.findMany({ where: { lookup: "sitemap", archiveUrl: { not: null } } });
+  const extraOutlets: Outlet[] = tracked.flatMap((row) => (row.archiveUrl ? [archiveOutlet(row.slug, row.name, row.host, row.archiveUrl)] : []));
 
   const [dimensionIds, topicIds] = dryRun
     ? [[], []]

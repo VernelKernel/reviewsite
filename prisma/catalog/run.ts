@@ -39,6 +39,19 @@ const prisma = new PrismaClient({
 const cacheDir = path.join(process.cwd(), "prisma", "catalog", ".cache");
 const dryRun = catalogIsDryRun(process.argv, process.env);
 
+function option(name: string): string | null {
+  const index = process.argv.indexOf(name);
+  if (index === -1) return null;
+  const value = process.argv[index + 1];
+  if (!value || value.startsWith("--")) return null;
+  return value;
+}
+
+function isoDate(value: string, label: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new Error(`${label} must be YYYY-MM-DD.`);
+  return value;
+}
+
 const platforms = [
   ["pc", "PC"],
   ["playstation-5", "PlayStation 5"],
@@ -247,15 +260,21 @@ async function main() {
     if (!process.env.GEMINI_API_KEY?.trim()) throw new Error("GEMINI_API_KEY is missing. Refusing to write a catalog with no evaluations.");
     await assertGeminiReady();
   }
-  const floor = CAMPAIGN_FLOOR;
+  const anchorArg = option("--anchor");
+  const floorArg = option("--floor");
+  const windowed = Boolean(anchorArg || floorArg);
+  if (windowed && (!anchorArg || !floorArg)) throw new Error("A window import needs both --anchor and --floor.");
+  const campaignFloor = CAMPAIGN_FLOOR;
+  const floor = floorArg ? isoDate(floorArg, "Floor") : campaignFloor;
   const last = await prisma.catalogBatch.findFirst({ orderBy: { createdAt: "desc" } });
-  if (last && iso(last.nextAnchor) <= floor) {
-    console.log(`2026 catalog is complete. The next anchor ${iso(last.nextAnchor)} is on or before ${floor}.`);
+  if (!windowed && last && iso(last.nextAnchor) <= campaignFloor) {
+    console.log(`2026 catalog is complete. The next anchor ${iso(last.nextAnchor)} is on or before ${campaignFloor}.`);
     return;
   }
-  const anchor = last ? iso(last.nextAnchor) : initialAnchor(todayIso(), INITIAL_ANCHOR_LAG_DAYS);
-  if (anchor <= floor) {
-    console.log(`2026 catalog is complete. The next anchor ${anchor} is on or before ${floor}.`);
+  const anchor = anchorArg ? isoDate(anchorArg, "Anchor") : last ? iso(last.nextAnchor) : initialAnchor(todayIso(), INITIAL_ANCHOR_LAG_DAYS);
+  if (floor > anchor) throw new Error(`Floor ${floor} is after anchor ${anchor}.`);
+  if (!windowed && anchor <= campaignFloor) {
+    console.log(`2026 catalog is complete. The next anchor ${anchor} is on or before ${campaignFloor}.`);
     return;
   }
 
@@ -264,7 +283,11 @@ async function main() {
       ? "Dry run. The database will not be changed."
       : `This run will write games and up to ${REVIEWS_PER_GAME} imported Steam evaluations for each game.`,
   );
-  console.log(`Catalog anchor ${anchor}. Floor ${floor}.`);
+  console.log(
+    windowed
+      ? `Window import ${floor} through ${anchor}. The year cursor stays ${last ? iso(last.nextAnchor) : "unset"}.`
+      : `Catalog anchor ${anchor}. Floor ${floor}.`,
+  );
   const [found, tags] = await Promise.all([discover(anchor, floor), popularTags()]);
   const discovered = found.games;
   const existing = new Set(
@@ -478,8 +501,8 @@ async function main() {
   await prisma.catalogBatch.create({
     data: {
       anchor: asUtcDate(anchor),
-      nextAnchor: asUtcDate(selection.nextAnchor),
-      campaignComplete: selection.campaignComplete,
+      nextAnchor: windowed && last ? last.nextAnchor : asUtcDate(selection.nextAnchor),
+      campaignComplete: windowed ? false : selection.campaignComplete,
       shortfalls: selection.shortfalls,
       placements: {
         create: written.map(({ workId, placement }) => ({
@@ -493,7 +516,11 @@ async function main() {
       },
     },
   });
-  console.log(`Wrote ${written.length} games. Run the command again to continue toward ${floor}.`);
+  console.log(
+    windowed
+      ? `Wrote ${written.length} games from ${floor} through ${anchor}. The year cursor stays ${last ? iso(last.nextAnchor) : "unset"}.`
+      : `Wrote ${written.length} games. Run the command again to continue toward ${floor}.`,
+  );
 }
 
 main()

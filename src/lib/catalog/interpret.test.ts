@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { dimensions, topics } from "../../../prisma/seed/catalog";
-import { GAME_DIMENSION_SLUGS, OBSERVATION_TOPICS } from "./evaluation-fields";
+import { GAME_DIMENSION_SLUGS, GAME_ENJOYMENT_DIMENSIONS, GAME_ENJOYMENT_SLUGS, OBSERVATION_TOPICS } from "./evaluation-fields";
 import {
   criticInterpretationPrompt,
   criticPlatformPrompt,
@@ -100,11 +100,53 @@ describe("review interpretation", () => {
     expect(parseInterpretation({ lens: "EXPERIENCE", execution: "POSITIVE" })).toBeNull();
   });
 
+  it("keeps enjoyment dimensions when the review answers them", () => {
+    const reading = parseInterpretation({
+      lens: "EXPERIENCE",
+      standard: "ABSOLUTE",
+      enjoyment: "POSITIVE",
+      execution: "MIXED",
+      completion: "COMPLETED",
+      enjoymentJudgments: [
+        { dimension: "engagement", stance: "POSITIVE" },
+        { dimension: "pacing", stance: "NEGATIVE" },
+        { dimension: "replay-appeal", stance: "MIXED" },
+        { dimension: "engagement", stance: "NEGATIVE" },
+      ],
+      judgments: [
+        { dimension: "gameplay", stance: "MIXED" },
+        { dimension: "fun", stance: "POSITIVE" },
+      ],
+    });
+    expect(reading?.judgments).toEqual([
+      { dimension: "engagement", stance: "POSITIVE" },
+      { dimension: "replay-appeal", stance: "MIXED" },
+      { dimension: "gameplay", stance: "MIXED" },
+      { dimension: "fun", stance: "POSITIVE" },
+    ]);
+  });
+
+  it("asks for enjoyment dimensions before work dimensions", () => {
+    const steam = interpretationPrompt({ title: "Hades", body: "I would play it again.", votedUp: true, playtimeMinutes: 600, earlyAccess: false });
+    const critic = criticInterpretationPrompt({ title: "Hades", outlet: "IGN", body: "I would play it again." });
+    for (const prompt of [steam, critic]) {
+      expect(prompt.indexOf("enjoymentJudgments come first")).toBeLessThan(prompt.indexOf("judgments: work dimensions only"));
+      expect(prompt).toContain("Did it hold your attention?");
+      expect(prompt).toContain("Do not copy the headline enjoyment");
+      expect(prompt).toContain("engagement, fun, immersion, emotional-impact, replay-appeal, satisfaction");
+    }
+  });
+
   it("uses the same dimensions and topics as the seed catalog", () => {
     const gameDimensions = dimensions
       .filter((dimension) => dimension.appliesTo.includes("GAME") && dimension.family !== "ENJOYMENT")
       .map((dimension) => dimension.slug);
     expect([...GAME_DIMENSION_SLUGS]).toEqual(gameDimensions);
+    const enjoyment = dimensions
+      .filter((dimension) => dimension.family === "ENJOYMENT" && dimension.appliesTo.includes("GAME"))
+      .sort((left, right) => left.sortOrder - right.sortOrder);
+    expect([...GAME_ENJOYMENT_SLUGS]).toEqual(enjoyment.map((dimension) => dimension.slug));
+    expect(GAME_ENJOYMENT_DIMENSIONS.map((dimension) => dimension.question)).toEqual(enjoyment.map((dimension) => dimension.description));
     expect([...OBSERVATION_TOPICS]).toEqual(topics.map(([slug]) => slug));
   });
 

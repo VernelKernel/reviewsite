@@ -1,6 +1,8 @@
 import {
   COMPLETIONS,
   GAME_DIMENSION_SLUGS,
+  GAME_ENJOYMENT_DIMENSIONS,
+  GAME_ENJOYMENT_SLUGS,
   LENSES,
   OBSERVATION_TOPICS,
   STANCES,
@@ -70,12 +72,25 @@ export type Interpretation = {
   enjoyment: Stance;
   execution: Stance;
   completion: Completion;
-  judgments: { dimension: (typeof GAME_DIMENSION_SLUGS)[number]; stance: Stance }[];
+  judgments: { dimension: JudgmentSlug; stance: Stance }[];
   observations: { topic: (typeof OBSERVATION_TOPICS)[number]; polarity: "PRAISE" | "CRITICISM"; content: string }[];
   impression: string | null;
 };
 
 const PROMPT_REVIEW_LIMIT = 6000;
+const JUDGMENT_SLUGS = [...GAME_DIMENSION_SLUGS, ...GAME_ENJOYMENT_SLUGS] as const;
+type JudgmentSlug = (typeof JUDGMENT_SLUGS)[number];
+
+const enjoymentJudgmentInstruction = [
+  "enjoymentJudgments come first. They describe how the experience felt, under the headline enjoyment stance.",
+  "They are not work dimensions, and they are not averaged into enjoyment.",
+  `dimension is one of ${GAME_ENJOYMENT_SLUGS.join(", ")}.`,
+  GAME_ENJOYMENT_DIMENSIONS.map((dimension) => `${dimension.slug} — ${dimension.question}`).join(" "),
+  "stance is POSITIVE, MIXED, or NEGATIVE. Omit a dimension the review does not answer. Silence is an omitted judgment.",
+  "Do not copy the headline enjoyment, a recommendation, a score, or hours played onto these dimensions.",
+  "Fun is the feeling of playing. A well-designed system is a work dimension unless the review says the playing felt good.",
+  "Replay Value only when they would want to experience it again.",
+].join(" ");
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === "object" ? (value as Record<string, unknown>) : null;
@@ -100,16 +115,7 @@ export function parseInterpretation(payload: unknown): Interpretation | null {
   const completion = oneOf(record.completion, COMPLETIONS);
   if (!lens || !standard || !enjoyment || !execution || !completion) return null;
 
-  const judgments: Interpretation["judgments"] = [];
-  const seenDimensions = new Set<string>();
-  for (const item of Array.isArray(record.judgments) ? record.judgments : []) {
-    const judgment = asRecord(item);
-    const dimension = oneOf(judgment?.dimension, GAME_DIMENSION_SLUGS);
-    const stance = oneOf(judgment?.stance, STANCES);
-    if (!dimension || !stance || seenDimensions.has(dimension)) continue;
-    seenDimensions.add(dimension);
-    judgments.push({ dimension, stance });
-  }
+  const judgments = readJudgments(record.enjoymentJudgments, record.judgments);
 
   const observations: Interpretation["observations"] = [];
   const seenContent = new Set<string>();
@@ -127,6 +133,20 @@ export function parseInterpretation(payload: unknown): Interpretation | null {
 
   const standardNote = standard === "ABSOLUTE" ? null : clip(record.standardNote, 240) || null;
   return { lens, standard, standardNote, enjoyment, execution, completion, judgments, observations, impression: readImpression(record.impression) };
+}
+
+function readJudgments(primary: unknown, secondary: unknown = []): Interpretation["judgments"] {
+  const judgments: Interpretation["judgments"] = [];
+  const seenDimensions = new Set<string>();
+  for (const item of [...(Array.isArray(primary) ? primary : []), ...(Array.isArray(secondary) ? secondary : [])]) {
+    const judgment = asRecord(item);
+    const dimension = oneOf(judgment?.dimension, JUDGMENT_SLUGS);
+    const stance = oneOf(judgment?.stance, STANCES);
+    if (!dimension || !stance || seenDimensions.has(dimension)) continue;
+    seenDimensions.add(dimension);
+    judgments.push({ dimension, stance });
+  }
+  return judgments;
 }
 
 function readImpression(value: unknown): string | null {
@@ -204,7 +224,8 @@ export function criticInterpretationPrompt(input: { title: string; outlet: strin
     "enjoyment and execution: POSITIVE, MIXED, or NEGATIVE.",
     "completion: JUST_STARTED, EARLY, SUBSTANTIAL, COMPLETED, ENDGAME, POST_GAME, ABANDONED, or UNKNOWN.",
     platformInstruction,
-    `judgments: dimension is one of ${GAME_DIMENSION_SLUGS.join(", ")}. stance is POSITIVE, MIXED, or NEGATIVE. Omit a dimension the review does not discuss.`,
+    enjoymentJudgmentInstruction,
+    `judgments: work dimensions only. dimension is one of ${GAME_DIMENSION_SLUGS.join(", ")}. stance is POSITIVE, MIXED, or NEGATIVE. Omit a dimension the review does not discuss.`,
     editorialCopy,
     `observations: up to 4, each on a different topic. topic is one of ${OBSERVATION_TOPICS.join(", ")}. polarity is PRAISE or CRITICISM. content is one specific observation, ideally under 12 words, about something the review actually noticed. Do not paste the article, and do not restate the topic as a category such as "strong music" or "repetitive gameplay".`,
     "Review:",
@@ -234,7 +255,8 @@ export function interpretationPrompt(input: {
     "standardNote: one sentence when the standard is contextual or mixed, otherwise empty.",
     "enjoyment and execution: POSITIVE, MIXED, or NEGATIVE.",
     "completion: JUST_STARTED, EARLY, SUBSTANTIAL, COMPLETED, ENDGAME, POST_GAME, ABANDONED, or UNKNOWN.",
-    `judgments: dimension is one of ${GAME_DIMENSION_SLUGS.join(", ")}. stance is POSITIVE, MIXED, or NEGATIVE.`,
+    enjoymentJudgmentInstruction,
+    `judgments: work dimensions only. dimension is one of ${GAME_DIMENSION_SLUGS.join(", ")}. stance is POSITIVE, MIXED, or NEGATIVE.`,
     editorialCopy,
     `observations: up to 4, each on a different topic. topic is one of ${OBSERVATION_TOPICS.join(", ")}. polarity is PRAISE or CRITICISM. content is one specific observation, ideally under 12 words, about something the review actually noticed. Do not paste the whole review, do not repeat a sentence, and do not restate the topic as a category such as "strong music" or "repetitive gameplay".`,
     "Review:",

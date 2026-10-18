@@ -33,6 +33,25 @@ export const GAME_DIMENSION_SLUGS = [
   "game-design",
 ] as const;
 
+/** Experience questions for games. Movie-only enjoyment dimensions stay out of the game import. */
+export const GAME_ENJOYMENT_DIMENSIONS = [
+  { slug: "engagement", question: "Did it hold your attention?" },
+  { slug: "fun", question: "Was the moment-to-moment experience enjoyable?" },
+  { slug: "immersion", question: "Did you feel inside the work?" },
+  { slug: "emotional-impact", question: "Did it make you feel something that mattered to you?" },
+  { slug: "replay-appeal", question: "Would you want to experience it again?" },
+  { slug: "satisfaction", question: "Did the experience feel rewarding or worthwhile?" },
+] as const;
+
+export const GAME_ENJOYMENT_SLUGS = [
+  "engagement",
+  "fun",
+  "immersion",
+  "emotional-impact",
+  "replay-appeal",
+  "satisfaction",
+] as const;
+
 export const OBSERVATION_TOPICS = [
   "tutorial",
   "controls",
