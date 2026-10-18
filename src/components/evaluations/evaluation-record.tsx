@@ -7,6 +7,7 @@ import {
   ownershipLabel,
   playtimeLabel,
   reviewHref,
+  reviewerHref,
   stanceClass,
   stanceLabel,
   workHref,
@@ -70,6 +71,9 @@ export function EvaluationRecord({
           <h1>
             <a href={workHref(work.workType, work.slug)}>{work.title}</a>
           </h1>
+          <p className="evaluation-reviewer">
+            <a href={reviewerHref(evaluation.reviewer.slug)}>{evaluation.reviewer.displayName}</a>
+          </p>
           <p className="lede">{headline}</p>
         </div>
         {genres.length > 0 ? (

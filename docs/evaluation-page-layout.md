@@ -42,7 +42,7 @@ At a 1440px viewport on Core, measured on this layout: the content span is about
 Gap is `space-5`.
 
 - Poster: `.evaluation-poster` is `7.5rem` wide. Height follows `--hero-ratio` (`3 / 4` on Core). It is smaller than the work-overview poster. The overview is the work; this page is one reading of it.
-- Copy: kicker is "{type} review". The `h1` is the work title and links to the overview. The lede is the enjoyment/execution headline, not a score.
+- Copy: kicker is "{type} review". The `h1` is the work title and links to the overview. Under the title, the reviewer handle uses the kicker's size and muted color and links to the reviewer. The lede is the enjoyment/execution headline, not a score.
 - Genre card: genre chips linking to Discover. The card is omitted when the work has no genres. It sits on the baseline of the title block (`align-items: end`), not stretched to a tall poster.
 
 ### Board

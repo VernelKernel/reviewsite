@@ -2815,6 +2815,21 @@ body:has(.mockup-sheet) .page {
   color: var(--color-accent);
 }
 
+.evaluation-reviewer {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-micro);
+}
+
+.evaluation-reviewer a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.evaluation-reviewer a:hover {
+  color: var(--color-text-primary);
+}
+
 .evaluation-byline {
   display: flex;
   flex-wrap: wrap;
