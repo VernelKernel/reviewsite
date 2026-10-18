@@ -46,7 +46,6 @@ export function EvaluationRecord({
   const strengths = evaluation.observations.filter((item) => item.polarity === "PRAISE").map((item) => item.content);
   const weaknesses = evaluation.observations.filter((item) => item.polarity === "CRITICISM").map((item) => item.content);
   const genres = [...work.genres].sort((left, right) => Number(right.isPrimary) - Number(left.isPrimary));
-  const headline = personalHeadline(enjoyment, execution);
   const glance = glanceItems(evaluation);
   const related = work.evaluations.filter((item) => item.id !== evaluation.id);
   const body = evaluation.review?.body?.trim() ?? "";
@@ -74,7 +73,6 @@ export function EvaluationRecord({
           <p className="evaluation-reviewer">
             <a href={reviewerHref(evaluation.reviewer.slug)}>{evaluation.reviewer.displayName}</a>
           </p>
-          <p className="lede">{headline}</p>
         </div>
         {genres.length > 0 ? (
           <aside className="impression-card">
