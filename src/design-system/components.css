@@ -1348,12 +1348,6 @@ button.population-chip[aria-pressed="true"] {
   stroke: var(--color-border-strong);
 }
 
-.shape-note {
-  color: var(--color-text-muted);
-  font-size: var(--text-meta);
-  margin: 0;
-}
-
 .shape-legend {
   display: flex;
   flex-wrap: wrap;

@@ -44,7 +44,6 @@ export function DimensionShape({
   onFocus: (population: Focus) => void;
   share?: { title: string; path: string };
 }) {
-  const noteId = useId();
   const points = useMemo(() => {
     const work = pairedDimensions(critics, audience);
     const enjoyment = pairedEnjoymentDimensions(critics, audience);
@@ -69,17 +68,11 @@ export function DimensionShape({
               selectable={selectable}
               focused={focus === population}
               onToggle={() => onFocus(population)}
-              noteId={noteId}
             />
             <GapPanel population={population} landscape={landscape} />
           </div>
         );
       })}
-      <p className="shape-note" id={noteId}>
-        The execution chart plots work dimensions. The enjoyment chart plots enjoyment dimensions. Distance from the center is
-        the share of positive judgments among people who judged that dimension. Color is the stance reading.
-        {selectable ? " Select a graph to focus the share card and the evaluations below on that group." : null}
-      </p>
       {share ? <ShapeShare title={share.title} path={share.path} /> : null}
       <ShapeLegend />
     </div>
@@ -94,7 +87,6 @@ function PopulationStage({
   selectable,
   focused,
   onToggle,
-  noteId,
 }: {
   population: Focus;
   landscape: ReviewLandscape;
@@ -103,7 +95,6 @@ function PopulationStage({
   selectable: boolean;
   focused: boolean;
   onToggle: () => void;
-  noteId: string;
 }) {
   const name = NAMES[population];
   const sample =
@@ -117,8 +108,8 @@ function PopulationStage({
       onClick={selectable ? onToggle : undefined}
     >
       <div className="shape-charts">
-        <FamilyChart title={familyTitle("Execution", landscape.execution)} points={execution} describedBy={noteId} />
-        <FamilyChart title={familyTitle("Enjoyment", landscape.enjoyment)} points={enjoyment} describedBy={noteId} />
+        <FamilyChart title={familyTitle("Execution", landscape.execution)} points={execution} />
+        <FamilyChart title={familyTitle("Enjoyment", landscape.enjoyment)} points={enjoyment} />
       </div>
       <div className="population-stage-foot">
         {selectable ? (
@@ -143,7 +134,7 @@ function PopulationStage({
   );
 }
 
-function FamilyChart({ title, points, describedBy }: { title: string; points: ShapePoint[]; describedBy: string }) {
+function FamilyChart({ title, points }: { title: string; points: ShapePoint[] }) {
   const labelId = useId();
   return (
     <div className="shape-chart" role="group" aria-labelledby={labelId}>
@@ -151,7 +142,7 @@ function FamilyChart({ title, points, describedBy }: { title: string; points: Sh
         {title}
       </p>
       {points.length > 0 ? (
-        <ShapeChart points={points} label={title} describedBy={describedBy} />
+        <ShapeChart points={points} label={title} />
       ) : (
         <p className="population-stage-empty">No dimensions judged.</p>
       )}
@@ -159,7 +150,7 @@ function FamilyChart({ title, points, describedBy }: { title: string; points: Sh
   );
 }
 
-function ShapeChart({ points, label, describedBy }: { points: ShapePoint[]; label: string; describedBy: string }) {
+function ShapeChart({ points, label }: { points: ShapePoint[]; label: string }) {
   const closed = points.length >= 3;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [active, setActive] = useState<number | null>(null);
@@ -190,7 +181,7 @@ function ShapeChart({ points, label, describedBy }: { points: ShapePoint[]; labe
   return (
     <div className="evaluation-plot shape-plot">
       {closed ? <canvas ref={canvasRef} className="evaluation-field" width={WIDTH} height={HEIGHT} aria-hidden="true" /> : null}
-      <svg className="radar-chart" viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label={summary(label, points)} aria-describedby={describedBy}>
+      <svg className="radar-chart" viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label={summary(label, points)}>
         {guideRings().map((ring) => (
           <circle key={ring} className="radar-ring" cx={CX} cy={CY} r={RADIUS * ring} />
         ))}

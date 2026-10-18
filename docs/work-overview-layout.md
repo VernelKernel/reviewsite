@@ -99,7 +99,7 @@ No large "What these evaluations say" heading. The heading is screen-reader only
 - `.dimension-shape`: `minmax(0, 1.45fr)` and `minmax(15rem, 0.8fr)`, the same ratio as `.evaluation-overview`. Rows use subgrid. `align-items: start`, so a panel stays beside its own chart stage and is only as tall as its bars.
 - Critics stage, then audience stage, according to the toggle. Each stage holds two charts. Execution plots the work dimensions that population judged. Enjoyment plots the enjoyment dimensions. A chart title adds the headline stance when four or more evaluations share a dominant reading. Fewer than three judged dimensions stay open. None says so.
 - The side panel is titled with the population. Enjoyment comes first, then an underlined Breakdown and the enjoyment dimensions that population judged. Execution follows the same way. Each row is a full-width bar with the percentage line on the left and the count on the right. Omit a Breakdown when that family has no judgments.
-- The shape note, share icons, and legend are `grid-column: 1`. They sit under the charts. They do not run under the panels.
+- The share icons and legend are `grid-column: 1`. They sit under the charts. They do not run under the panels.
 - Approach and experience splits (`.split.reading-measure`) come after the charts. Two columns inside the narrow measure: approach, then how much of the work that population experienced. Audience first, then critics, when both are in view.
 
 An empty work says there are no evaluations. An empty filter offers Clear filters. Neither state grows a chart.
