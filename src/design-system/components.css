@@ -444,6 +444,54 @@ p {
   clip-path: polygon(50% 8%, 92% 50%, 50% 92%, 8% 50%);
 }
 
+.profile-marks {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.profile-marks .shape-mark {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.profile-mark {
+  position: relative;
+  display: block;
+  line-height: 0;
+  border-radius: var(--radius-sm);
+}
+
+.profile-mark-rule {
+  width: 1px;
+  height: 1.15rem;
+  margin-inline: var(--space-1);
+  background: var(--color-border);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .profile-mark:hover::after,
+  .profile-mark:focus-visible::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 0.45rem);
+    z-index: 3;
+    padding: 0.28rem 0.45rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-text-primary);
+    color: var(--color-canvas);
+    font-family: var(--font-body);
+    font-size: var(--text-micro);
+    font-weight: 560;
+    line-height: 1.2;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: var(--shadow-floating);
+  }
+}
+
 .track-verdict {
   color: var(--color-text-primary);
   font-size: var(--text-meta);

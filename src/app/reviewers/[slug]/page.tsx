@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { FollowReviewerButton } from "@/components/comparison/follow-reviewer-button";
-import { distributionLabel } from "@/lib/aggregation/landscape";
+import { LandscapeMarks } from "@/components/works/landscape-marks";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
-import { lensLabel, reviewHref, reviewerCompareHref, standardLabel, workHref } from "@/lib/domain/labels";
+import { reviewHref, reviewerCompareHref, workHref } from "@/lib/domain/labels";
 import { getReviewer } from "@/lib/works/queries";
-import { landscapeFor } from "@/lib/works/present";
+import { landscapesFor } from "@/lib/works/present";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -71,32 +71,22 @@ export default async function ReviewerPage({ params }: { params: Promise<{ slug:
       </p>
       <div className="profile-list" style={{ marginTop: "2rem" }}>
         {reviewer.evaluations.map((evaluation) => {
-          const landscape = landscapeFor(evaluation.work);
+          const landscapes = landscapesFor(evaluation.work);
           return (
             <article className="review-card" key={evaluation.id}>
+              <LandscapeMarks
+                critics={{ enjoyment: landscapes.critics.enjoyment, execution: landscapes.critics.execution }}
+                audience={{ enjoyment: landscapes.audience.enjoyment, execution: landscapes.audience.execution }}
+              />
               <header>
                 <a className="reviewer-link" href={workHref(evaluation.work.workType, evaluation.work.slug)}>
                   {evaluation.work.title}
                 </a>
                 <a className="quiet-link" href={reviewHref(evaluation.work.workType, evaluation.work.slug, reviewer.slug)}>
-                  Evaluation
+                  Review
                 </a>
               </header>
-              <p className="context-line">
-                {[
-                  evaluation.lens ? lensLabel[evaluation.lens] : null,
-                  evaluation.standard ? standardLabel[evaluation.standard] : null,
-                  `Enjoyment ${evaluation.enjoyment.toLowerCase()}`,
-                  `Execution ${evaluation.execution.toLowerCase()}`,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
-              <p className="meta">
-                Audience evaluations: enjoyment {distributionLabel(landscape.enjoyment).toLowerCase()}, execution{" "}
-                {distributionLabel(landscape.execution).toLowerCase()}.
-              </p>
-              {evaluation.review?.body ? <p style={{ marginTop: "1rem" }}>{evaluation.review.body.slice(0, 280)}</p> : null}
+              {evaluation.review?.body ? <p className="excerpt-body">{evaluation.review.body.slice(0, 280)}</p> : null}
               {steamProfile ? (
                 <p className="provenance">
                   Reviews imported from their Steam profile:{" "}
