@@ -36,14 +36,14 @@ At a 1440px viewport on Core, measured on this layout: the content span is about
 `.evaluation-hero` is three columns, `align-items: end`:
 
 ```text
-[ poster 7.5rem ] [ title, headline, byline ] [ impression card, 14rem to 20rem ]
+[ poster 7.5rem ] [ title, headline ] [ genre card, 14rem to 20rem ]
 ```
 
 Gap is `space-5`.
 
 - Poster: `.evaluation-poster` is `7.5rem` wide. Height follows `--hero-ratio` (`3 / 4` on Core). It is smaller than the work-overview poster. The overview is the work; this page is one reading of it.
-- Copy: kicker is "{type} review". The `h1` is the work title and links to the overview. The lede is the enjoyment/execution headline, not a score. The byline is the reviewer, then platform and playtime when known.
-- Impression card: the reviewer's impression sentence, then genre chips linking to Discover. The card is omitted when both are absent. It sits on the baseline of the title block (`align-items: end`), not stretched to a tall poster.
+- Copy: kicker is "{type} review". The `h1` is the work title and links to the overview. The lede is the enjoyment/execution headline, not a score.
+- Genre card: genre chips linking to Discover. The card is omitted when the work has no genres. It sits on the baseline of the title block (`align-items: end`), not stretched to a tall poster.
 
 ### Board
 
@@ -64,8 +64,8 @@ Current item comes from the hash. Empty hash means Overview.
 
 `.evaluation-overview` is `minmax(0, 1.45fr)` and `minmax(15rem, 0.8fr)`, `align-items: start`. The work overview's `.dimension-shape` uses this same ratio.
 
-- Column 1: the evaluation graph (`#graph`), then the "At a glance" card (platform, playtime, completion, lens, access). Glance is omitted when nothing qualifies.
-- Column 2: `.evaluation-side` spans both rows. "Key impressions" is enjoyment and execution meters. Judged enjoyment dimensions sit under the enjoyment meter. "Dimension breakdown" lists each judged work dimension and its stance. The side column is as tall as those panels. It does not stretch into an empty card beside the graph. The graph plots work dimensions. Enjoyment dimensions stay off it.
+- Column 1: one chart stage (`#graph`), then the "At a glance" card (platform, playtime, completion, lens, access). Glance is omitted when nothing qualifies. The stage holds two charts. Execution is on the left and plots judged work dimensions. Enjoyment is on the right and plots judged enjoyment dimensions. Each title carries that headline stance. A family with fewer than three judgments keeps its points and does not close a shape. A family with none says so.
+- Column 2: `.evaluation-side` spans both rows. "Execution breakdown" lists each judged work dimension and its stance. "Enjoyment breakdown" lists each judged enjoyment dimension and its stance. The side column is as tall as those panels. It does not stretch into an empty card beside the graph. Work dimensions stay off the enjoyment chart. Enjoyment dimensions stay off the execution chart.
 
 ### Narrow text
 

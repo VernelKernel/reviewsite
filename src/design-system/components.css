@@ -2948,6 +2948,7 @@ body:has(.mockup-sheet) .page {
 .evaluation-stage {
   display: grid;
   gap: var(--space-3);
+  min-width: 0;
   margin: 0;
   padding: var(--space-4);
   border-radius: var(--radius-lg);
@@ -2955,9 +2956,51 @@ body:has(.mockup-sheet) .page {
   box-shadow: var(--shadow-card);
 }
 
+.evaluation-charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  min-width: 0;
+}
+
+.evaluation-chart {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.evaluation-chart + .evaluation-chart {
+  margin-inline-start: var(--space-3);
+  padding-inline-start: var(--space-3);
+  border-inline-start: 1px solid color-mix(in srgb, var(--color-chart-grid) 45%, transparent);
+}
+
+.evaluation-chart-title,
 .evaluation-stage-label,
 .evaluation-stage-note {
   margin: 0;
+}
+
+.evaluation-chart-title {
+  color: var(--color-chart-label);
+  font-size: var(--text-micro);
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.evaluation-chart-empty {
+  display: grid;
+  place-items: center;
+  min-height: 12rem;
+  margin: 0;
+  color: var(--color-chart-grid);
+  text-align: center;
+}
+
+.evaluation-chart .radar-label {
+  font-size: 18px;
 }
 
 .evaluation-stage-label {
@@ -2998,6 +3041,7 @@ body:has(.mockup-sheet) .page {
 
 .evaluation-plot {
   position: relative;
+  min-width: 0;
 }
 
 .evaluation-field {
@@ -3014,6 +3058,12 @@ body:has(.mockup-sheet) .page {
   z-index: 1;
   display: block;
   max-height: 25rem;
+}
+
+.evaluation-chart .evaluation-plot .radar-chart {
+  width: 100%;
+  max-width: 100%;
+  max-height: 17rem;
 }
 
 .radar-outline {
@@ -3615,6 +3665,19 @@ body:has(.mockup-sheet) .page {
     grid-template-columns: 1fr;
   }
 
+  .evaluation-charts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .evaluation-chart + .evaluation-chart {
+    margin-inline-start: 0;
+    padding-inline-start: 0;
+    border-inline-start: 0;
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid color-mix(in srgb, var(--color-chart-grid) 45%, transparent);
+  }
+
   .evaluation-nav {
     position: static;
     display: flex;
@@ -3812,6 +3875,19 @@ body:has(.mockup-sheet) .page {
 .builder-preview-head .meta,
 .builder-preview-note {
   margin: 0;
+}
+
+.builder-preview .evaluation-charts {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.builder-preview .evaluation-chart + .evaluation-chart {
+  margin-inline-start: 0;
+  padding-inline-start: 0;
+  border-inline-start: 0;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid color-mix(in srgb, var(--color-chart-grid) 45%, transparent);
 }
 
 .builder-preview .evaluation-plot .radar-chart,

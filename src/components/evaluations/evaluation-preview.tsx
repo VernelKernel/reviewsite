@@ -76,29 +76,38 @@ export function EvaluationPreview({
             ) : null}
           </div>
         </div>
-        <EvaluationGraph axes={workAxes} />
-        <section className="evaluation-panel" aria-labelledby="builder-key-impressions">
-          <h2 id="builder-key-impressions">Key impressions</h2>
-          {isStance(enjoyment) ? <StanceMeter label="Enjoyment" stance={enjoyment} /> : <p className="meta">Enjoyment is not judged yet.</p>}
-          {enjoymentAxes.length > 0 ? (
-            <ul className="dimension-breakdown" aria-label="Enjoyment dimensions">
-              {enjoymentAxes.map((axis) => (
-                <BreakdownRow key={axis.name} axis={axis} />
-              ))}
-            </ul>
-          ) : null}
-          {isStance(execution) ? <StanceMeter label="Execution" stance={execution} /> : <p className="meta">Execution is not judged yet.</p>}
-        </section>
-        {workAxes.length > 0 ? (
-          <section className="evaluation-panel" aria-labelledby="builder-dimension-breakdown">
-            <h2 id="builder-dimension-breakdown">Dimension breakdown</h2>
+        <EvaluationGraph
+          fields={[
+            { label: "Execution", stance: isStance(execution) ? execution : null, axes: workAxes },
+            { label: "Enjoyment", stance: isStance(enjoyment) ? enjoyment : null, axes: enjoymentAxes },
+          ]}
+        />
+        <section className="evaluation-panel" aria-labelledby="builder-execution-breakdown">
+          <h2 id="builder-execution-breakdown">Execution breakdown</h2>
+          {isStance(execution) ? null : <p className="meta">Execution is not judged yet.</p>}
+          {workAxes.length > 0 ? (
             <ul className="dimension-breakdown">
               {workAxes.map((axis) => (
                 <BreakdownRow key={axis.name} axis={axis} />
               ))}
             </ul>
-          </section>
-        ) : null}
+          ) : isStance(execution) ? (
+            <p className="meta">No dimensions judged.</p>
+          ) : null}
+        </section>
+        <section className="evaluation-panel" aria-labelledby="builder-enjoyment-breakdown">
+          <h2 id="builder-enjoyment-breakdown">Enjoyment breakdown</h2>
+          {isStance(enjoyment) ? null : <p className="meta">Enjoyment is not judged yet.</p>}
+          {enjoymentAxes.length > 0 ? (
+            <ul className="dimension-breakdown">
+              {enjoymentAxes.map((axis) => (
+                <BreakdownRow key={axis.name} axis={axis} />
+              ))}
+            </ul>
+          ) : isStance(enjoyment) ? (
+            <p className="meta">No dimensions judged.</p>
+          ) : null}
+        </section>
         {glance.length > 0 ? (
           <section className="evaluation-panel" aria-labelledby="builder-glance">
             <h2 id="builder-glance">At a glance</h2>
@@ -114,7 +123,7 @@ export function EvaluationPreview({
           </section>
         ) : null}
         <p className="builder-preview-note">
-          A visual record of your experience. Publishing turns this into a shareable page with the chart, key impressions, and your notes.
+          A visual record of your experience. Publishing turns this into a shareable page with both charts, the breakdowns, and your notes.
         </p>
         <div className="builder-publish">
           <IntentButton intent="publish">{publishLabel}</IntentButton>
@@ -131,24 +140,6 @@ function BreakdownRow({ axis }: { axis: RadarAxis }) {
       <span>{axis.name}</span>
       <span className={stanceClass(axis.stance)}>{stanceLabel[axis.stance]}</span>
     </li>
-  );
-}
-
-function StanceMeter({ label, stance }: { label: string; stance: StanceName }) {
-  const icon = label === "Enjoyment" ? "heart" : "gear";
-  return (
-    <div className="stance-meter">
-      <div className="stance-meter-head">
-        <strong>
-          <i className="flair-icon" data-icon={icon} aria-hidden="true" />
-          {label}
-        </strong>
-        <span className={stanceClass(stance)}>{stanceLabel[stance]}</span>
-      </div>
-      <div className="stance-meter-track" role="img" aria-label={`${label}: ${stanceLabel[stance]}`}>
-        <span className={`stance-meter-fill stance-meter-${stance.toLowerCase()}`} />
-      </div>
-    </div>
   );
 }
 

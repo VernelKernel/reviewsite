@@ -3,19 +3,69 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { stanceLabel } from "@/lib/domain/labels";
 import { fieldModel, guideRings, paintField, type FieldPalette } from "@/lib/evaluations/field";
-import { radarPoint, stanceDistance, type RadarAxis } from "@/lib/evaluations/radar";
+import { radarPoint, stanceDistance, type RadarAxis, type StanceName } from "@/lib/evaluations/radar";
 
-const WIDTH = 640;
-const HEIGHT = 520;
-const CX = 320;
-const CY = 258;
-const RADIUS = 156;
+const WIDTH = 560;
+const HEIGHT = 460;
+const CX = 280;
+const CY = 220;
+const RADIUS = 108;
 
-export function EvaluationGraph({ axes }: { axes: RadarAxis[] }) {
-  const noteId = useId();
+export type EvaluationField = {
+  label: string;
+  stance: StanceName | null;
+  axes: RadarAxis[];
+};
+
+export function EvaluationGraph({ fields }: { fields: EvaluationField[] }) {
+  const [active, setActive] = useState<{ field: number; index: number } | null>(null);
+  const selectedField = active ? fields[active.field] : null;
+  const selected = selectedField ? selectedField.axes[active!.index] : null;
+
+  return (
+    <figure className="evaluation-stage" id="graph">
+      <div className="evaluation-charts">
+        {fields.map((field, fieldIndex) => (
+          <RadarField
+            key={field.label}
+            field={field}
+            activeIndex={active?.field === fieldIndex ? active.index : null}
+            onActive={(index) => setActive(index === null ? null : { field: fieldIndex, index })}
+          />
+        ))}
+      </div>
+      <p className="evaluation-stage-note">
+        <strong>Distance shows strength. Color shows sentiment.</strong>
+        <span>
+          {selected && selectedField
+            ? `${selectedField.label}: ${selected.name}, ${stanceLabel[selected.stance]}.`
+            : "Unjudged dimensions stay off the chart. Select a point for details."}
+        </span>
+      </p>
+    </figure>
+  );
+}
+
+function RadarField({
+  field,
+  activeIndex,
+  onActive,
+}: {
+  field: EvaluationField;
+  activeIndex: number | null;
+  onActive: (index: number | null) => void;
+}) {
+  const labelId = useId();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [active, setActive] = useState<number | null>(null);
+  const { axes } = field;
   const closed = axes.length >= 3;
+  const title = field.stance ? `${field.label}: ${stanceLabel[field.stance]}` : field.label;
+  const summary = [
+    title,
+    axes.length > 0
+      ? axes.map((axis) => `${axis.name} ${stanceLabel[axis.stance]}`).join(", ")
+      : "No dimensions judged",
+  ].join(". ");
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -39,80 +89,95 @@ export function EvaluationGraph({ axes }: { axes: RadarAxis[] }) {
   }, [axes, closed]);
 
   return (
-    <figure className="evaluation-stage" id="graph">
-      <figcaption className="evaluation-stage-label">Impression</figcaption>
-      <div className="evaluation-plot">
-        {closed ? <canvas ref={canvasRef} className="evaluation-field" width={WIDTH} height={HEIGHT} aria-hidden="true" /> : null}
-        <svg className="radar-chart" viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-labelledby={noteId}>
-          {guideRings().map((ring) => (
-            <circle key={ring} className="radar-ring" cx={CX} cy={CY} r={RADIUS * ring} />
-          ))}
-          {axes.map((axis, index) => {
-            const end = radarPoint(CX, CY, RADIUS, index, axes.length, 1);
-            return <line key={`${axis.name}-spoke`} className="radar-spoke" x1={CX} y1={CY} x2={end.x} y2={end.y} />;
-          })}
-          {closed ? (
-            <polygon
-              className="radar-outline"
-              points={axes
-                .map((axis, index) => {
-                  const point = radarPoint(CX, CY, RADIUS, index, axes.length, stanceDistance(axis.stance));
-                  return `${point.x},${point.y}`;
-                })
-                .join(" ")}
-            />
-          ) : null}
-          {axes.map((axis, index) => {
-            const point = radarPoint(CX, CY, RADIUS, index, axes.length, stanceDistance(axis.stance));
-            const label = stanceLabel[axis.stance] ?? axis.stance;
-            const selected = active === index;
-            return (
-              <g key={`${axis.name}-dot`}>
-                <circle
-                  className={`radar-dot radar-dot-${axis.stance.toLowerCase()}${selected ? " radar-dot-active" : ""}`}
-                  cx={point.x}
-                  cy={point.y}
-                  r={selected ? 8 : 6}
-                  tabIndex={0}
-                  role="button"
-                  aria-label={`${axis.name}: ${label}`}
-                  aria-pressed={selected}
-                  onMouseEnter={() => setActive(index)}
-                  onMouseLeave={() => setActive((current) => (current === index ? null : current))}
-                  onFocus={() => setActive(index)}
-                  onBlur={() => setActive((current) => (current === index ? null : current))}
-                  onClick={() => setActive(index)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Escape") setActive(null);
-                  }}
-                >
-                  <title>{`${axis.name}: ${label}`}</title>
-                </circle>
-              </g>
-            );
-          })}
-          {axes.map((axis, index) => {
-            const point = radarPoint(CX, CY, RADIUS + 36, index, axes.length, 1);
-            const cos = Math.cos(point.angle);
-            const anchor = cos > 0.35 ? "start" : cos < -0.35 ? "end" : "middle";
-            return (
-              <text key={`${axis.name}-label`} className="radar-label" x={point.x} y={point.y} textAnchor={anchor} dominantBaseline="middle">
-                {axis.name}
-              </text>
-            );
-          })}
-        </svg>
-      </div>
-      <p className="evaluation-stage-note" id={noteId}>
-        <strong>Distance shows strength. Color shows sentiment.</strong>
-        <span>
-          {active !== null
-            ? `${axes[active].name}: ${stanceLabel[axes[active].stance]}.`
-            : "Unjudged dimensions are hidden. Select a point for details."}
-        </span>
+    <div className="evaluation-chart" role="group" aria-labelledby={labelId}>
+      <p className="evaluation-chart-title" id={labelId}>
+        {title}
       </p>
-    </figure>
+      {axes.length > 0 ? (
+        <div className="evaluation-plot">
+          {closed ? <canvas ref={canvasRef} className="evaluation-field" width={WIDTH} height={HEIGHT} aria-hidden="true" /> : null}
+          <svg className="radar-chart" viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label={summary}>
+            {guideRings().map((ring) => (
+              <circle key={ring} className="radar-ring" cx={CX} cy={CY} r={RADIUS * ring} />
+            ))}
+            {axes.map((axis, index) => {
+              const end = radarPoint(CX, CY, RADIUS, index, axes.length, 1);
+              return <line key={`${axis.name}-spoke`} className="radar-spoke" x1={CX} y1={CY} x2={end.x} y2={end.y} />;
+            })}
+            {closed ? (
+              <polygon
+                className="radar-outline"
+                points={axes
+                  .map((axis, index) => {
+                    const point = radarPoint(CX, CY, RADIUS, index, axes.length, stanceDistance(axis.stance));
+                    return `${point.x},${point.y}`;
+                  })
+                  .join(" ")}
+              />
+            ) : null}
+            {axes.map((axis, index) => {
+              const point = radarPoint(CX, CY, RADIUS, index, axes.length, stanceDistance(axis.stance));
+              const label = stanceLabel[axis.stance] ?? axis.stance;
+              const selected = activeIndex === index;
+              return (
+                <g key={`${axis.name}-dot`}>
+                  <circle
+                    className={`radar-dot radar-dot-${axis.stance.toLowerCase()}${selected ? " radar-dot-active" : ""}`}
+                    cx={point.x}
+                    cy={point.y}
+                    r={selected ? 8 : 6}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`${field.label}, ${axis.name}: ${label}`}
+                    aria-pressed={selected}
+                    onMouseEnter={() => onActive(index)}
+                    onMouseLeave={() => onActive(null)}
+                    onFocus={() => onActive(index)}
+                    onBlur={() => onActive(null)}
+                    onClick={() => onActive(index)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") onActive(null);
+                    }}
+                  >
+                    <title>{`${axis.name}: ${label}`}</title>
+                  </circle>
+                </g>
+              );
+            })}
+            {axes.map((axis, index) => {
+              const point = radarPoint(CX, CY, RADIUS + 34, index, axes.length, 1);
+              const cos = Math.cos(point.angle);
+              const anchor = cos > 0.35 ? "start" : cos < -0.35 ? "end" : "middle";
+              const lines = labelLines(axis.name);
+              const above = Math.sin(point.angle) < -0.2;
+              return (
+                <text key={`${axis.name}-label`} className="radar-label" x={point.x} y={point.y} textAnchor={anchor} dominantBaseline="middle">
+                  {lines.map((line, lineIndex) => (
+                    <tspan
+                      key={line}
+                      x={point.x}
+                      dy={lineIndex === 0 ? (above && lines.length > 1 ? "-1.1em" : 0) : "1.15em"}
+                    >
+                      {line}
+                    </tspan>
+                  ))}
+                </text>
+              );
+            })}
+          </svg>
+        </div>
+      ) : (
+        <p className="evaluation-chart-empty">No dimensions judged.</p>
+      )}
+    </div>
   );
+}
+
+function labelLines(name: string): string[] {
+  if (!name.includes(" ") || name.length < 12) return [name];
+  const words = name.split(" ");
+  const midpoint = Math.ceil(words.length / 2);
+  return [words.slice(0, midpoint).join(" "), words.slice(midpoint).join(" ")];
 }
 
 function readPalette(): FieldPalette {

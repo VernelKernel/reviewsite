@@ -7,7 +7,6 @@ import {
   ownershipLabel,
   playtimeLabel,
   reviewHref,
-  reviewerHref,
   stanceClass,
   stanceLabel,
   workHref,
@@ -46,7 +45,6 @@ export function EvaluationRecord({
   const strengths = evaluation.observations.filter((item) => item.polarity === "PRAISE").map((item) => item.content);
   const weaknesses = evaluation.observations.filter((item) => item.polarity === "CRITICISM").map((item) => item.content);
   const genres = [...work.genres].sort((left, right) => Number(right.isPrimary) - Number(left.isPrimary));
-  const impression = evaluation.review?.impression?.trim() || null;
   const headline = personalHeadline(enjoyment, execution);
   const glance = glanceItems(evaluation);
   const related = work.evaluations.filter((item) => item.id !== evaluation.id);
@@ -73,26 +71,18 @@ export function EvaluationRecord({
             <a href={workHref(work.workType, work.slug)}>{work.title}</a>
           </h1>
           <p className="lede">{headline}</p>
-          <p className="evaluation-byline">
-            <a href={reviewerHref(evaluation.reviewer.slug)}>{evaluation.reviewer.displayName}</a>
-            {evaluation.platform ? <span>{evaluation.platform.name}</span> : null}
-            {evaluation.playtime !== "UNKNOWN" ? <span>{playtimeLabel[evaluation.playtime]}</span> : null}
-          </p>
         </div>
-        {impression || genres.length > 0 ? (
+        {genres.length > 0 ? (
           <aside className="impression-card">
-            {impression ? <p className="impression-line">{impression}</p> : null}
-            {genres.length > 0 ? (
-              <ul className="impression-genres">
-                {genres.map((item) => (
-                  <li key={item.genre.id}>
-                    <a className="chip" href={`/discover?genre=${item.genre.slug}`}>
-                      {item.genre.name}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
+            <ul className="impression-genres">
+              {genres.map((item) => (
+                <li key={item.genre.id}>
+                  <a className="chip" href={`/discover?genre=${item.genre.slug}`}>
+                    {item.genre.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </aside>
         ) : null}
       </header>
@@ -101,38 +91,15 @@ export function EvaluationRecord({
         <EvaluationNav />
         <div className="evaluation-main">
           <section id="overview" className="evaluation-overview" aria-label="Overview">
-            <EvaluationGraph axes={axes} />
+            <EvaluationGraph
+              fields={[
+                { label: "Execution", stance: execution, axes },
+                { label: "Enjoyment", stance: enjoyment, axes: enjoymentAxes },
+              ]}
+            />
             <div className="evaluation-side">
-              <section className="panel evaluation-panel" aria-labelledby="key-impressions">
-                <h2 id="key-impressions">Key impressions</h2>
-                <StanceMeter label="Enjoyment" stance={enjoyment} />
-                {enjoymentAxes.length > 0 ? (
-                  <ul className="dimension-breakdown" aria-label="Enjoyment dimensions">
-                    {enjoymentAxes.map((axis) => (
-                      <li key={axis.name}>
-                        <i className={`dimension-dot dimension-dot-${axis.stance.toLowerCase()}`} aria-hidden="true" />
-                        <span>{axis.name}</span>
-                        <span className={stanceClass(axis.stance)}>{stanceLabel[axis.stance]}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-                <StanceMeter label="Execution" stance={execution} />
-              </section>
-              {axes.length > 0 ? (
-                <section className="panel evaluation-panel" aria-labelledby="dimension-breakdown">
-                  <h2 id="dimension-breakdown">Dimension breakdown</h2>
-                  <ul className="dimension-breakdown">
-                    {axes.map((axis) => (
-                      <li key={axis.name}>
-                        <i className={`dimension-dot dimension-dot-${axis.stance.toLowerCase()}`} aria-hidden="true" />
-                        <span>{axis.name}</span>
-                        <span className={stanceClass(axis.stance)}>{stanceLabel[axis.stance]}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              ) : null}
+              <DimensionBreakdown id="execution-breakdown" title="Execution breakdown" axes={axes} />
+              <DimensionBreakdown id="enjoyment-breakdown" title="Enjoyment breakdown" axes={enjoymentAxes} />
             </div>
             {glance.length > 0 ? (
               <section className="panel note-card glance-card" aria-labelledby="at-a-glance">
@@ -233,21 +200,24 @@ export function EvaluationRecord({
   );
 }
 
-function StanceMeter({ label, stance }: { label: string; stance: StanceName }) {
-  const icon = label === "Enjoyment" ? "heart" : label === "Execution" ? "gear" : null;
+function DimensionBreakdown({ id, title, axes }: { id: string; title: string; axes: RadarAxis[] }) {
   return (
-    <div className="stance-meter">
-      <div className="stance-meter-head">
-        <strong>
-          {icon ? <i className="flair-icon" data-icon={icon} aria-hidden="true" /> : null}
-          {label}
-        </strong>
-        <span className={stanceClass(stance)}>{stanceLabel[stance]}</span>
-      </div>
-      <div className="stance-meter-track" role="img" aria-label={`${label}: ${stanceLabel[stance]}`}>
-        <span className={`stance-meter-fill stance-meter-${stance.toLowerCase()}`} />
-      </div>
-    </div>
+    <section className="panel evaluation-panel" aria-labelledby={id}>
+      <h2 id={id}>{title}</h2>
+      {axes.length > 0 ? (
+        <ul className="dimension-breakdown">
+          {axes.map((axis) => (
+            <li key={axis.name}>
+              <i className={`dimension-dot dimension-dot-${axis.stance.toLowerCase()}`} aria-hidden="true" />
+              <span>{axis.name}</span>
+              <span className={stanceClass(axis.stance)}>{stanceLabel[axis.stance]}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="meta">No dimensions judged.</p>
+      )}
+    </section>
   );
 }
 
