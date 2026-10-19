@@ -1,5 +1,6 @@
 "use client";
 
+import { nestExportLayout, paintNest, readNestPalette } from "@/components/evaluations/nest-paint";
 import { diamondGeometry } from "@/components/evaluations/shape-mark";
 import type { Distribution } from "@/lib/aggregation/landscape";
 import { fieldModelFrom, paintField, type FieldPalette } from "@/lib/evaluations/field";
@@ -7,6 +8,8 @@ import { radarPoint } from "@/lib/evaluations/radar";
 import { saveFile } from "@/components/share/share-assets";
 
 type IconName = "glasses" | "heart" | "audience" | "gear";
+
+export type EmblemMark = "cluster" | "nest";
 
 export type EmblemReading = {
   critics: { enjoyment: Distribution; execution: Distribution };
@@ -92,6 +95,10 @@ function layout(scale: number) {
 /** Scale whose laid-out emblem is the given pixel size, so the cover copy is not resized afterward. */
 function scaleForPixels(pixels: number): number {
   return pixels / layout(1).size;
+}
+
+function scaleForNestPixels(pixels: number): number {
+  return pixels / nestExportLayout(1).size;
 }
 
 function traceDiamond(ctx: CanvasRenderingContext2D, cx: number, cy: number, radius: number) {
@@ -223,19 +230,31 @@ async function encode(canvas: HTMLCanvasElement, name: string): Promise<File> {
   return new File([blob], name, { type: "image/png" });
 }
 
-export async function downloadEmblem(input: EmblemReading, slug: string) {
-  const canvas = await renderEmblem(input);
+export async function renderNestEmblem(input: EmblemReading, scale = HI_RES_SCALE): Promise<HTMLCanvasElement> {
+  const { size, frame } = nestExportLayout(scale);
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not prepare the image.");
+  paintNest(ctx, frame, input.critics.execution, input.critics.enjoyment, readNestPalette(), scale >= 1);
+  return canvas;
+}
+
+export async function downloadEmblem(input: EmblemReading, slug: string, mark: EmblemMark = "cluster") {
+  const canvas = mark === "nest" ? await renderNestEmblem(input) : await renderEmblem(input);
   saveFile(await encode(canvas, `${slug}-emblem.png`));
 }
 
-export async function downloadCover(input: EmblemReading, slug: string, artSrc: string) {
+export async function downloadCover(input: EmblemReading, slug: string, artSrc: string, mark: EmblemMark = "cluster") {
   const image = await loadCover(artSrc);
   const width = image.naturalWidth;
   const height = image.naturalHeight;
   if (width < 2 || height < 2) throw new Error("Could not read the cover.");
   const pad = Math.max(8, Math.round(Math.min(width, height) * 0.02));
-  const mark = Math.round(Math.min(width, height) * 0.42 * 0.75);
-  const emblem = await renderEmblem(input, scaleForPixels(mark));
+  const markPx = Math.round(Math.min(width, height) * 0.42 * 0.75 * 0.75);
+  const emblem =
+    mark === "nest" ? await renderNestEmblem(input, scaleForNestPixels(markPx)) : await renderEmblem(input, scaleForPixels(markPx));
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;

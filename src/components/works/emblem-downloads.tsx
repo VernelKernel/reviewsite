@@ -7,10 +7,12 @@ export function EmblemDownloads({
   slug,
   artSrc,
   reading,
+  mark = "cluster",
 }: {
   slug: string;
   artSrc: string | null;
   reading: EmblemReading;
+  mark?: "cluster" | "nest";
 }) {
   const [pending, setPending] = useState<"emblem" | "cover" | null>(null);
   const [status, setStatus] = useState("");
@@ -19,8 +21,8 @@ export function EmblemDownloads({
     setPending(kind);
     setStatus("");
     try {
-      if (kind === "emblem") await downloadEmblem(reading, slug);
-      else if (artSrc) await downloadCover(reading, slug, artSrc);
+      if (kind === "emblem") await downloadEmblem(reading, slug, mark);
+      else if (artSrc) await downloadCover(reading, slug, artSrc, mark);
     } catch {
       setStatus("Could not prepare the image.");
     } finally {
@@ -40,7 +42,7 @@ export function EmblemDownloads({
           aria-busy={pending === "emblem"}
           onClick={() => void run("emblem")}
         >
-          <EmblemIcon />
+          {mark === "nest" ? <NestIcon /> : <EmblemIcon />}
         </button>
         <button
           type="button"
@@ -70,6 +72,15 @@ function EmblemIcon() {
       <path fill="currentColor" d="M12 13.4 15.2 17.6 12 21.8 8.8 17.6Z" />
       <path fill="currentColor" d="M2.2 12 6.4 8.8 10.6 12 6.4 15.2Z" />
       <path fill="currentColor" d="M13.4 12 17.6 8.8 21.8 12 17.6 15.2Z" />
+    </svg>
+  );
+}
+
+function NestIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" fillRule="evenodd" d="M12 1.8 22.2 12 12 22.2 1.8 12Z M12 6.6 17.4 12 12 17.4 6.6 12Z" />
+      <path fill="currentColor" d="M12 9.4 14.6 12 12 14.6 9.4 12Z" />
     </svg>
   );
 }

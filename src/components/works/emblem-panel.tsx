@@ -1,5 +1,6 @@
 import { criticCoverage, distributionLabel, type Distribution } from "@/lib/aggregation/landscape";
 import { CompareButton } from "@/components/comparison/compare-controls";
+import { CriticNestEmblem } from "@/components/evaluations/critic-nest-emblem";
 import { ReviewEmblem } from "@/components/evaluations/review-emblem";
 import { EmblemDownloads } from "@/components/works/emblem-downloads";
 import { ArtImage } from "@/components/works/work-art";
@@ -23,7 +24,7 @@ function ReadingPair({ enjoyment, execution }: { enjoyment: Distribution; execut
   );
 }
 
-export function EmblemPanel({ work }: { work: CardWork }) {
+export function EmblemPanel({ work, mark = "cluster" }: { work: CardWork; mark?: "cluster" | "nest" }) {
   const art = workArt(work.media);
   const landscapes = landscapesFor(work);
   const year = releaseYear(work.releases);
@@ -46,7 +47,11 @@ export function EmblemPanel({ work }: { work: CardWork }) {
             <h3>{work.title}</h3>
           </div>
           <div className="emblem-panel-mark">
-            <ReviewEmblem compact decorative spin critics={critics} audience={audience} />
+            {mark === "nest" ? (
+              <CriticNestEmblem compact decorative spin execution={critics.execution} enjoyment={critics.enjoyment} />
+            ) : (
+              <ReviewEmblem compact decorative spin critics={critics} audience={audience} />
+            )}
           </div>
           <div className="snapshot">
             <section className="snapshot-group">
@@ -69,6 +74,7 @@ export function EmblemPanel({ work }: { work: CardWork }) {
         <EmblemDownloads
           slug={work.slug}
           artSrc={art.tall?.src ?? art.wide?.src ?? null}
+          mark={mark}
           reading={{ critics, audience }}
         />
       </div>
