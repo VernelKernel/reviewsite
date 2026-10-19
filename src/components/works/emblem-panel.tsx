@@ -1,6 +1,7 @@
 import { criticCoverage, distributionLabel, type Distribution } from "@/lib/aggregation/landscape";
 import { CompareButton } from "@/components/comparison/compare-controls";
 import { ReviewEmblem } from "@/components/evaluations/review-emblem";
+import { EmblemDownloads } from "@/components/works/emblem-downloads";
 import { ArtImage } from "@/components/works/work-art";
 import { audienceHref, criticsHref, workHref, workTypeLabel } from "@/lib/domain/labels";
 import { landscapesFor, releaseYear, workArt, type CardWork } from "@/lib/works/present";
@@ -65,6 +66,11 @@ export function EmblemPanel({ work }: { work: CardWork }) {
       </p>
       <div className="work-card-actions">
         <CompareButton workType={work.workType} slug={work.slug} title={work.title} />
+        <EmblemDownloads
+          slug={work.slug}
+          artSrc={art.tall?.src ?? art.wide?.src ?? null}
+          reading={{ critics, audience }}
+        />
       </div>
     </article>
   );

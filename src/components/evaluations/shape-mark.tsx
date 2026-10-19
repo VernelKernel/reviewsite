@@ -180,7 +180,7 @@ function renderMark(signature: string, palette: FieldPalette): HTMLCanvasElement
 }
 
 /** Four diamond vertices. The largest share fills the field; the next share tints a corner when it is real. */
-function diamondGeometry(distribution: Distribution): { distance: number; t: number }[] {
+export function diamondGeometry(distribution: Distribution): { distance: number; t: number }[] {
   const count = distribution.count;
   const bands = [
     { t: 1, share: distribution.positive / count },
