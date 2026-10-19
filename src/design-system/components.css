@@ -2981,10 +2981,10 @@ body:has(.mockup-sheet) .page {
   mask: var(--emblem-icon) center / contain no-repeat;
 }
 
-.emblem-icon-heart { --emblem-icon: url("/media/emblem/heart.png"); width: 2.05rem; height: 1.95rem; }
-.emblem-icon-gear { --emblem-icon: url("/media/emblem/gear.png"); width: 2.05rem; height: 2.15rem; }
-.emblem-icon-glasses { --emblem-icon: url("/media/emblem/glasses.png"); width: 2.7rem; height: 1.4rem; }
-.emblem-icon-audience { --emblem-icon: url("/media/emblem/audience.png"); width: 2.85rem; height: 1.55rem; }
+.emblem-icon-heart { --emblem-icon: url("/media/emblem/heart.png"); width: calc(2.05rem * 1.25); height: calc(1.95rem * 1.25); }
+.emblem-icon-gear { --emblem-icon: url("/media/emblem/gear.png"); width: calc(2.05rem * 1.25); height: calc(2.15rem * 1.25); }
+.emblem-icon-glasses { --emblem-icon: url("/media/emblem/glasses.png"); width: calc(2.7rem * 1.25); height: calc(1.4rem * 1.25); }
+.emblem-icon-audience { --emblem-icon: url("/media/emblem/audience.png"); width: calc(2.85rem * 1.25); height: calc(1.55rem * 1.25); }
 
 .mockup-frame {
   width: min(880px, 100%);
