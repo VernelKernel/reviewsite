@@ -546,19 +546,27 @@ export type ShapePoint = {
   slug: string;
   name: string;
   distribution: Distribution;
-  /** Positive share, floored so a point never sits on the center. */
+  /** Share of the leading judgment. Radius is strength, not polarity. */
   distance: number;
-  /** Mean stance position: 0 negative, 0.5 mixed, 1 positive. */
+  /** Color position of a majority judgment: 0 negative, 0.5 mixed, 1 positive. */
   t: number;
+  /** No judgment holds a majority, so the vertex stays neutral. */
+  divided: boolean;
   tone: ShapeTone;
 };
 
-/** Stance reading for a dot. Fewer than four judgments, ties, or no majority read as divided. */
+/** Majority judgment for a vertex. A tie, or a lead under half, is divided. */
 export function shapeTone(distribution: Distribution): ShapeTone {
-  if (distribution.count < 4) return "divided";
+  if (distribution.count <= 0) return "divided";
   const key = dominantKey(distribution);
   if (!key || distribution[key] / distribution.count < 0.5) return "divided";
   return key;
+}
+
+/** Share held by the leading judgment. A tie uses that shared share. */
+export function leadingShare(distribution: Distribution): number {
+  if (distribution.count <= 0) return 0;
+  return Math.max(distribution.positive, distribution.mixed, distribution.negative) / distribution.count;
 }
 
 /** Radar points for one population, in dimension order, skipping dimensions that population did not judge. */
@@ -568,13 +576,15 @@ export function shapePoints(dimensions: PairedDimension[], population: "critics"
     .sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name))
     .map((dimension) => {
       const distribution = dimension[population];
+      const tone = shapeTone(distribution);
       return {
         slug: dimension.slug,
         name: dimension.name,
         distribution,
-        distance: Math.max(0.08, distribution.positive / distribution.count),
-        t: (distribution.positive + distribution.mixed * 0.5) / distribution.count,
-        tone: shapeTone(distribution),
+        distance: leadingShare(distribution),
+        t: tone === "positive" ? 1 : tone === "negative" ? 0 : 0.5,
+        divided: tone === "divided",
+        tone,
       };
     });
 }

@@ -23,7 +23,12 @@ import {
   sampleNote,
   type LandscapeEvaluation,
   type PopulatedEvaluation,
+  type Distribution,
 } from "./landscape";
+
+function audienceRow(slug: string, audience: Distribution, sortOrder: number) {
+  return { slug, name: slug, sortOrder, critics: emptyDistribution(), audience };
+}
 
 function evaluation(overrides: Partial<LandscapeEvaluation> = {}): LandscapeEvaluation {
   return {
@@ -229,8 +234,25 @@ describe("population shapes", () => {
     expect(shapePoints(dimensions, "audience").map((point) => point.slug)).toEqual(["story", "music"]);
     expect(shapePoints(dimensions, "critics").map((point) => point.slug)).toEqual(["story"]);
     const story = shapePoints(dimensions, "audience")[0];
-    expect(story.distance).toBe(0.08);
+    expect(story.distance).toBe(1);
     expect(story.t).toBe(0.5);
+    expect(story.tone).toBe("mixed");
+    expect(story.divided).toBe(false);
+  });
+
+  it("places a strong mixed or negative reading by its leading share", () => {
+    const dimensions = [
+      audienceRow("gameplay", { positive: 2, mixed: 0, negative: 2, count: 4 }, 1),
+      audienceRow("art-direction", { positive: 0, mixed: 1, negative: 0, count: 1 }, 2),
+      audienceRow("game-design", { positive: 1, mixed: 2, negative: 1, count: 4 }, 3),
+      audienceRow("pacing", { positive: 0, mixed: 0, negative: 4, count: 4 }, 4),
+    ];
+    expect(shapePoints(dimensions, "audience").map((point) => [point.slug, point.distance, point.tone, point.t, point.divided])).toEqual([
+      ["gameplay", 0.5, "divided", 0.5, true],
+      ["art-direction", 1, "mixed", 0.5, false],
+      ["game-design", 0.5, "mixed", 0.5, false],
+      ["pacing", 1, "negative", 0, false],
+    ]);
   });
 
   it("keeps enjoyment dimensions on their own chart", () => {
@@ -253,9 +275,12 @@ describe("population shapes", () => {
     expect(shapePoints(pairedDimensions(paired.critics, paired.audience), "critics")).toEqual([]);
   });
 
-  it("reads small or split samples as divided", () => {
-    expect(shapeTone({ positive: 3, mixed: 0, negative: 0, count: 3 })).toBe("divided");
+  it("colors a majority by its kind and keeps a tie or a sub-half lead divided", () => {
+    expect(shapeTone({ positive: 3, mixed: 0, negative: 0, count: 3 })).toBe("positive");
+    expect(shapeTone({ positive: 0, mixed: 1, negative: 0, count: 1 })).toBe("mixed");
+    expect(shapeTone({ positive: 0, mixed: 0, negative: 4, count: 4 })).toBe("negative");
     expect(shapeTone({ positive: 2, mixed: 2, negative: 0, count: 4 })).toBe("divided");
+    expect(shapeTone({ positive: 2, mixed: 2, negative: 3, count: 7 })).toBe("divided");
     expect(shapeTone({ positive: 3, mixed: 1, negative: 0, count: 4 })).toBe("positive");
   });
 

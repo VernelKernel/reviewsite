@@ -344,7 +344,7 @@ function ShapeLegend() {
       </li>
       <li>
         <i className="shape-swatch shape-swatch-divided" />
-        Divided, or fewer than 4
+        Divided
       </li>
     </ul>
   );
@@ -386,5 +386,6 @@ function readPalette(): FieldPalette {
     positive: read("--color-positive", "#1F7A4D"),
     mixed: read("--color-caution", "#E7B008"),
     negative: read("--color-negative", "#E15A4A"),
+    divided: read("--color-chart-grid", "#D5DEE6"),
   };
 }

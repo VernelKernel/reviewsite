@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canCloseField, centerStance, fieldModel, illuminatedFieldColor, sampleFieldColor, type RGB } from "./field";
+import { canCloseField, centerStance, fieldModel, fieldModelFrom, illuminatedFieldColor, sampleFieldColor, type RGB } from "./field";
 import type { StanceName } from "./radar";
 
 const palette = {
@@ -111,5 +111,75 @@ describe("evaluation field", () => {
     const cool = illuminatedFieldColor(mixed, layout.cx, layout.cy - 48);
     if (!warm || !cool) throw new Error("expected illuminated color");
     expect(warm.r - warm.g).toBeGreaterThan(cool.r - cool.g);
+  });
+
+  it("keeps a strong negative at the rim, and paints the center from the vertices", () => {
+    const negative = fieldModelFrom(
+      [
+        { distance: 1, t: 0 },
+        { distance: 1, t: 0 },
+        { distance: 1, t: 0 },
+      ],
+      layout.cx,
+      layout.cy,
+      layout.radius,
+      palette,
+    );
+    const mixed = fieldModelFrom(
+      [
+        { distance: 1, t: 0.5 },
+        { distance: 1, t: 0.5 },
+        { distance: 1, t: 0.5 },
+      ],
+      layout.cx,
+      layout.cy,
+      layout.radius,
+      palette,
+    );
+    const spread = fieldModelFrom(
+      [
+        { distance: 1, t: 1 },
+        { distance: 1, t: 0 },
+        { distance: 1, t: 0.5 },
+      ],
+      layout.cx,
+      layout.cy,
+      layout.radius,
+      palette,
+    );
+    if (!negative || !mixed || !spread) throw new Error("expected a closed field");
+    const rim = sampleFieldColor(negative, layout.cx, layout.cy - 90);
+    const negativeCenter = sampleFieldColor(negative, layout.cx, layout.cy);
+    const mixedCenter = sampleFieldColor(mixed, layout.cx, layout.cy);
+    const spreadCenter = sampleFieldColor(spread, layout.cx, layout.cy);
+    const positiveRim = sampleFieldColor(spread, layout.cx, layout.cy - 90);
+    if (!rim || !negativeCenter || !mixedCenter || !spreadCenter || !positiveRim) throw new Error("expected color");
+    expect(red(rim)).toBe(true);
+    expect(red(negativeCenter)).toBe(true);
+    expect(amber(mixedCenter)).toBe(true);
+    expect(amber(spreadCenter)).toBe(true);
+    expect(spreadCenter.r - spreadCenter.g).toBeLessThan(negativeCenter.r - negativeCenter.g);
+    expect(green(positiveRim)).toBe(true);
+  });
+
+  it("paints a tied vertex neutral instead of mixed", () => {
+    const tied = fieldModelFrom(
+      [
+        { distance: 0.5, t: 0.5, divided: true },
+        { distance: 1, t: 0.5 },
+        { distance: 1, t: 0.5 },
+      ],
+      layout.cx,
+      layout.cy,
+      layout.radius,
+      { ...palette, divided: "#D5DEE6" },
+    );
+    if (!tied) throw new Error("expected a closed field");
+    const split = sampleFieldColor(tied, layout.cx, layout.cy - 46);
+    const mixedRim = sampleFieldColor(tied, layout.cx + Math.cos(Math.PI / 6) * 90, layout.cy + Math.sin(Math.PI / 6) * 90);
+    if (!split || !mixedRim) throw new Error("expected color");
+    expect(amber(split)).toBe(false);
+    expect(red(split)).toBe(false);
+    expect(amber(mixedRim)).toBe(true);
   });
 });

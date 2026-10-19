@@ -12,21 +12,25 @@ export type FieldPalette = {
   positive: string;
   mixed: string;
   negative: string;
+  /** Neutral color for a vertex with no majority judgment. */
+  divided?: string;
 };
 
 type Lab = [number, number, number];
 
-type Vertex = { x: number; y: number; t: number };
+type Vertex = { x: number; y: number; t: number; divided: boolean };
 
 export type FieldModel = {
   cx: number;
   cy: number;
   radius: number;
   centerT: number;
+  centerDivided: boolean;
   vertices: Vertex[];
   negative: Lab;
   mixed: Lab;
   positive: Lab;
+  divided: Lab;
 };
 
 const GUIDE_RINGS = [1 / 3, 2 / 3, 1];
@@ -78,9 +82,9 @@ export function fieldModel(
   );
 }
 
-/** Field from explicit points: distance from center (0 to 1) and stance position t (0 negative, 1 positive). */
+/** Field from explicit points. Distance is radius, 0 to 1. t is the vertex color: 0 negative, 0.5 mixed, 1 positive. */
 export function fieldModelFrom(
-  points: { distance: number; t: number }[],
+  points: { distance: number; t: number; divided?: boolean }[],
   cx: number,
   cy: number,
   radius: number,
@@ -89,17 +93,21 @@ export function fieldModelFrom(
   if (!canCloseField(points.length)) return null;
   const vertices = points.map((item, index) => {
     const point = radarPoint(cx, cy, radius, index, points.length, item.distance);
-    return { x: point.x, y: point.y, t: item.t };
+    return { x: point.x, y: point.y, t: item.t, divided: item.divided === true };
   });
+  const colored = vertices.filter((vertex) => !vertex.divided);
+  const centerDivided = colored.length === 0;
   return {
     cx,
     cy,
     radius,
-    centerT: points.reduce((sum, item) => sum + item.t, 0) / points.length,
+    centerT: centerDivided ? 0.5 : colored.reduce((sum, vertex) => sum + vertex.t, 0) / colored.length,
+    centerDivided,
     vertices,
     negative: anchor(parseColor(palette.negative)),
     mixed: anchor(parseColor(palette.mixed)),
     positive: anchor(parseColor(palette.positive)),
+    divided: anchor(parseColor(palette.divided ?? "#D5DEE6")),
   };
 }
 
@@ -210,7 +218,7 @@ function spinColor(model: FieldModel, x: number, y: number): RGB {
       if (lab) break;
     }
   }
-  if (!lab) lab = labAt(model.centerT, model);
+  if (!lab) lab = model.centerDivided ? model.divided : labAt(model.centerT, model);
   return labToRgb(vary(lab, x, y, model));
 }
 
@@ -230,17 +238,53 @@ function labAt(t: number, model: Pick<FieldModel, "negative" | "mixed" | "positi
 function sampleFieldLab(model: FieldModel, x: number, y: number): Lab | null {
   const { vertices, centerT, cx, cy } = model;
   for (let index = 0; index < vertices.length; index += 1) {
+    const current = vertices[index];
     const next = vertices[(index + 1) % vertices.length];
-    const weights = barycentric({ x, y }, { x: cx, y: cy }, vertices[index], next);
+    const weights = barycentric({ x, y }, { x: cx, y: cy }, current, next);
     if (!weights) continue;
-    const v = spreadMixed(weights.v, vertices[index].t);
-    const w = spreadMixed(weights.w, next.t);
-    const sum = weights.u + v + w;
-    const t = lingerMixed((weights.u * centerT + v * vertices[index].t + w * next.t) / sum);
     const distance = Math.hypot(x - cx, y - cy);
-    return glow(labAt(t, model), distance, model.radius);
+    if (!model.centerDivided && !current.divided && !next.divided) {
+      const v = spreadMixed(weights.v, current.t);
+      const w = spreadMixed(weights.w, next.t);
+      const sum = weights.u + v + w;
+      const t = lingerMixed((weights.u * centerT + v * current.t + w * next.t) / sum);
+      return glow(labAt(t, model), distance, model.radius);
+    }
+    return glow(blendDivided(model, weights, current, next), distance, model.radius);
   }
   return null;
+}
+
+/** Mix majority colors with a neutral vertex. A tie is not painted as Mixed. */
+function blendDivided(
+  model: FieldModel,
+  weights: { u: number; v: number; w: number },
+  current: Vertex,
+  next: Vertex,
+): Lab {
+  const parts = [
+    { w: Math.max(0, weights.u), divided: model.centerDivided, t: model.centerT },
+    { w: Math.max(0, weights.v), divided: current.divided, t: current.t },
+    { w: Math.max(0, weights.w), divided: next.divided, t: next.t },
+  ];
+  let stanceW = 0;
+  let stanceT = 0;
+  let dividedW = 0;
+  for (const part of parts) {
+    if (part.w <= 0) continue;
+    if (part.divided) {
+      dividedW += part.w;
+      continue;
+    }
+    const weight = spreadMixed(part.w, part.t);
+    stanceW += weight;
+    stanceT += weight * part.t;
+  }
+  const sum = stanceW + dividedW;
+  if (sum <= 0 || stanceW <= 0) return model.divided;
+  const stanceLab = labAt(lingerMixed(stanceT / stanceW), model);
+  if (dividedW <= 0) return stanceLab;
+  return lerp(stanceLab, model.divided, dividedW / sum);
 }
 
 function glow(lab: Lab, distance: number, radius: number): Lab {
@@ -337,23 +381,25 @@ function paintEdgeEnergy(ctx: CanvasRenderingContext2D, model: FieldModel) {
   for (let index = 0; index < vertices.length; index += 1) {
     const start = vertices[index];
     const end = vertices[(index + 1) % vertices.length];
+    const startColor = vertexLab(model, start);
+    const endColor = vertexLab(model, end);
     const gradient = ctx.createLinearGradient(start.x, start.y, end.x, end.y);
-    gradient.addColorStop(0, rgbCss(labToRgb(labAt(start.t, model))));
-    gradient.addColorStop(1, rgbCss(labToRgb(labAt(end.t, model))));
+    gradient.addColorStop(0, rgbCss(labToRgb(startColor)));
+    gradient.addColorStop(1, rgbCss(labToRgb(endColor)));
     ctx.beginPath();
     ctx.moveTo(start.x, start.y);
     ctx.lineTo(end.x, end.y);
     ctx.strokeStyle = gradient;
     ctx.globalAlpha = 0.18;
     ctx.lineWidth = 10;
-    ctx.shadowColor = rgbCss(labToRgb(labAt(start.t, model)));
+    ctx.shadowColor = rgbCss(labToRgb(startColor));
     ctx.shadowBlur = 12;
     ctx.stroke();
   }
   ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
   for (const vertex of vertices) {
-    const color = labToRgb(labAt(vertex.t, model));
+    const color = labToRgb(vertexLab(model, vertex));
     const halo = ctx.createRadialGradient(vertex.x, vertex.y, 1, vertex.x, vertex.y, 16);
     halo.addColorStop(0, rgba(color, 0.36));
     halo.addColorStop(1, rgba(color, 0));
@@ -363,6 +409,10 @@ function paintEdgeEnergy(ctx: CanvasRenderingContext2D, model: FieldModel) {
     ctx.fill();
   }
   ctx.restore();
+}
+
+function vertexLab(model: FieldModel, vertex: Vertex): Lab {
+  return vertex.divided ? model.divided : labAt(vertex.t, model);
 }
 
 function lerp(a: Lab, b: Lab, t: number): Lab {

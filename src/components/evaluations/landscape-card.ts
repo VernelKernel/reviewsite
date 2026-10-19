@@ -227,6 +227,7 @@ function drawStage(
       positive: palette.positive,
       mixed: palette.caution,
       negative: palette.negative,
+      divided: palette.grid,
     });
     if (model) paintField(ctx, model);
     ctx.strokeStyle = palette.grid;
