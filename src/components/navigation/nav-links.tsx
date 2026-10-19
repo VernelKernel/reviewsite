@@ -13,7 +13,7 @@ export function NavLinks() {
   return (
     <nav className="nav-links" aria-label="Primary">
       {links.map((link) => (
-        <a key={link.href} href={link.href} aria-current={pathname.startsWith(link.href) ? "page" : undefined}>
+        <a key={link.href} href={link.href} aria-current={pathname === link.href || pathname.startsWith(`${link.href}/`) ? "page" : undefined}>
           {link.label}
         </a>
       ))}

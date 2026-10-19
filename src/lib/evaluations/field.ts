@@ -159,6 +159,61 @@ export function paintField(ctx: CanvasRenderingContext2D, model: FieldModel, opt
   if (options?.edge !== false) paintEdgeEnergy(ctx, model);
 }
 
+export type SpinSource = {
+  canvas: HTMLCanvasElement;
+  left: number;
+  top: number;
+  cx: number;
+  cy: number;
+  vertices: { x: number; y: number }[];
+};
+
+/** Opaque field large enough to cover the diamond at every rotation. */
+export function paintSpinSource(model: FieldModel): SpinSource {
+  const left = Math.floor(model.cx - model.radius);
+  const top = Math.floor(model.cy - model.radius);
+  const right = Math.ceil(model.cx + model.radius);
+  const bottom = Math.ceil(model.cy + model.radius);
+  const width = Math.max(1, right - left);
+  const height = Math.max(1, bottom - top);
+  const image = new ImageData(width, height);
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const color = spinColor(model, left + x + 0.5, top + y + 0.5);
+      const i = (y * width + x) * 4;
+      image.data[i] = color.r;
+      image.data[i + 1] = color.g;
+      image.data[i + 2] = color.b;
+      image.data[i + 3] = 255;
+    }
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext("2d")?.putImageData(image, 0, 0);
+  return {
+    canvas,
+    left,
+    top,
+    cx: model.cx,
+    cy: model.cy,
+    vertices: model.vertices.map((vertex) => ({ x: vertex.x, y: vertex.y })),
+  };
+}
+
+function spinColor(model: FieldModel, x: number, y: number): RGB {
+  let lab = sampleFieldLab(model, x, y);
+  if (!lab) {
+    for (let step = 1; step <= 8; step += 1) {
+      const t = step / 8;
+      lab = sampleFieldLab(model, x + (model.cx - x) * t, y + (model.cy - y) * t);
+      if (lab) break;
+    }
+  }
+  if (!lab) lab = labAt(model.centerT, model);
+  return labToRgb(vary(lab, x, y, model));
+}
+
 function anchor(rgb: RGB): Lab {
   const lab = rgbToOklab(rgb);
   const lightness = Math.min(0.84, lab[0] * 0.32 + 0.58);

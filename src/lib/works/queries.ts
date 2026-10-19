@@ -78,6 +78,16 @@ export async function listWorks(workType?: WorkType): Promise<CardWork[]> {
   });
 }
 
+/** A short catalog slice for the simulated games list. */
+export async function listGameSample(take = 10): Promise<CardWork[]> {
+  return prisma.work.findMany({
+    where: { status: "PUBLISHED", workType: "GAME" },
+    include: cardInclude,
+    orderBy: { title: "asc" },
+    take,
+  });
+}
+
 export async function getWork(workType: WorkType, slug: string): Promise<FullWork | null> {
   return prisma.work.findUnique({
     where: { workType_slug: { workType, slug } },
