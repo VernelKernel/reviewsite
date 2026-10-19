@@ -2930,6 +2930,62 @@ body:has(.mockup-sheet) .page {
   padding-block: 0;
 }
 
+.emblem-sheet {
+  min-height: 100vh;
+  align-content: center;
+  justify-items: center;
+}
+
+.emblem {
+  --facet: 15rem;
+  --gutter: 0.45rem;
+  --offset: calc(var(--facet) * 0.44 + var(--gutter));
+  position: relative;
+  width: calc(var(--offset) * 2 + var(--facet));
+  height: calc(var(--offset) * 2 + var(--facet));
+}
+
+.emblem-facet {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--facet);
+  height: var(--facet);
+}
+
+.emblem-north { transform: translate(-50%, -50%) translateY(calc(var(--offset) * -1)); }
+.emblem-south { transform: translate(-50%, -50%) translateY(var(--offset)); }
+.emblem-west { transform: translate(-50%, -50%) translateX(calc(var(--offset) * -1)); }
+.emblem-east { transform: translate(-50%, -50%) translateX(var(--offset)); }
+
+.emblem-facet .shape-mark {
+  width: 100%;
+  height: 100%;
+}
+
+.emblem-marks {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  pointer-events: none;
+}
+
+.emblem-icon {
+  display: block;
+  background: var(--color-canvas);
+  -webkit-mask: var(--emblem-icon) center / contain no-repeat;
+  mask: var(--emblem-icon) center / contain no-repeat;
+}
+
+.emblem-icon-heart { --emblem-icon: url("/media/emblem/heart.png"); width: 2.05rem; height: 1.95rem; }
+.emblem-icon-gear { --emblem-icon: url("/media/emblem/gear.png"); width: 2.05rem; height: 2.15rem; }
+.emblem-icon-glasses { --emblem-icon: url("/media/emblem/glasses.png"); width: 2.7rem; height: 1.4rem; }
+.emblem-icon-audience { --emblem-icon: url("/media/emblem/audience.png"); width: 2.85rem; height: 1.55rem; }
+
 .mockup-frame {
   width: min(880px, 100%);
   padding: var(--space-6);
