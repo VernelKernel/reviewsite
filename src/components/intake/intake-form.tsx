@@ -276,7 +276,6 @@ export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimen
           <div className="panel builder-preview-scroll">
             <header className="builder-preview-head">
               <p className="kicker">Live preview</p>
-              <p className="meta">Your chart updates as you answer.</p>
             </header>
             <div>
               <p className="builder-work-title" id="intake-preview-title">

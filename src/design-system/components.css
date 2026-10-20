@@ -3384,7 +3384,7 @@ body:has(.mockup-sheet) .page {
   font-size: var(--text-meta);
 }
 
-.evaluation-byline span::before {
+.evaluation-byline span + span::before {
   content: "·";
   margin-right: var(--space-4);
   color: var(--color-text-muted);
