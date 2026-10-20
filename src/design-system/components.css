@@ -201,6 +201,11 @@ p {
   line-height: var(--leading-body);
 }
 
+.evaluation-builder .field input,
+.evaluation-builder .field textarea {
+  font-size: var(--text-meta);
+}
+
 .site-footer {
   border-top: var(--border-width) solid var(--color-border);
   margin-top: var(--space-8);
@@ -2388,15 +2393,26 @@ fieldset {
 .dimension-row > span {
   display: grid;
   gap: var(--space-1);
+  font-size: var(--text-meta);
 }
 
 .dimension-row select {
   font: inherit;
-  background: var(--color-surface);
+  font-size: var(--text-meta);
+  appearance: none;
+  background-color: var(--color-surface);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--color-text-muted) 50%),
+    linear-gradient(-45deg, transparent 50%, var(--color-text-muted) 50%);
+  background-position:
+    calc(100% - 0.95rem) 55%,
+    calc(100% - 0.72rem) 55%;
+  background-size: 0.28rem 0.28rem;
+  background-repeat: no-repeat;
   color: var(--color-text-primary);
   border: var(--border-width) solid var(--color-border-strong);
   border-radius: var(--radius-sm);
-  padding: 0.4rem 0.5rem;
+  padding: 0.4rem 1.55rem 0.4rem 0.5rem;
   cursor: pointer;
 }
 
@@ -4292,6 +4308,7 @@ body:has(.mockup-sheet) .page {
   background: transparent;
   color: var(--color-text-secondary);
   font: inherit;
+  font-size: var(--text-meta);
   cursor: pointer;
 }
 
@@ -4346,6 +4363,10 @@ body:has(.mockup-sheet) .page {
 
 .builder-section-head h2,
 .builder-section-head .meta {
+  margin: 0;
+}
+
+.builder-switch {
   margin: 0;
 }
 
@@ -4429,6 +4450,50 @@ body:has(.mockup-sheet) .page {
   border-top: 1px solid color-mix(in srgb, var(--color-chart-grid) 45%, transparent);
 }
 
+.builder-preview .dimension-breakdown li > span,
+.builder-preview .stance {
+  font-size: var(--text-meta);
+}
+
+.builder-preview .stance {
+  font-weight: 400;
+}
+
+.builder-preview .preview-dimension-label {
+  letter-spacing: normal;
+  text-transform: none;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.builder-preview .evaluation-panel > h2 {
+  margin-bottom: var(--space-4);
+}
+
+.preview-group + .preview-group {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.preview-group .stance-meter:first-child,
+.preview-group > .meta:first-child {
+  margin-top: 0;
+}
+
+.preview-breakdown {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.dimension-group {
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
 .builder-preview .evaluation-plot .radar-chart,
 .intake-preview-chart .radar-chart {
   display: block;
@@ -4441,6 +4506,11 @@ body:has(.mockup-sheet) .page {
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface-elevated);
+}
+
+.builder-publish {
+  display: grid;
+  gap: var(--space-3);
 }
 
 .builder-publish .btn,
@@ -4475,6 +4545,7 @@ body:has(.mockup-sheet) .page {
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-text-primary);
+  font-size: var(--text-meta);
   cursor: pointer;
 }
 
@@ -4592,4 +4663,85 @@ body:has(.mockup-sheet) .page {
   .builder-actions .btn {
     width: 100%;
   }
+}
+
+.review-composer {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.review-composer-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.review-composer-head > span {
+  font-size: var(--text-meta);
+  color: var(--color-text-secondary);
+}
+
+.review-composer-head .shape-segment {
+  margin-left: auto;
+}
+
+.review-stack {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.review-block {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.review-block-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.review-block-head strong {
+  font-size: var(--text-meta);
+}
+
+.review-block-head .stance {
+  font-size: var(--text-meta);
+  font-weight: 400;
+}
+
+.review-block-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-2);
+}
+
+.review-block-actions .btn {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+}
+
+.review-block-actions svg {
+  width: 0.7rem;
+  height: 0.7rem;
+  fill: currentColor;
+}
+
+.review-stack .field textarea {
+  min-height: 6.5rem;
+}
+
+.review-stack > .field textarea {
+  font-size: var(--text-meta);
+}
+
+.review-reading {
+  display: grid;
+  gap: var(--space-3);
 }

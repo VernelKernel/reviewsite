@@ -60,7 +60,14 @@ export const workInclude = {
     include: {
       reviewer: true,
       platform: true,
-      review: true,
+      review: {
+        include: {
+          sections: {
+            orderBy: { sortOrder: "asc" },
+            include: { dimension: { select: { name: true } } },
+          },
+        },
+      },
       judgments: { include: { dimension: true } },
       observations: { include: { topic: true } },
     },
@@ -201,7 +208,14 @@ export async function reviewerEvaluation(workId: string, reviewerId: string) {
   return prisma.evaluation.findUnique({
     where: { reviewerId_workId: { reviewerId, workId } },
     include: {
-      review: true,
+      review: {
+        include: {
+          sections: {
+            orderBy: { sortOrder: "asc" },
+            include: { dimension: { select: { name: true } } },
+          },
+        },
+      },
       judgments: true,
       observations: true,
     },

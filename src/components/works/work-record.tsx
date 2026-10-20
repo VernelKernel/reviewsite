@@ -277,6 +277,10 @@ export function toReview(
           title: evaluation.review.title,
           impression: evaluation.review.impression,
           body: evaluation.review.body,
+          sections: evaluation.review.sections.map((section) => ({
+            heading: section.dimension?.name ?? null,
+            body: section.body,
+          })),
           source: evaluation.review.source,
           importSourceName: evaluation.review.importSourceName,
           importSourceUrl: evaluation.review.importSourceUrl,

@@ -1,13 +1,15 @@
 "use client";
 
-import { useActionState, useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useActionState, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import type { WorkType } from "@/generated/prisma/client";
 import { DimensionChoices, type DimensionOption } from "@/components/evaluations/dimension-fields";
 import { EvaluationPreview, IntentButton, isStance } from "@/components/evaluations/evaluation-preview";
+import { ReviewComposer } from "@/components/evaluations/review-composer";
 import { ArtImage } from "@/components/works/work-art";
 import { saveEvaluation, type ActionState } from "@/lib/evaluation/actions";
 import { completionLabel, ownershipLabel, playtimeLabel, stanceLabel } from "@/lib/domain/labels";
 import type { RadarAxis } from "@/lib/evaluations/radar";
+import { judgedDimensions, rememberJudgment, type StoredSection } from "@/lib/reviews/sections";
 import type { WorkArt } from "@/lib/works/present";
 
 type Option = { id: string; name: string };
@@ -64,6 +66,7 @@ export function EvaluationForm({
     reviewTitle: string;
     impression: string;
     reviewBody: string;
+    reviewSections: StoredSection[];
     imported: boolean;
     importSourceName: string;
     importSourceUrl: string;
@@ -76,6 +79,7 @@ export function EvaluationForm({
   const [active, setActive] = useState("basics");
   const [stickyTop, setStickyTop] = useState(88);
   const [impression, setImpression] = useState(defaults?.impression ?? "");
+  const [imported, setImported] = useState(defaults?.imported ?? false);
   const [enjoyment, setEnjoyment] = useState(defaults?.enjoyment ?? "");
   const [execution, setExecution] = useState(defaults?.execution ?? "");
   const [lens, setLens] = useState(defaults?.lens ?? "");
@@ -89,6 +93,7 @@ export function EvaluationForm({
     for (const judgment of defaults?.judgments ?? []) next[judgment.dimensionId] = judgment.stance;
     return next;
   });
+  const [judgedOrder, setJudgedOrder] = useState<string[]>(() => initialJudgedOrder(defaults));
   const [observations, setObservations] = useState<Observation[]>(
     defaults?.observations.length
       ? defaults.observations
@@ -129,6 +134,7 @@ export function EvaluationForm({
     };
   }, [stickyTop]);
 
+  const judged = useMemo(() => judgedDimensions(dimensions, judgments, judgedOrder), [dimensions, judgments, judgedOrder]);
   const enjoymentDimensions = dimensions.filter((dimension) => dimension.family === "ENJOYMENT");
   const workDimensions = dimensions.filter((dimension) => dimension.family !== "ENJOYMENT");
   const workAxes = axesFor(workDimensions, judgments);
@@ -313,10 +319,10 @@ export function EvaluationForm({
           </fieldset>
           <DimensionChoices
             legend="Enjoyment, if you want to be more specific"
-            note="Leave a row as “Not judged” when you don’t have a view. These are optional, and they stay separate from the headline."
+            note="Leave a row as “Skip” when you don’t have a view. These are optional, and they stay separate from the headline."
             dimensions={enjoymentDimensions}
             values={judgments}
-            onStance={(dimensionId, stance) => setJudgments((current) => ({ ...current, [dimensionId]: stance }))}
+            onStance={(dimensionId, stance) => recordStance(setJudgments, setJudgedOrder, dimensionId, stance)}
             split
           />
         </section>
@@ -337,10 +343,10 @@ export function EvaluationForm({
           </fieldset>
           <DimensionChoices
             legend="Execution, if you want to be more specific"
-            note="Leave a row as “Not judged” when you don’t have a view. Three or more judged dimensions draw the radar."
+            note="Leave a row as “Skip” when you don’t have a view. Three or more judged dimensions draw the radar."
             dimensions={workDimensions}
             values={judgments}
-            onStance={(dimensionId, stance) => setJudgments((current) => ({ ...current, [dimensionId]: stance }))}
+            onStance={(dimensionId, stance) => recordStance(setJudgments, setJudgedOrder, dimensionId, stance)}
             split
           />
         </section>
@@ -356,7 +362,7 @@ export function EvaluationForm({
             </div>
           </header>
           <label className="choice">
-            <input type="checkbox" name="imported" defaultChecked={defaults?.imported ?? false} />
+            <input type="checkbox" name="imported" checked={imported} onChange={(event) => setImported(event.target.checked)} />
             <span>
               This text was written somewhere else
               <small>Imported reviews stay marked as imported.</small>
@@ -377,10 +383,14 @@ export function EvaluationForm({
             <span>Title, optional</span>
             <input name="reviewTitle" maxLength={140} defaultValue={defaults?.reviewTitle ?? ""} />
           </label>
-          <label className="field">
-            <span>Review</span>
-            <textarea name="reviewBody" defaultValue={defaults?.reviewBody ?? ""} />
-          </label>
+          <ReviewComposer
+            label="Review"
+            judged={judged}
+            catalog={dimensions}
+            initialBody={defaults?.reviewBody ?? ""}
+            initialSections={defaults?.reviewSections ?? []}
+            forcedContinuous={imported}
+          />
           <label className="field">
             <span>Original publication, if imported</span>
             <input name="importSourceName" maxLength={120} defaultValue={defaults?.importSourceName ?? ""} />
@@ -477,6 +487,34 @@ export function EvaluationForm({
       </div>
     </form>
   );
+}
+
+function initialJudgedOrder(
+  defaults: { reviewSections: StoredSection[]; judgments: { dimensionId: string }[] } | null,
+): string[] {
+  const seen = new Set<string>();
+  const order: string[] = [];
+  for (const section of defaults?.reviewSections ?? []) {
+    if (!section.dimensionId || seen.has(section.dimensionId)) continue;
+    seen.add(section.dimensionId);
+    order.push(section.dimensionId);
+  }
+  for (const judgment of defaults?.judgments ?? []) {
+    if (seen.has(judgment.dimensionId)) continue;
+    seen.add(judgment.dimensionId);
+    order.push(judgment.dimensionId);
+  }
+  return order;
+}
+
+function recordStance(
+  setJudgments: Dispatch<SetStateAction<Record<string, string>>>,
+  setOrder: Dispatch<SetStateAction<string[]>>,
+  dimensionId: string,
+  stance: string,
+) {
+  setJudgments((current) => ({ ...current, [dimensionId]: stance }));
+  setOrder((order) => rememberJudgment(order, dimensionId, stance));
 }
 
 function axesFor(dimensions: DimensionOption[], judgments: Record<string, string>): RadarAxis[] {

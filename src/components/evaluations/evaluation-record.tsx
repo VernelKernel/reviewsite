@@ -16,6 +16,7 @@ import {
 import type { EvaluationCardInput } from "@/components/evaluations/evaluation-card";
 import type { RadarAxis, StanceName } from "@/lib/evaluations/radar";
 import { personalHeadline } from "@/lib/intake/judgments";
+import { ReviewProse } from "@/components/reviews/review-prose";
 import { HeroArt } from "@/components/works/work-art";
 import { formatDate, workArt, type FullWork } from "@/lib/works/present";
 
@@ -155,11 +156,13 @@ export function EvaluationRecord({
             {evaluation.standardNote ? <p>{evaluation.standardNote}</p> : null}
             {evaluation.review?.title ? <h3>{evaluation.review.title}</h3> : null}
             {body ? (
-              <div className="prose">
-                {body.split(/\n{2,}/).map((paragraph) => (
-                  <p key={paragraph.slice(0, 48)}>{paragraph}</p>
-                ))}
-              </div>
+              <ReviewProse
+                body={body}
+                sections={(evaluation.review?.sections ?? []).map((section) => ({
+                  heading: section.dimension?.name ?? null,
+                  body: section.body,
+                }))}
+              />
             ) : (
               <p className="meta">No written review. The stances above are the evaluation.</p>
             )}

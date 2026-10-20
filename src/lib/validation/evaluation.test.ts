@@ -67,6 +67,79 @@ describe("evaluation validation", () => {
     }
   });
 
+  it("builds the review from dimension sections and drops empty blocks", () => {
+    const result = parseEvaluationForm(
+      form({ ...base, reviewBody: "", reviewMode: "sections" }, (data) => {
+        data.set("reviewOpening", "I came for the story.");
+        data.append("sectionDimension", "story");
+        data.append("sectionBody", "The plot lost me, and that decided it.");
+        data.append("sectionDimension", "gameplay");
+        data.append("sectionBody", "   ");
+      }),
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.sections).toEqual([
+        { dimensionId: null, body: "I came for the story." },
+        { dimensionId: "story", body: "The plot lost me, and that decided it." },
+      ]);
+      expect(result.data.reviewBody).toBe("I came for the story.\n\nThe plot lost me, and that decided it.");
+    }
+  });
+
+  it("keeps a written dimension that has no judgment", () => {
+    const result = parseEvaluationForm(
+      form({ ...base, reviewBody: "", reviewMode: "sections" }, (data) => {
+        data.append("sectionDimension", "story");
+        data.append("sectionBody", "The plot lost me, and that decided the experience.");
+      }),
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.judgments).toEqual([]);
+      expect(result.data.sections).toEqual([
+        { dimensionId: "story", body: "The plot lost me, and that decided the experience." },
+      ]);
+    }
+  });
+
+  it("rejects a review section that is too short to say anything", () => {
+    const result = parseEvaluationForm(
+      form({ ...base, reviewBody: "", reviewMode: "sections" }, (data) => {
+        data.set("reviewOpening", "Too short");
+      }),
+    );
+    expect(result.ok).toBe(false);
+  });
+
+  it("rejects two sections for the same dimension", () => {
+    const prose = "The combat is readable and the ending is not.";
+    const result = parseEvaluationForm(
+      form({ ...base, reviewBody: "", reviewMode: "sections" }, (data) => {
+        data.append("sectionDimension", "story");
+        data.append("sectionBody", prose);
+        data.append("sectionDimension", "story");
+        data.append("sectionBody", prose);
+      }),
+    );
+    expect(result.ok).toBe(false);
+  });
+
+  it("ignores dimension sections when the review is imported", () => {
+    const result = parseEvaluationForm(
+      form({ ...base, imported: "on", reviewMode: "sections" }, (data) => {
+        data.set("reviewOpening", "This opening should not replace the pasted review.");
+        data.append("sectionDimension", "story");
+        data.append("sectionBody", "The plot lost me, and that decided it.");
+      }),
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.sections).toEqual([]);
+      expect(result.data.reviewBody).toBe(base.reviewBody);
+    }
+  });
+
   it("still checks an observation that is present on a draft", () => {
     const result = parseEvaluationForm(
       form({ ...base, lens: "", standard: "", intent: "draft" }, (data) => {

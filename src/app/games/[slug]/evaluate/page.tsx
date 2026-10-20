@@ -69,6 +69,11 @@ export async function EvaluateScreen({
                 reviewTitle: existing?.review?.title ?? "",
                 impression: existing?.review?.impression ?? "",
                 reviewBody: existing?.review?.body ?? "",
+                reviewSections:
+                  existing?.review?.sections.map((section) => ({
+                    dimensionId: section.dimensionId,
+                    body: section.body,
+                  })) ?? [],
                 imported: existing?.review?.source === "IMPORTED",
                 importSourceName: existing?.review?.importSourceName ?? "",
                 importSourceUrl: existing?.review?.importSourceUrl ?? "",

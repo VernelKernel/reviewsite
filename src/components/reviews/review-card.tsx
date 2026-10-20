@@ -10,6 +10,7 @@ import {
   stanceLabel,
   standardLabel,
 } from "@/lib/domain/labels";
+import { ReviewProse, type ReviewHeading } from "@/components/reviews/review-prose";
 import { formatDate } from "@/lib/works/present";
 
 export type ReviewCardModel = {
@@ -38,6 +39,7 @@ export type ReviewCardModel = {
     importSourceName: string | null;
     importSourceUrl: string | null;
     impression?: string | null;
+    sections?: ReviewHeading[];
   } | null;
 };
 
@@ -92,12 +94,10 @@ export function ReviewCard({ review, linked = true }: { review: ReviewCardModel;
       {review.standardNote ? <p className="context-line">Standard note: {review.standardNote}</p> : null}
       {review.ownership ? <p className="context-line">Access: {ownershipLabel[review.ownership]}</p> : null}
       {review.review ? (
-        <div className="prose">
+        <div className="review-reading">
           {review.review.impression ? <p className="impression-line">{review.review.impression}</p> : null}
           {review.review.title ? <h3>{review.review.title}</h3> : null}
-          {review.review.body.split(/\n{2,}/).map((paragraph) => (
-            <p key={paragraph.slice(0, 24)}>{paragraph}</p>
-          ))}
+          <ReviewProse body={review.review.body} sections={review.review.sections} />
         </div>
       ) : (
         <p className="meta">No written review. The structured judgments above are the evaluation.</p>

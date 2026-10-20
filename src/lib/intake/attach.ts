@@ -4,6 +4,7 @@ import { steamArtwork } from "../catalog/media";
 import { slugify } from "../catalog/parse";
 import { fetchSteamApp, fetchSteamPortraits, SteamLookupError } from "../catalog/steam-title";
 import { prisma } from "../db/client";
+import { flattenSections, foldSections, readStoredSections } from "../reviews/sections";
 import { readJudgments, type StoredJudgment } from "./judgments";
 import { normalizeTitle } from "./normalize";
 
@@ -30,6 +31,7 @@ type AttachIntake = {
   execution: "POSITIVE" | "MIXED" | "NEGATIVE";
   completion: "JUST_STARTED" | "EARLY" | "SUBSTANTIAL" | "COMPLETED" | "ENDGAME" | "POST_GAME" | "ABANDONED" | "UNKNOWN";
   reviewBody: string | null;
+  reviewSections: unknown;
   judgments: unknown;
   workType: WorkType;
 };
@@ -140,13 +142,25 @@ export async function attachIntakeToWork(intake: AttachIntake, workId: string, r
         });
       }
 
-      const body = intake.reviewBody?.trim();
+      const allowedSections = foldSections(readStoredSections(intake.reviewSections), allowed);
+      const body = (allowedSections.length > 0 ? flattenSections(allowedSections) : intake.reviewBody?.trim()) || "";
       if (body) {
-        await tx.review.upsert({
+        const review = await tx.review.upsert({
           where: { evaluationId: saved.id },
           update: { body, source: "INTERNAL" },
           create: { evaluationId: saved.id, body, source: "INTERNAL" },
         });
+        await tx.reviewSection.deleteMany({ where: { reviewId: review.id } });
+        if (allowedSections.length > 0) {
+          await tx.reviewSection.createMany({
+            data: allowedSections.map((section, index) => ({
+              reviewId: review.id,
+              dimensionId: section.dimensionId,
+              body: section.body,
+              sortOrder: index,
+            })),
+          });
+        }
       }
 
       if (normalizeTitle(work.title) !== intake.normalizedTitle) {

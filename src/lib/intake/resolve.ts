@@ -17,6 +17,7 @@ type Resolvable = {
   execution: "POSITIVE" | "MIXED" | "NEGATIVE";
   completion: "JUST_STARTED" | "EARLY" | "SUBSTANTIAL" | "COMPLETED" | "ENDGAME" | "POST_GAME" | "ABANDONED" | "UNKNOWN";
   reviewBody: string | null;
+  reviewSections: unknown;
   judgments: unknown;
   workType: WorkType;
   user: { profile: { id: string } | null };

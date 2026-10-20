@@ -987,7 +987,7 @@ Shared:
 ```text
 Engagement — Did it hold your attention?
 Immersion — Did you feel inside the work?
-Emotional impact — Did it make you feel something that mattered to you?
+Impact — Did it make you feel something that mattered to you?
 ```
 
 Games:
@@ -1174,6 +1174,11 @@ It may include:
 * publication date
 * edit date
 * source/provenance
+* optional ordered sections
+
+`body` is the continuous prose. Sections, when the author wrote by dimension, keep an optional opening and one passage per dimension in the author's order. A section may remain after that dimension is no longer judged, so the prose is not deleted with the stance. Empty sections are not stored. Imported reviews stay a single body.
+
+An anonymous intake carries the same shape: flattened prose in `reviewBody`, and the section list in `reviewSections`, until the intake is attached to an evaluation.
 
 The Review is subordinate to Evaluation conceptually.
 

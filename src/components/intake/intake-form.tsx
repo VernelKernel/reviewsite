@@ -1,16 +1,17 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import { useFormStatus } from "react-dom";
 import type { WorkType } from "@/generated/prisma/client";
 import { DimensionChoices, type DimensionOption } from "@/components/evaluations/dimension-fields";
+import { ReviewComposer } from "@/components/evaluations/review-composer";
 import { PersonalShape, type PersonalAxis } from "@/components/intake/personal-shape";
 import { createIntake, type IntakeActionState } from "@/lib/intake/actions";
-import { personalHeadline } from "@/lib/intake/judgments";
+import { judgedDimensions, rememberJudgment } from "@/lib/reviews/sections";
 import { stanceClass, stanceLabel } from "@/lib/domain/labels";
 
 const steps = [
-  { id: "basics", anchor: "basics", label: "Basics" },
+  { id: "basics", anchor: "basics", label: "Media" },
   { id: "enjoyment", anchor: "enjoyment", label: "Enjoyment" },
   { id: "execution", anchor: "execution", label: "Execution" },
   { id: "note", anchor: "note", label: "Note" },
@@ -27,7 +28,8 @@ export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimen
   const [enjoyment, setEnjoyment] = useState("");
   const [execution, setExecution] = useState("");
   const [judgments, setJudgments] = useState<Record<string, string>>({});
-  const noun = workType === "MOVIE" ? "movie" : "game";
+  const [judgedOrder, setJudgedOrder] = useState<string[]>([]);
+  const [chartFeedback, setChartFeedback] = useState<string | null>(null);
   const otherHref = workType === "MOVIE" ? "/review/new?type=game" : "/review/new?type=movie";
   const otherLabel = workType === "MOVIE" ? "games" : "movies";
 
@@ -65,17 +67,43 @@ export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimen
     };
   }, [stickyTop]);
 
+  const judged = useMemo(() => judgedDimensions(dimensions, judgments, judgedOrder), [dimensions, judgments, judgedOrder]);
   const enjoymentDimensions = dimensions.filter((dimension) => dimension.family === "ENJOYMENT");
   const workDimensions = dimensions.filter((dimension) => dimension.family !== "ENJOYMENT");
   const workAxes = axesFor(workDimensions, judgments);
   const enjoymentAxes = axesFor(enjoymentDimensions, judgments);
   const current = steps.find((step) => step.id === active) ?? steps[0];
   const currentIndex = steps.findIndex((step) => step.id === current.id) + 1;
-  const headline = isStance(enjoyment) && isStance(execution) ? personalHeadline(enjoyment, execution) : "Your chart updates as you answer.";
   const byline = [platform.trim(), genre.trim()].filter(Boolean);
+  const titleMissing = title.trim().length < 2;
+  const platformMissing = platform.trim().length === 0;
+  const genreMissing = genre.trim().length === 0;
+  const basicsMissing = titleMissing || platformMissing || genreMissing;
+  const requirementMessage = chartRequirementMessage({
+    titleMissing,
+    platformMissing,
+    genreMissing,
+    enjoyment,
+    execution,
+    judgedEnjoyment: enjoymentAxes.length,
+    judgedExecution: workAxes.length,
+  });
+  const showRequirements = chartFeedback !== null && requirementMessage !== null;
+
+  function onCreateChart(event: FormEvent<HTMLFormElement>) {
+    if (!requirementMessage) {
+      setChartFeedback(null);
+      return;
+    }
+    event.preventDefault();
+    setChartFeedback(requirementMessage);
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const targetId = basicsMissing ? "basics" : !isStance(enjoyment) || enjoymentAxes.length < 3 ? "enjoyment" : "execution";
+    document.getElementById(targetId)?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  }
 
   return (
-    <form className="evaluation-builder" action={action}>
+    <form className="evaluation-builder" action={action} noValidate onSubmit={onCreateChart}>
       <header className="builder-intro">
         <p className="kicker">Create your review</p>
         <h1>{workType === "MOVIE" ? "Movie" : "Game"}</h1>
@@ -124,17 +152,16 @@ export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimen
           ) : null}
           <input type="hidden" name="workType" value={workType} />
 
+          <p className="builder-switch meta">
+            <a href={otherHref}>Switch to {otherLabel}</a>
+          </p>
+
           <section className="panel builder-section" id="basics" aria-labelledby="intake-basics">
             <header className="builder-section-head">
               <span className="builder-index" aria-hidden="true">
                 1
               </span>
-              <div>
-                <h2 id="intake-basics">Work and basics</h2>
-                <p className="meta">
-                  Name the {noun}. <a href={otherHref}>Switch to {otherLabel}</a>
-                </p>
-              </div>
+              <h2 id="intake-basics">Media</h2>
             </header>
             <label className="field">
               <span>Title</span>
@@ -144,19 +171,35 @@ export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimen
                 minLength={2}
                 maxLength={140}
                 autoComplete="off"
-                placeholder={`The ${noun} you evaluated`}
+                aria-invalid={showRequirements && titleMissing ? true : undefined}
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
               />
             </label>
             <div className="builder-fields">
               <label className="field">
-                <span>Platform, optional</span>
-                <input name="platform" maxLength={80} autoComplete="off" value={platform} onChange={(event) => setPlatform(event.target.value)} />
+                <span>Platform</span>
+                <input
+                  name="platform"
+                  required
+                  maxLength={80}
+                  autoComplete="off"
+                  aria-invalid={showRequirements && platformMissing ? true : undefined}
+                  value={platform}
+                  onChange={(event) => setPlatform(event.target.value)}
+                />
               </label>
               <label className="field">
-                <span>Genre, optional</span>
-                <input name="genre" maxLength={80} autoComplete="off" value={genre} onChange={(event) => setGenre(event.target.value)} />
+                <span>Genre</span>
+                <input
+                  name="genre"
+                  required
+                  maxLength={80}
+                  autoComplete="off"
+                  aria-invalid={showRequirements && genreMissing ? true : undefined}
+                  value={genre}
+                  onChange={(event) => setGenre(event.target.value)}
+                />
               </label>
             </div>
           </section>
@@ -166,23 +209,24 @@ export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimen
               <span className="builder-index" aria-hidden="true">
                 2
               </span>
-              <div>
-                <h2 id="intake-enjoyment">Enjoyment</h2>
-                <p className="meta">How it felt to spend time with it. These stay off the chart.</p>
-              </div>
+              <h2 id="intake-enjoyment">Enjoyment</h2>
             </header>
             <fieldset>
               <legend className="legend">Did you enjoy it?</legend>
               <StancePills name="enjoyment" value={enjoyment} onChange={setEnjoyment} />
             </fieldset>
-            <DimensionChoices
-              legend="Enjoyment, if you want to be more specific"
-              note="Leave a row as “Not judged” when you don’t have a view. These are optional, and they stay separate from the headline."
-              dimensions={enjoymentDimensions}
-              values={judgments}
-              onStance={(dimensionId, stance) => setJudgments((current) => ({ ...current, [dimensionId]: stance }))}
-              split
-            />
+            <p className="meta">At least three dimensions are required.</p>
+            {isStance(enjoyment) ? (
+              <div className="dimension-group">
+                <DimensionChoices
+                  legend="Enjoyment, if you want to be more specific"
+                  dimensions={enjoymentDimensions}
+                  values={judgments}
+                  onStance={(dimensionId, stance) => recordStance(setJudgments, setJudgedOrder, dimensionId, stance)}
+                  split
+                />
+              </div>
+            ) : null}
           </section>
 
           <section className="panel builder-section" id="execution" aria-labelledby="intake-execution">
@@ -190,23 +234,25 @@ export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimen
               <span className="builder-index" aria-hidden="true">
                 3
               </span>
-              <div>
-                <h2 id="intake-execution">Execution</h2>
-                <p className="meta">How it was made. Judged rows are what the chart draws.</p>
-              </div>
+              <h2 id="intake-execution">Execution</h2>
             </header>
             <fieldset>
               <legend className="legend">Was it well executed?</legend>
               <StancePills name="execution" value={execution} onChange={setExecution} />
             </fieldset>
-            <DimensionChoices
-              legend="Execution, if you want to be more specific"
-              note="Leave a row as “Not judged” when you don’t have a view. Three or more judged dimensions draw the radar."
-              dimensions={workDimensions}
-              values={judgments}
-              onStance={(dimensionId, stance) => setJudgments((current) => ({ ...current, [dimensionId]: stance }))}
-              split
-            />
+            <p className="meta">At least three dimensions are required.</p>
+            {isStance(execution) ? (
+              <div className="dimension-group">
+                <DimensionChoices
+                  legend="Execution, if you want to be more specific"
+                  note="Leave a row as “Skip” when you don’t have a view."
+                  dimensions={workDimensions}
+                  values={judgments}
+                  onStance={(dimensionId, stance) => recordStance(setJudgments, setJudgedOrder, dimensionId, stance)}
+                  split
+                />
+              </div>
+            ) : null}
           </section>
 
           <section className="panel builder-section" id="note" aria-labelledby="intake-note">
@@ -215,14 +261,11 @@ export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimen
                 4
               </span>
               <div>
-                <h2 id="intake-note">Note</h2>
+                <h2 id="intake-note">Review</h2>
                 <p className="meta">Optional. A few sentences are enough.</p>
               </div>
             </header>
-            <label className="field">
-              <span>A note, optional</span>
-              <textarea name="reviewBody" maxLength={8000} />
-            </label>
+            <ReviewComposer label="Review" hideLabel judged={judged} catalog={dimensions} initialBody="" initialSections={[]} maxLength={8000} />
           </section>
           <div id="preview-anchor" className="builder-anchor" />
         </div>
@@ -237,7 +280,6 @@ export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimen
               <p className="builder-work-title" id="intake-preview-title">
                 {title.trim() || "Untitled"}
               </p>
-              <p className="lede">{headline}</p>
               {byline.length > 0 ? (
                 <p className="evaluation-byline">
                   {byline.map((item) => (
@@ -246,35 +288,50 @@ export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimen
                 </p>
               ) : null}
             </div>
-            <div className="intake-preview-chart">
-              <PersonalShape axes={workAxes} labelledBy="intake-preview-title" />
-            </div>
+            {workAxes.length >= 3 ? (
+              <div className="intake-preview-chart">
+                <PersonalShape axes={workAxes} labelledBy="intake-preview-title" />
+              </div>
+            ) : null}
             <section className="evaluation-panel" aria-labelledby="intake-key-impressions">
               <h2 id="intake-key-impressions">Key impressions</h2>
-              {isStance(enjoyment) ? <StanceMeter label="Enjoyment" stance={enjoyment} /> : <p className="meta">Enjoyment is not judged yet.</p>}
-              {enjoymentAxes.length > 0 ? (
-                <ul className="dimension-breakdown" aria-label="Enjoyment dimensions">
-                  {enjoymentAxes.map((axis) => (
-                    <BreakdownRow key={axis.name} axis={axis} />
-                  ))}
-                </ul>
-              ) : null}
-              {isStance(execution) ? <StanceMeter label="Execution" stance={execution} /> : <p className="meta">Execution is not judged yet.</p>}
+              <div className="preview-group">
+                {isStance(enjoyment) ? <StanceMeter label="Enjoyment" stance={enjoyment} /> : <p className="meta">Enjoyment not selected</p>}
+                {isStance(enjoyment) && enjoymentAxes.length > 0 ? (
+                  <div className="preview-breakdown">
+                    <h2 className="preview-dimension-label" id="intake-enjoyment-dimension">
+                      Dimension
+                    </h2>
+                    <ul className="dimension-breakdown" aria-label="Enjoyment dimensions">
+                      {enjoymentAxes.map((axis) => (
+                        <BreakdownRow key={axis.name} axis={axis} />
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
+              <div className="preview-group">
+                {isStance(execution) ? <StanceMeter label="Execution" stance={execution} /> : <p className="meta">Execution not selected</p>}
+                {isStance(execution) && workAxes.length > 0 ? (
+                  <div className="preview-breakdown">
+                    <h2 className="preview-dimension-label" id="intake-dimension-breakdown">
+                      Dimension
+                    </h2>
+                    <ul className="dimension-breakdown">
+                      {workAxes.map((axis) => (
+                        <BreakdownRow key={axis.name} axis={axis} />
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
             </section>
-            {workAxes.length > 0 ? (
-              <section className="evaluation-panel" aria-labelledby="intake-dimension-breakdown">
-                <h2 id="intake-dimension-breakdown">Dimension breakdown</h2>
-                <ul className="dimension-breakdown">
-                  {workAxes.map((axis) => (
-                    <BreakdownRow key={axis.name} axis={axis} />
-                  ))}
-                </ul>
-              </section>
-            ) : null}
-            <p className="builder-preview-note">
-              Seeing the chart saves this review to you. Verifying an email unlocks the image and lets it join a work when the title matches.
-            </p>
             <div className="builder-publish">
+              {showRequirements ? (
+                <p className="form-error" id="chart-requirements" role="alert">
+                  {requirementMessage}
+                </p>
+              ) : null}
               <SeeChartButton />
             </div>
           </div>
@@ -282,6 +339,16 @@ export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimen
       </div>
     </form>
   );
+}
+
+function recordStance(
+  setJudgments: Dispatch<SetStateAction<Record<string, string>>>,
+  setOrder: Dispatch<SetStateAction<string[]>>,
+  dimensionId: string,
+  stance: string,
+) {
+  setJudgments((current) => ({ ...current, [dimensionId]: stance }));
+  setOrder((order) => rememberJudgment(order, dimensionId, stance));
 }
 
 function axesFor(dimensions: DimensionOption[], judgments: Record<string, string>): PersonalAxis[] {
@@ -293,6 +360,34 @@ function axesFor(dimensions: DimensionOption[], judgments: Record<string, string
 
 function isStance(value: string): value is PersonalAxis["stance"] {
   return value === "POSITIVE" || value === "MIXED" || value === "NEGATIVE";
+}
+
+function chartRequirementMessage({
+  titleMissing,
+  platformMissing,
+  genreMissing,
+  enjoyment,
+  execution,
+  judgedEnjoyment,
+  judgedExecution,
+}: {
+  titleMissing: boolean;
+  platformMissing: boolean;
+  genreMissing: boolean;
+  enjoyment: string;
+  execution: string;
+  judgedEnjoyment: number;
+  judgedExecution: number;
+}): string | null {
+  const missing: string[] = [];
+  const fields = [titleMissing ? "Title" : null, platformMissing ? "Platform" : null, genreMissing ? "Genre" : null].filter(
+    (field): field is string => Boolean(field),
+  );
+  if (fields.length === 1) missing.push(`${fields[0]} is required.`);
+  if (fields.length > 1) missing.push(`${fields.slice(0, -1).join(", ")} and ${fields[fields.length - 1]} are required.`);
+  if (!isStance(enjoyment) || !isStance(execution)) missing.push("Answer enjoyment and execution.");
+  if (judgedEnjoyment < 3 || judgedExecution < 3) missing.push("At least three dimensions are required.");
+  return missing.length > 0 ? missing.join(" ") : null;
 }
 
 function scrollToStep(id: string) {
@@ -337,9 +432,6 @@ function StanceMeter({ label, stance }: { label: string; stance: PersonalAxis["s
           {label}
         </strong>
         <span className={stanceClass(stance)}>{stanceLabel[stance]}</span>
-      </div>
-      <div className="stance-meter-track" role="img" aria-label={`${label}: ${stanceLabel[stance]}`}>
-        <span className={`stance-meter-fill stance-meter-${stance.toLowerCase()}`} />
       </div>
     </div>
   );

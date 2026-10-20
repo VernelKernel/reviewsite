@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { flattenSections, readSectionFields, type StoredSection } from "../reviews/sections";
 
 export const stanceSchema = z.enum(["POSITIVE", "MIXED", "NEGATIVE"]);
 export const lensSchema = z.enum(["EXPERIENCE", "EXECUTION", "MIXED"]);
@@ -56,6 +57,14 @@ const evaluationShape = {
   importSourceName: z.preprocess(emptyToUndefined, z.string().max(120).optional()),
   importSourceUrl: z.preprocess(emptyToUndefined, z.string().url("Enter a full source URL, including https://").optional()),
   judgments: z.array(z.object({ dimensionId: z.string().min(1), stance: stanceSchema })).max(24),
+  sections: z
+    .array(
+      z.object({
+        dimensionId: z.string().min(1).nullable(),
+        body: z.string().trim().min(1).max(20000),
+      }),
+    )
+    .max(25),
   observations: z
     .array(
       z.object({
@@ -68,7 +77,7 @@ const evaluationShape = {
 };
 
 function refineEvaluation(
-  value: { judgments: { dimensionId: string }[]; imported: boolean; reviewBody?: string },
+  value: { judgments: { dimensionId: string }[]; sections: StoredSection[]; imported: boolean; reviewBody?: string },
   context: z.RefinementCtx,
 ) {
   const dimensionIds = value.judgments.map((judgment) => judgment.dimensionId);
@@ -77,6 +86,14 @@ function refineEvaluation(
       code: z.ZodIssueCode.custom,
       message: "Each dimension can only be judged once in an evaluation.",
       path: ["judgments"],
+    });
+  }
+  const sectionIds = value.sections.flatMap((section) => (section.dimensionId ? [section.dimensionId] : []));
+  if (new Set(sectionIds).size !== sectionIds.length) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Each dimension can only be written once in a review.",
+      path: ["sections"],
     });
   }
   if (value.imported && !value.reviewBody) {
@@ -136,6 +153,10 @@ export function parseEvaluationForm(formData: FormData) {
 
   const intent: EvaluationIntent = formData.get("intent") === "draft" ? "draft" : "publish";
   const schema = intent === "draft" ? evaluationDraftSchema : evaluationInputSchema;
+  const imported = formData.get("imported") === "on";
+  const sectional = !imported && formData.get("reviewMode") === "sections";
+  const sections = sectional ? readSectionFields(formData) : [];
+  const flattened = sectional ? flattenSections(sections) : undefined;
   const parsed = schema.safeParse({
     email: formData.get("email"),
     displayName: formData.get("displayName"),
@@ -150,11 +171,12 @@ export function parseEvaluationForm(formData: FormData) {
     platformId: formData.get("platformId"),
     reviewTitle: formData.get("reviewTitle"),
     impression: formData.get("impression"),
-    reviewBody: formData.get("reviewBody"),
-    imported: formData.get("imported") === "on",
+    reviewBody: sectional ? flattened : formData.get("reviewBody"),
+    imported,
     importSourceName: formData.get("importSourceName"),
     importSourceUrl: formData.get("importSourceUrl"),
     judgments,
+    sections,
     observations: observations.filter((observation) => observation.content.trim()),
   });
 

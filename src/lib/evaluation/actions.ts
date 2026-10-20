@@ -50,6 +50,9 @@ export async function saveEvaluation(
     if (input.observations.some((observation) => !topicIds.has(observation.topicId))) {
       return { error: "One of those topics is not in the catalog." };
     }
+    if (input.sections.some((section) => section.dimensionId && !dimensionIds.has(section.dimensionId))) {
+      return { error: "One of those dimensions does not apply to this work." };
+    }
 
     const reviewer = await establishReviewer({ email: input.email, displayName: input.displayName });
     const existing = await prisma.evaluation.findUnique({
@@ -116,7 +119,7 @@ export async function saveEvaluation(
       }
 
       if (input.reviewBody || input.impression) {
-        await tx.review.upsert({
+        const review = await tx.review.upsert({
           where: { evaluationId: saved.id },
           create: {
             evaluationId: saved.id,
@@ -136,6 +139,17 @@ export async function saveEvaluation(
             importSourceUrl: input.imported ? (input.importSourceUrl ?? null) : null,
           },
         });
+        await tx.reviewSection.deleteMany({ where: { reviewId: review.id } });
+        if (!input.imported && input.sections.length > 0) {
+          await tx.reviewSection.createMany({
+            data: input.sections.map((section, index) => ({
+              reviewId: review.id,
+              dimensionId: section.dimensionId,
+              body: section.body,
+              sortOrder: index,
+            })),
+          });
+        }
       } else {
         await tx.review.deleteMany({ where: { evaluationId: saved.id } });
       }

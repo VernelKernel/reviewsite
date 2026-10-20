@@ -84,7 +84,7 @@ export function EvaluationPreview({
         />
         <section className="evaluation-panel" aria-labelledby="builder-execution-breakdown">
           <h2 id="builder-execution-breakdown">Execution breakdown</h2>
-          {isStance(execution) ? null : <p className="meta">Execution is not judged yet.</p>}
+          {isStance(execution) ? null : <p className="meta">Execution not selected</p>}
           {workAxes.length > 0 ? (
             <ul className="dimension-breakdown">
               {workAxes.map((axis) => (
@@ -97,7 +97,7 @@ export function EvaluationPreview({
         </section>
         <section className="evaluation-panel" aria-labelledby="builder-enjoyment-breakdown">
           <h2 id="builder-enjoyment-breakdown">Enjoyment breakdown</h2>
-          {isStance(enjoyment) ? null : <p className="meta">Enjoyment is not judged yet.</p>}
+          {isStance(enjoyment) ? null : <p className="meta">Enjoyment not selected</p>}
           {enjoymentAxes.length > 0 ? (
             <ul className="dimension-breakdown">
               {enjoymentAxes.map((axis) => (

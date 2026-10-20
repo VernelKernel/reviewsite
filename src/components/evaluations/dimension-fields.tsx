@@ -17,7 +17,7 @@ export function DimensionChoices({
   split = false,
 }: {
   legend: string;
-  note: string;
+  note?: string;
   dimensions: DimensionOption[];
   stanceFor?: (id: string) => string;
   values?: Record<string, string>;
@@ -28,7 +28,7 @@ export function DimensionChoices({
   return (
     <fieldset>
       <legend className="legend">{legend}</legend>
-      <p className="meta">{note}</p>
+      {note ? <p className="meta">{note}</p> : null}
       <div className={split ? "builder-dimensions" : undefined}>
         {dimensions.map((dimension) => (
           <div className="dimension-row" key={dimension.id}>
@@ -46,7 +46,7 @@ export function DimensionChoices({
                   }
                 : { defaultValue: stanceFor?.(dimension.id) ?? "" })}
             >
-              <option value="">Not judged</option>
+              <option value="">Skip</option>
               <option value="POSITIVE">Positive</option>
               <option value="MIXED">Mixed</option>
               <option value="NEGATIVE">Negative</option>

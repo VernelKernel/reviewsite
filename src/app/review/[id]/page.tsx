@@ -6,6 +6,8 @@ import { PersonalShape } from "@/components/intake/personal-shape";
 import { stanceClass, stanceLabel, workHref } from "@/lib/domain/labels";
 import { loadOwnedIntake } from "@/lib/intake/access";
 import { personalHeadline, readJudgments } from "@/lib/intake/judgments";
+import { readStoredSections } from "@/lib/reviews/sections";
+import { ReviewProse } from "@/components/reviews/review-prose";
 import { prisma } from "@/lib/db/client";
 
 export const metadata: Metadata = { title: "Your review" };
@@ -32,6 +34,7 @@ export default async function ReviewChartPage({ params }: { params: Promise<{ id
   const headline = personalHeadline(intake.enjoyment, intake.execution);
   const verified = Boolean(intake.user?.emailVerified);
   const headingId = "personal-chart-title";
+  const noteSections = await intakeSections(intake.reviewSections);
 
   return (
     <main className="page shell">
@@ -62,7 +65,11 @@ export default async function ReviewChartPage({ params }: { params: Promise<{ id
             {intake.rawGenre ? <p className="meta">Genre: {intake.rawGenre}</p> : null}
           </div>
         </div>
-        {intake.reviewBody ? <p className="personal-note">{intake.reviewBody}</p> : null}
+        {intake.reviewBody ? (
+          <div className="personal-note">
+            <ReviewProse body={intake.reviewBody} sections={noteSections} />
+          </div>
+        ) : null}
         <MatchNote
           status={intake.matchStatus}
           note={intake.matchNote}
@@ -99,6 +106,19 @@ function StanceMeter({ label, stance }: { label: string; stance: string }) {
       </div>
     </div>
   );
+}
+
+async function intakeSections(value: unknown) {
+  const stored = readStoredSections(value);
+  const ids = stored.flatMap((section) => (section.dimensionId ? [section.dimensionId] : []));
+  const dimensions = ids.length
+    ? await prisma.dimension.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } })
+    : [];
+  const names = new Map(dimensions.map((dimension) => [dimension.id, dimension.name]));
+  return stored.map((section) => ({
+    heading: section.dimensionId ? (names.get(section.dimensionId) ?? null) : null,
+    body: section.body,
+  }));
 }
 
 function MatchNote({

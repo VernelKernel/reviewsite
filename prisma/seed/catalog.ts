@@ -155,7 +155,7 @@ export const dimensions: {
   },
   {
     slug: "emotional-impact",
-    name: "Emotional impact",
+    name: "Impact",
     description: "Did it make you feel something that mattered to you?",
     sortOrder: 5,
     appliesTo: ["GAME", "MOVIE"],

@@ -12,6 +12,7 @@ import { sendVerificationEmail, verificationUrl } from "../mail/send";
 import { loadOwnedIntake } from "./access";
 import { writeIntakeSecret } from "./cookie";
 import { normalizeTitle } from "./normalize";
+import { flattenSections, readSectionFields, readStoredSections } from "../reviews/sections";
 import { resolveIntake } from "./resolve";
 
 export type IntakeActionState = { error?: string; sent?: boolean; devLink?: string };
@@ -38,10 +39,14 @@ export async function createIntake(_previous: IntakeActionState, formData: FormD
 
   const rawPlatform = optionalText(formData.get("platform"), CONTEXT_MAX);
   const rawGenre = optionalText(formData.get("genre"), CONTEXT_MAX);
-  const reviewBody = optionalText(formData.get("reviewBody"), NOTE_MAX);
+  const sectional = formData.get("reviewMode") === "sections";
+  const reviewSections = sectional ? readSectionFields(formData) : [];
+  const reviewBody = sectional ? flattenSections(reviewSections) || null : optionalText(formData.get("reviewBody"), NOTE_MAX);
   if (reviewBody === undefined || rawPlatform === undefined || rawGenre === undefined) {
     return { error: "One of those fields is too long." };
   }
+  if (!rawPlatform || !rawGenre) return { error: "Enter the platform and genre." };
+  if (reviewBody && reviewBody.length > NOTE_MAX) return { error: "One of those fields is too long." };
 
   try {
     assertSubmissionRate(`intake:${await clientAddress()}`);
@@ -51,12 +56,23 @@ export async function createIntake(_previous: IntakeActionState, formData: FormD
 
   const dimensions = await prisma.dimension.findMany({
     where: { appliesTo: { has: workType } },
-    select: { id: true },
+    select: { id: true, family: true },
   });
+  const allowedDimensions = new Set(dimensions.map((dimension) => dimension.id));
+  if (reviewSections.some((section) => section.dimensionId && !allowedDimensions.has(section.dimensionId))) {
+    return { error: "One of those dimensions does not apply to this work." };
+  }
   const judgments = dimensions.flatMap((dimension) => {
     const stance = stanceOf(formData.get(`judgment:${dimension.id}`));
     return stance ? [{ dimensionId: dimension.id, stance }] : [];
   });
+  const enjoymentIds = new Set(dimensions.filter((dimension) => dimension.family === "ENJOYMENT").map((dimension) => dimension.id));
+  const workIds = new Set(dimensions.filter((dimension) => dimension.family === "WORK").map((dimension) => dimension.id));
+  const judgedEnjoyment = judgments.filter((judgment) => enjoymentIds.has(judgment.dimensionId)).length;
+  const judgedWork = judgments.filter((judgment) => workIds.has(judgment.dimensionId)).length;
+  if (judgedEnjoyment < 3 || judgedWork < 3) {
+    return { error: "At least three dimensions are required." };
+  }
 
   const secret = randomBytes(32).toString("base64url");
   const intake = await prisma.intake.create({
@@ -70,6 +86,7 @@ export async function createIntake(_previous: IntakeActionState, formData: FormD
       enjoyment,
       execution,
       reviewBody,
+      reviewSections: readStoredSections(reviewSections) as Prisma.InputJsonValue,
       judgments: judgments as Prisma.InputJsonValue,
       expiresAt: new Date(Date.now() + ANONYMOUS_MS),
     },
