@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import type { WorkType } from "@/generated/prisma/client";
 import { DimensionChoices, type DimensionOption } from "@/components/evaluations/dimension-fields";
+import { StancePills } from "@/components/evaluations/stance-pills";
 import { EvaluationPreview, IntentButton, isStance } from "@/components/evaluations/evaluation-preview";
 import { ReviewComposer } from "@/components/evaluations/review-composer";
 import { ArtImage } from "@/components/works/work-art";
@@ -555,20 +556,6 @@ function Choice({
         <small>{detail}</small>
       </span>
     </label>
-  );
-}
-
-function StancePills({ name, value, onChange }: { name: string; value: string; onChange: (value: string) => void }) {
-  return (
-    <div className="stance-pills">
-      {(["POSITIVE", "MIXED", "NEGATIVE"] as const).map((stance) => (
-        <label className={`stance-pill stance-pill-${stance.toLowerCase()}`} key={stance}>
-          <input type="radio" name={name} value={stance} required checked={value === stance} onChange={() => onChange(stance)} />
-          <i className={`dimension-dot dimension-dot-${stance.toLowerCase()}`} aria-hidden="true" />
-          <span>{stanceLabel[stance]}</span>
-        </label>
-      ))}
-    </div>
   );
 }
 

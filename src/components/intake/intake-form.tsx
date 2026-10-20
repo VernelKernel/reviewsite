@@ -4,6 +4,7 @@ import { useActionState, useEffect, useMemo, useState, type Dispatch, type FormE
 import { useFormStatus } from "react-dom";
 import type { WorkType } from "@/generated/prisma/client";
 import { DimensionChoices, type DimensionOption } from "@/components/evaluations/dimension-fields";
+import { StancePills } from "@/components/evaluations/stance-pills";
 import { ReviewComposer } from "@/components/evaluations/review-composer";
 import { PersonalShape, type PersonalAxis } from "@/components/intake/personal-shape";
 import { createIntake, type IntakeActionState } from "@/lib/intake/actions";
@@ -396,20 +397,6 @@ function scrollToStep(id: string) {
   const node = document.getElementById(targetId);
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   node?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-}
-
-function StancePills({ name, value, onChange }: { name: string; value: string; onChange: (value: string) => void }) {
-  return (
-    <div className="stance-pills">
-      {(["POSITIVE", "MIXED", "NEGATIVE"] as const).map((stance) => (
-        <label className={`stance-pill stance-pill-${stance.toLowerCase()}`} key={stance}>
-          <input type="radio" name={name} value={stance} required checked={value === stance} onChange={() => onChange(stance)} />
-          <i className={`dimension-dot dimension-dot-${stance.toLowerCase()}`} aria-hidden="true" />
-          <span>{stanceLabel[stance]}</span>
-        </label>
-      ))}
-    </div>
-  );
 }
 
 function BreakdownRow({ axis }: { axis: PersonalAxis }) {

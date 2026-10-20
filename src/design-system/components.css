@@ -2406,19 +2406,79 @@ fieldset {
   font-size: var(--text-meta);
   appearance: none;
   background-color: var(--color-surface);
-  background-image:
-    linear-gradient(45deg, transparent 50%, var(--color-text-muted) 50%),
-    linear-gradient(-45deg, transparent 50%, var(--color-text-muted) 50%);
-  background-position:
-    calc(100% - 0.95rem) 55%,
-    calc(100% - 0.72rem) 55%;
-  background-size: 0.28rem 0.28rem;
-  background-repeat: no-repeat;
-  color: var(--color-text-primary);
-  border: var(--border-width) solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  padding: 0.4rem 1.55rem 0.4rem 0.5rem;
+  background-image: none;
+  color: var(--color-text-secondary);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: 999px;
+  padding: 0.4rem 2rem 0.4rem 0.9rem;
+  min-width: 8.5rem;
+  min-height: 2.45rem;
   cursor: pointer;
+}
+
+.stance-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  width: max-content;
+}
+
+.stance-select .dimension-dot {
+  position: absolute;
+  left: 0.8rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  pointer-events: none;
+}
+
+.stance-select-chevron {
+  position: absolute;
+  right: 0.75rem;
+  width: 0.7rem;
+  height: 0.7rem;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.dimension-row .stance-select-positive select,
+.dimension-row .stance-select-mixed select,
+.dimension-row .stance-select-negative select {
+  padding-left: 1.85rem;
+  font-weight: 600;
+}
+
+.dimension-row .stance-select-positive select {
+  color: var(--color-positive);
+}
+
+.dimension-row .stance-select-mixed select {
+  color: var(--color-caution);
+}
+
+.dimension-row .stance-select-negative select {
+  color: var(--color-negative);
+}
+
+.dimension-row .stance-select select:hover {
+  border-color: var(--color-border-strong);
+}
+
+.dimension-row .stance-select-positive select:hover {
+  border-color: var(--color-positive);
+}
+
+.dimension-row .stance-select-mixed select:hover {
+  border-color: var(--color-caution);
+}
+
+.dimension-row .stance-select-negative select:hover {
+  border-color: var(--color-negative);
+}
+
+.dimension-row .stance-select select:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
 }
 
 .insight-list {
@@ -4409,6 +4469,10 @@ body:has(.mockup-sheet) .page {
   min-height: 2.75rem;
 }
 
+.builder-dimensions .dimension-row .stance-select select {
+  min-height: 2.45rem;
+}
+
 .builder-dimensions {
   display: grid;
   grid-template-columns: 1fr;
@@ -4545,13 +4609,25 @@ body:has(.mockup-sheet) .page {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
+  padding: 0.45rem 1rem 0.45rem 0.7rem;
   border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: 999px;
   background: var(--color-surface);
-  color: var(--color-text-primary);
+  color: var(--color-text-muted);
   font-size: var(--text-meta);
+  font-weight: 620;
   cursor: pointer;
+  transition:
+    background var(--motion-fast) ease,
+    border-color var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    transform var(--motion-fast) ease;
+}
+
+.stance-face {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
 }
 
 .stance-pill input {
@@ -4564,6 +4640,7 @@ body:has(.mockup-sheet) .page {
 
 .stance-pill:hover {
   border-color: var(--color-border-strong);
+  color: var(--color-text-secondary);
 }
 
 .stance-pill:active {
@@ -4575,19 +4652,25 @@ body:has(.mockup-sheet) .page {
   outline-offset: 2px;
 }
 
-.stance-pill-positive:has(input:checked) {
+.stance-pill-positive:has(input:checked),
+.stance-pill-positive:has(input:checked):hover {
   background: var(--color-positive-soft);
   border-color: var(--color-positive);
+  color: var(--color-positive);
 }
 
-.stance-pill-mixed:has(input:checked) {
+.stance-pill-mixed:has(input:checked),
+.stance-pill-mixed:has(input:checked):hover {
   background: var(--color-caution-soft);
   border-color: var(--color-caution);
+  color: var(--color-caution);
 }
 
-.stance-pill-negative:has(input:checked) {
+.stance-pill-negative:has(input:checked),
+.stance-pill-negative:has(input:checked):hover {
   background: var(--color-negative-soft);
   border-color: var(--color-negative);
+  color: var(--color-negative);
 }
 
 @media (min-width: 1280px) {
