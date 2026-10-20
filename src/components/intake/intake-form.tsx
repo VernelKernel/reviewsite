@@ -8,6 +8,7 @@ import { EvaluationGraph } from "@/components/evaluations/evaluation-graph";
 import { StancePills } from "@/components/evaluations/stance-pills";
 import { ReviewComposer } from "@/components/evaluations/review-composer";
 import type { PersonalAxis } from "@/components/intake/personal-shape";
+import { SearchableSelect, type CatalogOption } from "@/components/intake/searchable-select";
 import { createIntake, type IntakeActionState } from "@/lib/intake/actions";
 import { judgedDimensions, rememberJudgment } from "@/lib/reviews/sections";
 import { stanceClass, stanceLabel } from "@/lib/domain/labels";
@@ -16,17 +17,26 @@ const steps = [
   { id: "basics", anchor: "basics", label: "Media" },
   { id: "enjoyment", anchor: "enjoyment", label: "Enjoyment" },
   { id: "execution", anchor: "execution", label: "Execution" },
-  { id: "note", anchor: "note", label: "Note" },
-  { id: "preview", anchor: "preview-anchor", label: "Preview" },
+  { id: "note", anchor: "note", label: "Review" },
 ];
 
-export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimensions: DimensionOption[] }) {
+export function IntakeForm({
+  workType,
+  dimensions,
+  platforms,
+  genres,
+}: {
+  workType: WorkType;
+  dimensions: DimensionOption[];
+  platforms: CatalogOption[];
+  genres: CatalogOption[];
+}) {
   const [state, action] = useActionState(createIntake, {} as IntakeActionState);
   const [active, setActive] = useState("basics");
   const [stickyTop, setStickyTop] = useState(88);
   const [title, setTitle] = useState("");
   const [platform, setPlatform] = useState("");
-  const [genre, setGenre] = useState("");
+  const [genresChosen, setGenresChosen] = useState<string[]>([]);
   const [enjoyment, setEnjoyment] = useState("");
   const [execution, setExecution] = useState("");
   const [judgments, setJudgments] = useState<Record<string, string>>({});
@@ -76,10 +86,10 @@ export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimen
   const enjoymentAxes = axesFor(enjoymentDimensions, judgments);
   const current = steps.find((step) => step.id === active) ?? steps[0];
   const currentIndex = steps.findIndex((step) => step.id === current.id) + 1;
-  const byline = [platform.trim(), genre.trim()].filter(Boolean);
+  const byline = [platform.trim(), ...genresChosen].filter(Boolean);
   const titleMissing = title.trim().length < 2;
   const platformMissing = platform.trim().length === 0;
-  const genreMissing = genre.trim().length === 0;
+  const genreMissing = genresChosen.length === 0;
   const basicsMissing = titleMissing || platformMissing || genreMissing;
   const requirementMessage = chartRequirementMessage({
     titleMissing,
@@ -179,30 +189,29 @@ export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimen
               />
             </label>
             <div className="builder-fields">
-              <label className="field">
+              <div className="field">
                 <span>Platform</span>
-                <input
+                <SearchableSelect
+                  label="Platform"
                   name="platform"
-                  required
-                  maxLength={80}
-                  autoComplete="off"
-                  aria-invalid={showRequirements && platformMissing ? true : undefined}
+                  options={platforms}
                   value={platform}
-                  onChange={(event) => setPlatform(event.target.value)}
+                  invalid={showRequirements && platformMissing}
+                  onChange={(next) => setPlatform(typeof next === "string" ? next : "")}
                 />
-              </label>
-              <label className="field">
+              </div>
+              <div className="field">
                 <span>Genre</span>
-                <input
+                <SearchableSelect
+                  label="Genre"
                   name="genre"
-                  required
-                  maxLength={80}
-                  autoComplete="off"
-                  aria-invalid={showRequirements && genreMissing ? true : undefined}
-                  value={genre}
-                  onChange={(event) => setGenre(event.target.value)}
+                  options={genres}
+                  multiple
+                  value={genresChosen}
+                  invalid={showRequirements && genreMissing}
+                  onChange={(next) => setGenresChosen(Array.isArray(next) ? next : [])}
                 />
-              </label>
+              </div>
             </div>
           </section>
 
@@ -213,8 +222,7 @@ export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimen
               </span>
               <h2 id="intake-enjoyment">Enjoyment</h2>
             </header>
-            <fieldset>
-              <legend className="legend">Did you enjoy it?</legend>
+            <fieldset aria-labelledby="intake-enjoyment">
               <StancePills name="enjoyment" value={enjoyment} onChange={setEnjoyment} />
             </fieldset>
             <p className="meta">At least three dimensions are required.</p>
@@ -269,7 +277,6 @@ export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimen
             </header>
             <ReviewComposer label="Review" hideLabel judged={judged} catalog={dimensions} initialBody="" initialSections={[]} maxLength={8000} />
           </section>
-          <div id="preview-anchor" className="builder-anchor" />
         </div>
 
         <aside className="builder-preview" id="preview" aria-label="Live preview">
@@ -393,9 +400,7 @@ function chartRequirementMessage({
 }
 
 function scrollToStep(id: string) {
-  const narrow = window.matchMedia("(max-width: 1100px)").matches;
-  const targetId = id === "preview" ? (narrow ? "preview" : "preview-anchor") : id;
-  const node = document.getElementById(targetId);
+  const node = document.getElementById(id);
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   node?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
 }
@@ -429,7 +434,7 @@ function SeeChartButton() {
   const { pending } = useFormStatus();
   return (
     <button className="btn btn-primary" type="submit" disabled={pending} aria-busy={pending}>
-      {pending ? "Saving your review…" : "See your chart"}
+      {pending ? "Saving your review…" : "Publish Review"}
     </button>
   );
 }

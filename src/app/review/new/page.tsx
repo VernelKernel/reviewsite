@@ -37,6 +37,8 @@ export default async function NewReviewPage({ searchParams }: { searchParams: Pr
           family: dimension.family,
           description: dimension.description,
         }))}
+        platforms={options.platforms.map((platform) => ({ slug: platform.slug, name: platform.name }))}
+        genres={options.genres.map((genre) => ({ slug: genre.slug, name: genre.name }))}
       />
     </main>
   );

@@ -314,8 +314,7 @@ export function EvaluationForm({
               <p className="meta">How it felt to spend time with the work. These stay off the chart.</p>
             </div>
           </header>
-          <fieldset>
-            <legend className="legend">Did you enjoy it?</legend>
+          <fieldset aria-labelledby="builder-enjoyment">
             <StancePills name="enjoyment" value={enjoyment} onChange={setEnjoyment} />
           </fieldset>
           <DimensionChoices

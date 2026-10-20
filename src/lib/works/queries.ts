@@ -223,13 +223,14 @@ export async function reviewerEvaluation(workId: string, reviewerId: string) {
 }
 
 export async function evaluationFormOptions(workType: WorkType) {
-  const [dimensions, topics, platforms] = await Promise.all([
+  const [dimensions, topics, platforms, genres] = await Promise.all([
     prisma.dimension.findMany({
       where: { appliesTo: { has: workType } },
       orderBy: { sortOrder: "asc" },
     }),
     prisma.topic.findMany({ orderBy: { name: "asc" } }),
     prisma.platform.findMany({ orderBy: { name: "asc" } }),
+    prisma.genre.findMany({ orderBy: { name: "asc" } }),
   ]);
-  return { dimensions, topics, platforms };
+  return { dimensions, topics, platforms, genres };
 }

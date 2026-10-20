@@ -38,14 +38,24 @@ export async function createIntake(_previous: IntakeActionState, formData: FormD
   if (!enjoyment || !execution) return { error: "Answer enjoyment and execution." };
 
   const rawPlatform = optionalText(formData.get("platform"), CONTEXT_MAX);
-  const rawGenre = optionalText(formData.get("genre"), CONTEXT_MAX);
+  const genreValues = formData
+    .getAll("genre")
+    .map((value) => String(value).trim())
+    .filter(Boolean);
+  const rawGenre = genreValues.join(", ");
   const sectional = formData.get("reviewMode") === "sections";
   const reviewSections = sectional ? readSectionFields(formData) : [];
   const reviewBody = sectional ? flattenSections(reviewSections) || null : optionalText(formData.get("reviewBody"), NOTE_MAX);
   if (reviewBody === undefined || rawPlatform === undefined || rawGenre === undefined) {
     return { error: "One of those fields is too long." };
   }
-  if (!rawPlatform || !rawGenre) return { error: "Enter the platform and genre." };
+  if (!rawPlatform || genreValues.length === 0 || rawGenre.length > 240) return { error: "Choose a platform and genre." };
+  const [platformMatch, genreCatalog] = await Promise.all([
+    prisma.platform.findFirst({ where: { name: rawPlatform }, select: { id: true } }),
+    prisma.genre.findMany({ select: { name: true } }),
+  ]);
+  const knownGenres = new Set(genreCatalog.map((genre) => genre.name));
+  if (!platformMatch || genreValues.some((name) => !knownGenres.has(name))) return { error: "Choose a platform and genre." };
   if (reviewBody && reviewBody.length > NOTE_MAX) return { error: "One of those fields is too long." };
 
   try {
