@@ -3542,8 +3542,7 @@ body:has(.mockup-sheet) .page {
 }
 
 .evaluation-chart-title,
-.evaluation-stage-label,
-.evaluation-stage-note {
+.evaluation-stage-label {
   margin: 0;
 }
 
@@ -3573,21 +3572,6 @@ body:has(.mockup-sheet) .page {
   font-size: var(--text-micro);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-.evaluation-stage-note {
-  display: grid;
-  gap: 0.15rem;
-  color: var(--color-chart-grid);
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  font-weight: 400;
-  line-height: 1.35;
-}
-
-.evaluation-stage-note strong {
-  color: var(--color-chart-label);
-  font-weight: 700;
 }
 
 .evaluation-stage .radar-ring,
@@ -4519,6 +4503,26 @@ body:has(.mockup-sheet) .page {
   border-top: 1px solid color-mix(in srgb, var(--color-chart-grid) 45%, transparent);
 }
 
+.builder-preview .dimension-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--space-5);
+  row-gap: var(--space-2);
+}
+
+.builder-preview .dimension-breakdown li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.builder-preview .dimension-breakdown li > span:not(.stance) {
+  color: var(--color-text-primary);
+  font-weight: 560;
+}
+
 .builder-preview .dimension-breakdown li > span,
 .builder-preview .stance {
   font-size: var(--text-meta);
@@ -4563,11 +4567,10 @@ body:has(.mockup-sheet) .page {
   background: var(--color-surface);
 }
 
-.builder-preview .evaluation-plot .radar-chart,
-.intake-preview-chart .radar-chart {
+.builder-preview .evaluation-plot .radar-chart {
   display: block;
   width: 100%;
-  max-height: 18rem;
+  max-height: 17rem;
 }
 
 .builder-preview-note {

@@ -42,7 +42,6 @@ export default async function PersonalMockupPage({
               <p className="meta">BonzoMan · PC</p>
             </div>
           </div>
-          <p className="meta">Distance from the center is this evaluation’s stance. Unjudged dimensions are left off.</p>
         </article>
       </section>
       ) : null}

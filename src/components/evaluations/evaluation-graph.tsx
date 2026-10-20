@@ -19,8 +19,6 @@ export type EvaluationField = {
 
 export function EvaluationGraph({ fields }: { fields: EvaluationField[] }) {
   const [active, setActive] = useState<{ field: number; index: number } | null>(null);
-  const selectedField = active ? fields[active.field] : null;
-  const selected = selectedField ? selectedField.axes[active!.index] : null;
 
   return (
     <figure className="evaluation-stage" id="graph">
@@ -34,14 +32,6 @@ export function EvaluationGraph({ fields }: { fields: EvaluationField[] }) {
           />
         ))}
       </div>
-      <p className="evaluation-stage-note">
-        <strong>Distance shows strength. Color shows sentiment.</strong>
-        <span>
-          {selected && selectedField
-            ? `${selectedField.label}: ${selected.name}, ${stanceLabel[selected.stance]}.`
-            : "Unjudged dimensions stay off the chart. Select a point for details."}
-        </span>
-      </p>
     </figure>
   );
 }

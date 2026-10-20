@@ -78,7 +78,7 @@ export async function renderEvaluationCard(input: EvaluationCardInput): Promise<
 }
 
 function drawGraph(ctx: CanvasRenderingContext2D, palette: Palette, input: EvaluationCardInput, x: number, y: number, width: number): number {
-  const height = input.axes.length >= 3 ? 640 : 248;
+  const height = input.axes.length >= 3 ? 560 : 200;
   roundRect(ctx, x, y, width, height, 28);
   const fill = ctx.createLinearGradient(x, y, x, y + height);
   fill.addColorStop(0, palette.stage);
@@ -144,14 +144,6 @@ function drawGraph(ctx: CanvasRenderingContext2D, palette: Palette, input: Evalu
       ctx.textBaseline = "middle";
       ctx.fillText(axis.name, label.x, label.y);
     });
-    ctx.textAlign = "left";
-    ctx.textBaseline = "alphabetic";
-    ctx.fillStyle = palette.label;
-    ctx.font = `700 16px ${palette.body}`;
-    ctx.fillText("Distance shows strength. Color shows sentiment.", x + 28, y + height - 52);
-    ctx.fillStyle = palette.grid;
-    ctx.font = `400 15px ${palette.body}`;
-    ctx.fillText("Unjudged dimensions are hidden. Select a point for details.", x + 28, y + height - 28);
   } else {
     const cx = x + width / 2;
     const cy = y + 120;
@@ -170,13 +162,6 @@ function drawGraph(ctx: CanvasRenderingContext2D, palette: Palette, input: Evalu
       ctx.arc(dot.x, dot.y, 6, 0, Math.PI * 2);
       ctx.fill();
     });
-    ctx.fillStyle = palette.label;
-    ctx.font = `700 16px ${palette.body}`;
-    ctx.textAlign = "left";
-    ctx.fillText("Distance shows strength. Color shows sentiment.", x + 28, y + height - 52);
-    ctx.fillStyle = palette.grid;
-    ctx.font = `400 15px ${palette.body}`;
-    ctx.fillText("Unjudged dimensions are hidden. Select a point for details.", x + 28, y + height - 28);
   }
   return y + height;
 }

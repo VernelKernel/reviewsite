@@ -45,7 +45,6 @@ export default async function ReviewChartPage({ params }: { params: Promise<{ id
         <div className="personal-layout">
           <div>
             <PersonalShape axes={axes} labelledBy={headingId} />
-            <p className="meta">Distance from the center is this evaluation’s stance. Unjudged dimensions are left off.</p>
           </div>
           <div className="personal-readings">
             <StanceMeter label="Enjoyment" stance={intake.enjoyment} />

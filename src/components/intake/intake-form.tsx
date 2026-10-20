@@ -4,9 +4,10 @@ import { useActionState, useEffect, useMemo, useState, type Dispatch, type FormE
 import { useFormStatus } from "react-dom";
 import type { WorkType } from "@/generated/prisma/client";
 import { DimensionChoices, type DimensionOption } from "@/components/evaluations/dimension-fields";
+import { EvaluationGraph } from "@/components/evaluations/evaluation-graph";
 import { StancePills } from "@/components/evaluations/stance-pills";
 import { ReviewComposer } from "@/components/evaluations/review-composer";
-import { PersonalShape, type PersonalAxis } from "@/components/intake/personal-shape";
+import type { PersonalAxis } from "@/components/intake/personal-shape";
 import { createIntake, type IntakeActionState } from "@/lib/intake/actions";
 import { judgedDimensions, rememberJudgment } from "@/lib/reviews/sections";
 import { stanceClass, stanceLabel } from "@/lib/domain/labels";
@@ -289,11 +290,12 @@ export function IntakeForm({ workType, dimensions }: { workType: WorkType; dimen
                 </p>
               ) : null}
             </div>
-            {workAxes.length >= 3 ? (
-              <div className="intake-preview-chart">
-                <PersonalShape axes={workAxes} labelledBy="intake-preview-title" />
-              </div>
-            ) : null}
+            <EvaluationGraph
+              fields={[
+                { label: "Execution", stance: isStance(execution) ? execution : null, axes: workAxes },
+                { label: "Enjoyment", stance: isStance(enjoyment) ? enjoyment : null, axes: enjoymentAxes },
+              ]}
+            />
             <section className="evaluation-panel" aria-labelledby="intake-key-impressions">
               <h2 id="intake-key-impressions">Key impressions</h2>
               <div className="preview-group">
