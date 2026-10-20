@@ -78,12 +78,12 @@ export const coreTheme: Theme = {
   },
   elevation: {
     light: {
-      card: "0 1px 2px rgba(23, 25, 28, 0.05)",
+      card: "0 1px 2px rgba(23, 25, 28, 0.04), 0 8px 22px rgba(23, 25, 28, 0.07)",
       floating: "0 10px 28px rgba(23, 25, 28, 0.08)",
       modal: "0 18px 50px rgba(23, 25, 28, 0.16)",
     },
     dark: {
-      card: "0 1px 2px rgba(0, 0, 0, 0.28)",
+      card: "0 1px 2px rgba(0, 0, 0, 0.28), 0 10px 24px rgba(0, 0, 0, 0.28)",
       floating: "0 12px 32px rgba(0, 0, 0, 0.35)",
       modal: "0 18px 50px rgba(0, 0, 0, 0.5)",
     },
