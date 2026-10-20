@@ -79,13 +79,16 @@ export function paintNestSpin(
     enjoyment: SpinSource | null;
     executionAngle: number;
     enjoymentAngle: number;
+    /** Color-field zoom. 1 is the still emblem. */
+    scale?: number;
     empty: string;
   },
 ) {
+  const scale = layers.scale ?? 1;
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  if (layers.execution) drawRotated(ctx, layers.execution, layers.executionAngle, () => clipRing(ctx, frame));
+  if (layers.execution) drawRotated(ctx, layers.execution, layers.executionAngle, scale, () => clipRing(ctx, frame));
   else fillClipped(ctx, layers.empty, () => clipRing(ctx, frame), frame.cx, frame.cy, frame.outerRadius);
-  if (layers.enjoyment) drawRotated(ctx, layers.enjoyment, layers.enjoymentAngle, () => clipInner(ctx, frame));
+  if (layers.enjoyment) drawRotated(ctx, layers.enjoyment, layers.enjoymentAngle, scale, () => clipInner(ctx, frame));
   else fillClipped(ctx, layers.empty, () => clipInner(ctx, frame), frame.cx, frame.cy, frame.innerRadius);
 }
 
@@ -121,11 +124,12 @@ function punchDiamond(ctx: CanvasRenderingContext2D, cx: number, cy: number, rad
   ctx.restore();
 }
 
-function drawRotated(ctx: CanvasRenderingContext2D, source: SpinSource, angle: number, clip: () => void) {
+function drawRotated(ctx: CanvasRenderingContext2D, source: SpinSource, angle: number, scale: number, clip: () => void) {
   ctx.save();
   clip();
   ctx.translate(source.cx, source.cy);
   ctx.rotate(angle);
+  ctx.scale(scale, scale);
   ctx.translate(-source.cx, -source.cy);
   ctx.drawImage(source.canvas, source.left, source.top);
   ctx.restore();

@@ -11,6 +11,8 @@ import {
   readNestPalette,
   type NestFrame,
 } from "@/components/evaluations/nest-paint";
+import { useSpinEpoch } from "@/components/evaluations/spin-clock";
+import { breathScale } from "@/lib/evaluations/breath";
 
 const TURN_SECONDS = 16;
 
@@ -31,6 +33,7 @@ export function CriticNestEmblem({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const executionKey = signature(execution);
   const enjoymentKey = signature(enjoyment);
+  const spinEpoch = useSpinEpoch();
   const label = `Critics execution, ${distributionLabel(execution)}. Critics enjoyment, ${distributionLabel(enjoyment)}.`;
 
   useLayoutEffect(() => {
@@ -90,12 +93,14 @@ export function CriticNestEmblem({
       if (!alive || !frame) return;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
-      const turns = (now - started) / 1000 / TURN_SECONDS;
+      const elapsed = (now - started) / 1000;
+      const angle = (elapsed / TURN_SECONDS) * Math.PI * 2;
       paintNestSpin(ctx, frame, {
         execution: executionSource,
         enjoyment: enjoymentSource,
-        executionAngle: turns * Math.PI * 2,
-        enjoymentAngle: (turns + 0.5) * Math.PI * 2,
+        executionAngle: angle,
+        enjoymentAngle: angle,
+        scale: breathScale(elapsed),
         empty,
       });
     };
@@ -142,7 +147,7 @@ export function CriticNestEmblem({
         rafId = 0;
       }
     };
-  }, [spin, execution, enjoyment, executionKey, enjoymentKey]);
+  }, [spin, execution, enjoyment, executionKey, enjoymentKey, spinEpoch]);
 
   return (
     <div

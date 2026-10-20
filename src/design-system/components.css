@@ -447,6 +447,104 @@ p {
   margin: 0;
 }
 
+.list-three-grid {
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 22rem));
+  justify-content: start;
+}
+
+.list-three-head {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 42%) minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.list-three-cover {
+  position: relative;
+}
+
+.list-three-art {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 2 / 3;
+  background: var(--color-surface-elevated);
+  border-radius: var(--radius-sm);
+}
+
+.list-three-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.list-three:hover .list-three-art img {
+  transform: none;
+}
+
+/* Same inset and size as the downloaded cover: 2% of the short side, emblem about a quarter of that side. */
+.list-three-badge {
+  position: absolute;
+  right: 2%;
+  bottom: 1.333%;
+  width: 24.2%;
+  aspect-ratio: 1;
+  pointer-events: none;
+}
+
+.list-three h3.list-three-title {
+  min-width: 0;
+  font-size: var(--text-h2);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+  overflow-wrap: break-word;
+}
+
+.list-three .work-card-link {
+  padding: var(--space-4);
+  gap: var(--space-4);
+}
+
+.list-three .snapshot {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.list-three-polygon {
+  display: flex;
+  justify-content: center;
+}
+
+.list-three .nest-emblem {
+  --emblem-scale: 0.25;
+}
+
+.list-three-badge .nest-emblem {
+  width: 100%;
+  height: 100%;
+}
+
+.list-three .emblem-reading {
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 0.15rem;
+}
+
+.list-three .emblem-reading dd {
+  margin: 0 0 var(--space-3);
+}
+
+.list-three .emblem-reading dd:last-child {
+  margin-bottom: 0;
+}
+
+.list-three-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
 .meta {
   color: var(--color-text-muted);
   font-size: var(--text-meta);
