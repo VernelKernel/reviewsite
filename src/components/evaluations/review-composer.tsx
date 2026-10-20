@@ -125,7 +125,7 @@ export function ReviewComposer({
             />
           </label>
           {blocks.length === 0 ? (
-            <p className="meta">Judgments you make under Enjoyment or Execution show up here, in the order you set them.</p>
+            <p className="meta">Dimensions show up here, in the order you set them.</p>
           ) : (
             blocks.map((block, index) => {
               const name = names.get(block.dimensionId) ?? "Dimension";
