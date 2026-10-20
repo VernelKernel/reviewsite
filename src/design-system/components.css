@@ -815,6 +815,7 @@ p {
 
 .work-intro .lede {
   max-width: none;
+  font-size: 14px;
 }
 
 .fact-card {
@@ -981,6 +982,10 @@ p {
 
 .fact-list dd {
   margin: 0;
+}
+
+.fact-card .fact-list dd {
+  font-size: 14px;
 }
 
 .hero-actions {
