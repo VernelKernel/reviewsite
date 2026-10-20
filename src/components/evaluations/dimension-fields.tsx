@@ -32,10 +32,13 @@ export function DimensionChoices({
       <div className={split ? "builder-dimensions" : undefined}>
         {dimensions.map((dimension) => (
           <div className="dimension-row" key={dimension.id}>
-            <span>{dimension.name}</span>
+            <span>
+              {dimension.name}
+              {dimension.family === "WORK" && dimension.description ? <small>{dimension.description}</small> : null}
+            </span>
             <DimensionStance
               id={dimension.id}
-              label={dimension.name}
+              label={dimension.family === "WORK" && dimension.description ? `${dimension.name}. ${dimension.description}` : dimension.name}
               stanceFor={stanceFor}
               values={values}
               onStance={onStance}
