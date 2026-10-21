@@ -5,7 +5,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { assertValidWorkRelation } from "../src/lib/domain/relations";
 import { clearDatabase } from "./clear-data";
-import { dimensions, genres, platforms, relations, reviewers, topics, works } from "./seed/catalog";
+import { dimensions, genres, platforms, relations, reviewers, works } from "./seed/catalog";
 import { coverSvg } from "./seed/covers";
 import { evaluations } from "./seed/evaluations";
 
@@ -27,14 +27,10 @@ async function main() {
   await prisma.genre.createMany({
     data: genres.map(([slug, name]) => ({ slug, name })),
   });
-  await prisma.topic.createMany({
-    data: topics.map(([slug, name]) => ({ slug, name })),
-  });
   await prisma.dimension.createMany({ data: dimensions });
 
   const platformBySlug = new Map((await prisma.platform.findMany()).map((platform) => [platform.slug, platform.id]));
   const genreBySlug = new Map((await prisma.genre.findMany()).map((genre) => [genre.slug, genre.id]));
-  const topicBySlug = new Map((await prisma.topic.findMany()).map((topic) => [topic.slug, topic.id]));
   const dimensionBySlug = new Map((await prisma.dimension.findMany()).map((dimension) => [dimension.slug, dimension.id]));
 
   for (const reviewer of reviewers) {
@@ -128,12 +124,6 @@ async function main() {
       return { dimensionId, stance };
     });
 
-    const observationData = (evaluation.observations ?? []).map((observation) => {
-      const topicId = topicBySlug.get(observation.topic);
-      if (!topicId) throw new Error(`Unknown topic ${observation.topic}`);
-      return { topicId, polarity: observation.polarity, content: observation.content };
-    });
-
     await prisma.evaluation.create({
       data: {
         workId,
@@ -156,7 +146,6 @@ async function main() {
           },
         },
         judgments: { create: judgmentData },
-        observations: { create: observationData },
       },
     });
   }

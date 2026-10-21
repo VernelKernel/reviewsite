@@ -24,7 +24,6 @@ export const cardInclude = {
       population: true,
       review: { select: { importSourceName: true } },
       judgments: { include: { dimension: true } },
-      observations: { include: { topic: true } },
     },
   },
 } satisfies Prisma.WorkInclude;
@@ -67,7 +66,6 @@ export const workInclude = {
         },
       },
       judgments: { include: { dimension: true } },
-      observations: { include: { topic: true } },
     },
   },
 } satisfies Prisma.WorkInclude;
@@ -117,10 +115,7 @@ export async function searchWorks(query: string): Promise<CardWork[]> {
           evaluations: {
             some: {
               status: "PUBLISHED",
-              OR: [
-                { review: { body: { contains: q, mode: "insensitive" } } },
-                { observations: { some: { topic: { name: { contains: q, mode: "insensitive" } } } } },
-              ],
+              OR: [{ review: { body: { contains: q, mode: "insensitive" } } }],
             },
           },
         },
@@ -215,20 +210,18 @@ export async function reviewerEvaluation(workId: string, reviewerId: string) {
         },
       },
       judgments: true,
-      observations: true,
     },
   });
 }
 
 export async function evaluationFormOptions(workType: WorkType) {
-  const [dimensions, topics, platforms, genres] = await Promise.all([
+  const [dimensions, platforms, genres] = await Promise.all([
     prisma.dimension.findMany({
       where: { appliesTo: { has: workType } },
       orderBy: { sortOrder: "asc" },
     }),
-    prisma.topic.findMany({ orderBy: { name: "asc" } }),
     prisma.platform.findMany({ orderBy: { name: "asc" } }),
     prisma.genre.findMany({ orderBy: { name: "asc" } }),
   ]);
-  return { dimensions, topics, platforms, genres };
+  return { dimensions, platforms, genres };
 }

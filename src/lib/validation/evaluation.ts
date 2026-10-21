@@ -40,7 +40,7 @@ const emptyToUndefined = (value: unknown) => {
 };
 
 const evaluationShape = {
-  email: z.string().trim().email("Enter an email so this evaluation can stay attached to you."),
+  email: z.string().trim().email("Enter an email so this review can stay attached to you."),
   displayName: z.string().trim().min(2, "Use a name of at least 2 characters.").max(48),
   enjoyment: stanceSchema,
   execution: stanceSchema,
@@ -51,9 +51,6 @@ const evaluationShape = {
   reviewTitle: z.preprocess(emptyToUndefined, z.string().max(140).optional()),
   impression: z.preprocess(emptyToUndefined, z.string().max(80, "Keep the overall impression to 80 characters.").optional()),
   reviewBody: z.preprocess(emptyToUndefined, z.string().max(20000).optional()),
-  imported: z.boolean(),
-  importSourceName: z.preprocess(emptyToUndefined, z.string().max(120).optional()),
-  importSourceUrl: z.preprocess(emptyToUndefined, z.string().url("Enter a full source URL, including https://").optional()),
   judgments: z.array(z.object({ dimensionId: z.string().min(1), stance: stanceSchema, mattered: matteredSchema })).max(24),
   sections: z
     .array(
@@ -63,26 +60,17 @@ const evaluationShape = {
       }),
     )
     .max(25),
-  observations: z
-    .array(
-      z.object({
-        topicId: z.string().min(1),
-        polarity: z.enum(["PRAISE", "CRITICISM"]),
-        content: z.string().trim().min(8, "An observation needs a sentence, not a label.").max(500),
-      }),
-    )
-    .max(8),
 };
 
 function refineEvaluation(
-  value: { judgments: { dimensionId: string }[]; sections: StoredSection[]; imported: boolean; reviewBody?: string },
+  value: { judgments: { dimensionId: string }[]; sections: StoredSection[]; reviewBody?: string },
   context: z.RefinementCtx,
 ) {
   const dimensionIds = value.judgments.map((judgment) => judgment.dimensionId);
   if (new Set(dimensionIds).size !== dimensionIds.length) {
     context.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "Each dimension can only be judged once in an evaluation.",
+      message: "Each dimension can only be judged once in a review.",
       path: ["judgments"],
     });
   }
@@ -92,13 +80,6 @@ function refineEvaluation(
       code: z.ZodIssueCode.custom,
       message: "Each dimension can only be written once in a review.",
       path: ["sections"],
-    });
-  }
-  if (value.imported && !value.reviewBody) {
-    context.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Paste the review you are importing.",
-      path: ["reviewBody"],
     });
   }
   if (value.reviewBody && value.reviewBody.length < 20) {
@@ -133,21 +114,9 @@ export function parseEvaluationForm(formData: FormData) {
     return { ok: false as const, message: "Say how much each judged dimension mattered." };
   }
 
-  const topicIds = formData.getAll("observationTopic").map(String);
-  const polarities = formData.getAll("observationPolarity").map(String);
-  const contents = formData.getAll("observationContent").map(String);
-  const observations = topicIds
-    .map((topicId, index) => ({
-      topicId,
-      polarity: polarities[index] ?? "",
-      content: contents[index] ?? "",
-    }))
-    .filter((observation) => observation.content.trim() || observation.topicId);
-
   const intent: EvaluationIntent = formData.get("intent") === "draft" ? "draft" : "publish";
   const schema = intent === "draft" ? evaluationDraftSchema : evaluationInputSchema;
-  const imported = formData.get("imported") === "on";
-  const sectional = !imported && formData.get("reviewMode") === "sections";
+  const sectional = formData.get("reviewMode") === "sections";
   const sections = sectional ? readSectionFields(formData) : [];
   const flattened = sectional ? flattenSections(sections) : undefined;
   const parsed = schema.safeParse({
@@ -162,16 +131,12 @@ export function parseEvaluationForm(formData: FormData) {
     reviewTitle: formData.get("reviewTitle"),
     impression: formData.get("impression"),
     reviewBody: sectional ? flattened : formData.get("reviewBody"),
-    imported,
-    importSourceName: formData.get("importSourceName"),
-    importSourceUrl: formData.get("importSourceUrl"),
     judgments,
     sections,
-    observations: observations.filter((observation) => observation.content.trim()),
   });
 
   if (!parsed.success) {
-    const message = parsed.error.issues[0]?.message ?? "Check the evaluation and try again.";
+    const message = parsed.error.issues[0]?.message ?? "Check the review and try again.";
     return { ok: false as const, message };
   }
   return { ok: true as const, intent, data: parsed.data };

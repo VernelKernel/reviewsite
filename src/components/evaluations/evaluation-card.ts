@@ -11,8 +11,6 @@ export type EvaluationCardInput = {
   enjoyment: StanceName;
   execution: StanceName;
   axes: RadarAxis[];
-  strengths: string[];
-  weaknesses: string[];
 };
 
 type Palette = {
@@ -59,10 +57,6 @@ export async function renderEvaluationCard(input: EvaluationCardInput): Promise<
   if (input.axes.length > 0) {
     y = drawDimensions(ctx, palette, input.axes, 36, y, width - 72);
     y += 20;
-  }
-  if (input.strengths.length > 0 || input.weaknesses.length > 0) {
-    y = drawNotes(ctx, palette, input, 36, y, width - 72);
-    y += 36;
   }
 
   const height = Math.ceil(y);
@@ -228,49 +222,6 @@ function drawDimensions(ctx: CanvasRenderingContext2D, palette: Palette, axes: R
   return y + height;
 }
 
-function drawNotes(ctx: CanvasRenderingContext2D, palette: Palette, input: EvaluationCardInput, x: number, y: number, width: number): number {
-  const gap = 16;
-  const both = input.strengths.length > 0 && input.weaknesses.length > 0;
-  const cardWidth = both ? (width - gap) / 2 : width;
-  const height = 220;
-  if (input.strengths.length > 0) drawNote(ctx, palette, "STRENGTHS", input.strengths, palette.positiveSoft, palette.positive, x, y, cardWidth, height);
-  if (input.weaknesses.length > 0) {
-    drawNote(ctx, palette, "WEAKNESSES", input.weaknesses, palette.negativeSoft, palette.negative, both ? x + cardWidth + gap : x, y, cardWidth, height);
-  }
-  return y + height;
-}
-
-function drawNote(
-  ctx: CanvasRenderingContext2D,
-  palette: Palette,
-  title: string,
-  lines: string[],
-  background: string,
-  accent: string,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-) {
-  roundRect(ctx, x, y, width, height, 18);
-  ctx.fillStyle = background;
-  ctx.fill();
-  ctx.fillStyle = accent;
-  ctx.font = `700 14px ${palette.body}`;
-  ctx.textAlign = "left";
-  ctx.fillText(title, x + 20, y + 32);
-  ctx.fillStyle = palette.text;
-  ctx.font = `400 16px ${palette.body}`;
-  let lineY = y + 62;
-  for (const line of lines.slice(0, 4)) {
-    const wrapped = wrap(ctx, line, width - 48).slice(0, 2);
-    for (const part of wrapped) {
-      ctx.fillText(part, x + 20, lineY);
-      lineY += 22;
-    }
-  }
-}
-
 function meter(ctx: CanvasRenderingContext2D, palette: Palette, label: string, stance: StanceName, x: number, y: number, width: number) {
   ctx.fillStyle = palette.text;
   ctx.font = `650 22px ${palette.body}`;
@@ -335,23 +286,6 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: n
   ctx.arcTo(x, y + height, x, y, r);
   ctx.arcTo(x, y, x + width, y, r);
   ctx.closePath();
-}
-
-function wrap(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
-  const words = text.split(/\s+/).filter(Boolean);
-  const lines: string[] = [];
-  let line = "";
-  for (const word of words) {
-    const next = line ? `${line} ${word}` : word;
-    if (line && ctx.measureText(next).width > maxWidth) {
-      lines.push(line);
-      line = word;
-    } else {
-      line = next;
-    }
-  }
-  if (line) lines.push(line);
-  return lines;
 }
 
 function fit(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {

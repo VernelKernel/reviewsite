@@ -77,21 +77,6 @@ export const genres = [
   ["fighting", "Fighting"],
 ] as const;
 
-export const topics = [
-  ["tutorial", "Tutorial"],
-  ["controls", "Controls"],
-  ["performance", "Performance"],
-  ["difficulty", "Difficulty"],
-  ["pacing", "Pacing"],
-  ["writing", "Writing"],
-  ["music", "Music"],
-  ["technical-issues", "Technical issues"],
-  ["combat", "Combat"],
-  ["exploration", "Exploration"],
-  ["story", "Story"],
-  ["interface", "Interface"],
-] as const;
-
 export const dimensions: {
   slug: string;
   name: string;

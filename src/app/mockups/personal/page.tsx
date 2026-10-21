@@ -70,18 +70,6 @@ export default async function PersonalMockupPage({
               { name: "Controls", stance: "POSITIVE" },
               { name: "Game Design", stance: "MIXED" },
             ],
-            observations: [
-              {
-                topic: "Controls",
-                polarity: "PRAISE",
-                content: "Flight controls are awesome and make you feel like a once in a generation pilot.",
-              },
-              {
-                topic: "Music",
-                polarity: "PRAISE",
-                content: "The music is awesome in the phenomenal single-player campaign.",
-              },
-            ],
             review: {
               title: null,
               body: "TLDR: Play this game for the campaign and don’t touch the multiplayer.\n\nThe single player is phenomenal. The music, level design, and flight controls are all awesome. The game definitely makes you FEEL like you are a once in a generation pilot.\n\nThen you get to multiplayer. And Whoo boy… pay to win planes, some awkward hub area designed to sell you pilot cosmetics. And a grindy tech tree designed to encourage micro transactions. The game has been out about a week and the whales and sweat lords are already taking over lobbies.\n\nIt’s all designed to suck money out of you in the worst way possible. And that’s why it gets the not recommended for me. Until the adjust the multiplayer I’m gonna keep this negative review up. But seeing as they have a trend of just abandoning the multiplayer when it’s clearly not working I kinda doubt it.",

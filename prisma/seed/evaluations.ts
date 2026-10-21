@@ -16,7 +16,6 @@ export type SeedEvaluation = {
   title: string;
   body: string;
   judgments: Record<string, Stance>;
-  observations?: { topic: string; polarity: "PRAISE" | "CRITICISM"; content: string }[];
   imported?: { name: string; url: string };
 };
 
@@ -24,7 +23,8 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "hades",
     reviewer: "mira-chen",
-    reviewedOn: "2021-02-11",
+    reviewedOn: "2021-02-11",
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -34,12 +34,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "The run is the sentence",
     body: "I was evaluating whether the combat and the meta-progression actually deliver a complete action game, not whether I felt welcomed by it. They do. Attacks read, builds change the verb, and death returns you to a house that has something new to say. The repetition is real, and it is also the structure. I would hold another action game to this standard.",
     judgments: { gameplay: "POSITIVE", music: "POSITIVE", "art-direction": "POSITIVE", "technical-quality": "POSITIVE", controls: "POSITIVE", atmosphere: "POSITIVE" },
-    observations: [{ topic: "combat", polarity: "PRAISE", content: "Each weapon changes the decisions in a room without turning the run into a menu." }],
   },
   {
     work: "hades",
     reviewer: "owen-hale",
-    reviewedOn: "2021-04-02",
+    reviewedOn: "2021-04-02",
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -49,12 +49,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "I kept coming back for the house",
     body: "What I was evaluating was the feeling of another attempt, not a checklist of systems. I enjoyed it completely. The residents of the house are why the deaths feel like a story instead of a tax. The music makes the climb feel inevitable. I also think it is well made; the enjoyment is not an apology for the craft.",
     judgments: { story: "POSITIVE", music: "POSITIVE", atmosphere: "POSITIVE", gameplay: "POSITIVE", "art-direction": "POSITIVE" },
-    observations: [{ topic: "story", polarity: "PRAISE", content: "Relationships advance in the downtime, so failure still moves the plot." }],
   },
   {
     work: "hades",
     reviewer: "luis-ortega",
-    reviewedOn: "2022-01-19",
+    reviewedOn: "2022-01-19",
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "ENDGAME",
@@ -64,12 +64,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "Finished, then stayed",
     body: "I finished the surface route and kept playing for the heat. The late game does repeat itself, and a few boon combinations solve rooms too cleanly. That did not undo the judgment. The story payoffs are earned by the hours, and the combat still asks for attention after the credits. I enjoyed it and I think the execution holds.",
     judgments: { gameplay: "MIXED", story: "POSITIVE", music: "POSITIVE", "technical-quality": "POSITIVE", atmosphere: "POSITIVE" },
-    observations: [{ topic: "combat", polarity: "CRITICISM", content: "After the story resolves, some builds stop asking for decisions and start clearing rooms on their own." }],
   },
   {
     work: "hades",
     reviewer: "adele-march",
-    reviewedOn: "2021-06-08",
+    reviewedOn: "2021-06-08",
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -83,7 +83,9 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "hades-ii",
     reviewer: "priya-raman",
-    reviewedOn: "2024-07-14",
+    reviewedOn: "2024-07-14",
+
+
     enjoyment: "POSITIVE",
     execution: "MIXED",
     completion: "SUBSTANTIAL",
@@ -93,12 +95,13 @@ export const evaluations: SeedEvaluation[] = [
     title: "Unfinished, and already a place",
     body: "I adjusted my standard because this is early access. The nights are already absorbing, the characters have voices, and I wanted another run. I do not think the whole game is well executed yet. Some systems are still explaining themselves, and the shape of the full route is not there. Enjoyment is not me pretending the missing pieces are present.",
     judgments: { gameplay: "MIXED", story: "POSITIVE", music: "POSITIVE", atmosphere: "POSITIVE", "technical-quality": "MIXED" },
-    observations: [{ topic: "story", polarity: "PRAISE", content: "Even unfinished, the relationships between runs give the nights a reason to continue." }],
   },
   {
     work: "hades-ii",
     reviewer: "samir-shah",
-    reviewedOn: "2024-09-02",
+    reviewedOn: "2024-09-02",
+
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "SUBSTANTIAL",
@@ -112,7 +115,9 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "hades-ii",
     reviewer: "mira-chen",
-    reviewedOn: "2024-08-20",
+    reviewedOn: "2024-08-20",
+
+
     enjoyment: "POSITIVE",
     execution: "NEGATIVE",
     completion: "SUBSTANTIAL",
@@ -122,12 +127,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "I liked the nights. It is not finished.",
     body: "I enjoyed playing it. That is separate from the question I was actually asking, which is whether this is a well-executed action game yet. It is not. Major routes are incomplete, some encounters feel like drafts, and I will not call a strong prototype a finished execution because the studio has earned trust. I am glad it exists. I am not grading the promise.",
     judgments: { gameplay: "NEGATIVE", "technical-quality": "MIXED", music: "POSITIVE", atmosphere: "POSITIVE", controls: "MIXED" },
-    observations: [{ topic: "combat", polarity: "CRITICISM", content: "Several encounters still feel like drafts of a fight rather than a fight with a finished answer." }],
   },
   {
     work: "hades-ii",
     reviewer: "jonah-ellis",
-    reviewedOn: "2024-06-18",
+    reviewedOn: "2024-06-18",
+
     enjoyment: "MIXED",
     execution: "NEGATIVE",
     completion: "EARLY",
@@ -137,12 +142,13 @@ export const evaluations: SeedEvaluation[] = [
     title: "Early access is not a technical alibi",
     body: "I stopped in the early regions. Performance hitches and a few soft locks were enough for me to pause, and I am not treating 'early access' as permission for that on a studio of this size. The art direction is already confident. The build I played was not well executed. My enjoyment was mixed because the runs were fun until they were not stable.",
     judgments: { "technical-quality": "NEGATIVE", performance: "NEGATIVE", "art-direction": "POSITIVE", gameplay: "MIXED" },
-    observations: [{ topic: "technical-issues", polarity: "CRITICISM", content: "Hitches and one soft lock interrupted runs often enough that I stopped early." }],
   },
   {
     work: "hades-ii",
     reviewer: "naomi-okonkwo",
-    reviewedOn: "2024-05-28",
+    reviewedOn: "2024-05-28",
+
+
     enjoyment: "POSITIVE",
     execution: "MIXED",
     completion: "EARLY",
@@ -152,12 +158,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "An early impression, labeled as one",
     body: "This is an early portion, not a verdict on the whole route. I enjoyed the first nights a great deal: the tone is immediate, and I wanted to see the next room. Execution feels mixed even with early access in mind. The opening teaches a lot at once. I will revise this if I reach the end. I am not pretending I have.",
     judgments: { atmosphere: "POSITIVE", music: "POSITIVE", gameplay: "MIXED", controls: "MIXED" },
-    observations: [{ topic: "tutorial", polarity: "CRITICISM", content: "The opening introduces several systems before the basic loop has settled." }],
   },
   {
     work: "cyberpunk-2077",
     reviewer: "adele-march",
-    reviewedOn: "2021-03-04",
+    reviewedOn: "2021-03-04",
+
     enjoyment: "POSITIVE",
     execution: "MIXED",
     completion: "COMPLETED",
@@ -167,15 +173,13 @@ export const evaluations: SeedEvaluation[] = [
     title: "The city is the point, and it stumbles",
     body: "I was there for Night City, the characters, and the way the main job eats the protagonist. I loved that. I do not think the game, as I played it near launch on PC, was well executed as a whole. Quests of consequence sit next to systems that barely respond, and the body of the city is full of technical failure. The story does not cancel the condition of the software.",
     judgments: { story: "POSITIVE", music: "POSITIVE", atmosphere: "POSITIVE", "technical-quality": "NEGATIVE", gameplay: "MIXED", performance: "MIXED" },
-    observations: [
-      { topic: "story", polarity: "PRAISE", content: "The main job turns into a crisis of identity that the side stories keep echoing." },
-      { topic: "technical-issues", polarity: "CRITICISM", content: "Scripts broke often enough that the city felt unfinished even when the writing did not." },
-    ],
   },
   {
     work: "cyberpunk-2077",
     reviewer: "owen-hale",
-    reviewedOn: "2023-11-12",
+    reviewedOn: "2023-11-12",
+
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -189,7 +193,8 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "cyberpunk-2077",
     reviewer: "jonah-ellis",
-    reviewedOn: "2020-12-20",
+    reviewedOn: "2020-12-20",
+
     enjoyment: "MIXED",
     execution: "NEGATIVE",
     completion: "SUBSTANTIAL",
@@ -199,13 +204,13 @@ export const evaluations: SeedEvaluation[] = [
     title: "Shipped in a state I won't excuse",
     body: "I played on a base PlayStation 4 in the launch month, and I am using the same standard I use for any large commercial game. It was not well executed. Performance, pop-in, and broken encounters were the play, not an occasional interruption. I can hear that the fiction is ambitious. Ambition did not make the build I bought playable enough to recommend as a finished work. I did not finish it.",
     judgments: { "technical-quality": "NEGATIVE", performance: "NEGATIVE", gameplay: "NEGATIVE", story: "MIXED", atmosphere: "MIXED" },
-    observations: [{ topic: "performance", polarity: "CRITICISM", content: "On a base PlayStation 4 at launch, frame rate and pop-in made ordinary driving a technical problem." }],
     imported: { name: "Personal notes", url: "https://example.com/notes/cyberpunk-2077" },
   },
   {
     work: "cyberpunk-2077",
     reviewer: "luis-ortega",
-    reviewedOn: "2021-08-30",
+    reviewedOn: "2021-08-30",
+
     enjoyment: "POSITIVE",
     execution: "NEGATIVE",
     completion: "COMPLETED",
@@ -215,12 +220,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "I finished it because of the people",
     body: "I completed the main endings I cared about. I enjoyed the characters enough to forgive hours of friction while I was playing, and I still do not think the game was well executed. Police response, driving, and a long list of systems feel like categories on a box rather than designs. The writing of a few relationships is the reason my enjoyment is positive. It is not a reason to call the craft successful.",
     judgments: { story: "POSITIVE", gameplay: "NEGATIVE", "technical-quality": "NEGATIVE", music: "POSITIVE", atmosphere: "POSITIVE" },
-    observations: [{ topic: "writing", polarity: "PRAISE", content: "A handful of relationships are specific enough that I stayed through systems I did not respect." }],
   },
   {
     work: "cyberpunk-2077",
     reviewer: "naomi-okonkwo",
-    reviewedOn: "2021-01-09",
+    reviewedOn: "2021-01-09",
+
     enjoyment: "POSITIVE",
     execution: "MIXED",
     completion: "SUBSTANTIAL",
@@ -234,7 +239,8 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "baldurs-gate-3",
     reviewer: "luis-ortega",
-    reviewedOn: "2023-10-02",
+    reviewedOn: "2023-10-02",
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -244,12 +250,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "The campaign holds, the last act strains",
     body: "I finished a full campaign. I enjoyed it, and I think the role-playing execution is unusually successful: conversations have teeth, the party argues, and failure is often a scene rather than a reload. Performance in the last act was the recurring problem, especially in the city. That kept a positive execution from being an unqualified one. It did not flip the judgment.",
     judgments: { gameplay: "POSITIVE", story: "POSITIVE", "technical-quality": "MIXED", performance: "MIXED", music: "POSITIVE" },
-    observations: [{ topic: "performance", polarity: "CRITICISM", content: "The city in the last act stuttered often enough to break conversations." }],
   },
   {
     work: "baldurs-gate-3",
     reviewer: "adele-march",
-    reviewedOn: "2023-11-18",
+    reviewedOn: "2023-11-18",
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -259,12 +265,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "A story that lets you be difficult",
     body: "I evaluated the dramatic experience. It is rare for a game this systemic to let characters remain prickly. I loved it. The execution of that drama is strong: scenes react, and the soundtrack knows when to get out of the way. I noticed slowdown late, and I am treating that as a technical complaint inside an experience that still worked.",
     judgments: { story: "POSITIVE", music: "POSITIVE", atmosphere: "POSITIVE", gameplay: "POSITIVE", performance: "MIXED" },
-    observations: [{ topic: "story", polarity: "PRAISE", content: "Party members stay difficult even when the systems would make it easier to flatter the player." }],
   },
   {
     work: "baldurs-gate-3",
     reviewer: "mira-chen",
-    reviewedOn: "2024-01-07",
+    reviewedOn: "2024-01-07",
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -278,7 +284,8 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "baldurs-gate-3",
     reviewer: "samir-shah",
-    reviewedOn: "2024-02-16",
+    reviewedOn: "2024-02-16",
+
     enjoyment: "POSITIVE",
     execution: "MIXED",
     completion: "COMPLETED",
@@ -288,12 +295,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "Loved the campaign, fought the frame rate",
     body: "On PlayStation 5 the last stretch was compromised enough that I can't call the execution clean. I still enjoyed the campaign more than almost anything else I played that year. Inventory friction and slowdown sat on top of a game whose scenes and fights mostly deliver. Mixed execution, positive enjoyment. Those are both the review.",
     judgments: { gameplay: "POSITIVE", story: "POSITIVE", performance: "NEGATIVE", "technical-quality": "MIXED", music: "POSITIVE" },
-    observations: [{ topic: "performance", polarity: "CRITICISM", content: "On PlayStation 5, the final act's frame rate was poor enough to affect combat timing." }],
   },
   {
     work: "death-stranding",
     reviewer: "adele-march",
-    reviewedOn: "2020-01-22",
+    reviewedOn: "2020-01-22",
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -303,12 +310,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "The walking is the work",
     body: "I evaluated the artistic experience, and I think the game executes it. Delivering cargo across ugly distances is not a failure to be an action game. It is the sentence. I enjoyed the loneliness and the rare arrival. The story over-explains, and I still found the journey coherent. People who wanted a shooter were measuring a different intention.",
     judgments: { atmosphere: "POSITIVE", story: "POSITIVE", music: "POSITIVE", gameplay: "POSITIVE", "art-direction": "POSITIVE" },
-    observations: [{ topic: "pacing", polarity: "PRAISE", content: "Long crossings without combat are the point of the journey, not a gap in it." }],
   },
   {
     work: "death-stranding",
     reviewer: "owen-hale",
-    reviewedOn: "2020-03-02",
+    reviewedOn: "2020-03-02",
+
     enjoyment: "NEGATIVE",
     execution: "MIXED",
     completion: "SUBSTANTIAL",
@@ -318,12 +325,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "I understood it and did not want it",
     body: "I could see what the deliveries were for, and I did not enjoy them. Hours of balancing cargo while the plot shouted its themes left me cold. The landscape is extraordinary. That is not the same as wanting to cross it again. I think the execution of the central verb is mixed: the terrain simulation is careful, and the fiction around it is bloated. I stopped short of the end.",
     judgments: { gameplay: "NEGATIVE", atmosphere: "POSITIVE", story: "NEGATIVE", "art-direction": "POSITIVE", music: "POSITIVE" },
-    observations: [{ topic: "pacing", polarity: "CRITICISM", content: "Crossings repeat the same physical joke long after the metaphor has landed." }],
   },
   {
     work: "death-stranding",
     reviewer: "mira-chen",
-    reviewedOn: "2020-08-19",
+    reviewedOn: "2020-08-19",
+
     enjoyment: "MIXED",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -337,7 +344,8 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "death-stranding",
     reviewer: "luis-ortega",
-    reviewedOn: "2022-10-11",
+    reviewedOn: "2022-10-11",
+
     enjoyment: "NEGATIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -351,7 +359,8 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "death-stranding",
     reviewer: "samir-shah",
-    reviewedOn: "2020-05-27",
+    reviewedOn: "2020-05-27",
+
     enjoyment: "MIXED",
     execution: "MIXED",
     completion: "COMPLETED",
@@ -361,12 +370,13 @@ export const evaluations: SeedEvaluation[] = [
     title: "Half a meditation, half a lecture",
     body: "Both the feeling and the craft mattered to me, and both came out mixed. Some crossings are the best quiet play I had that year. The cutscenes repeat the thesis until the quiet cannot recover. Combat, when it arrives, is the least convincing verb. I neither loved it nor think it fails. The split is the review.",
     judgments: { gameplay: "MIXED", story: "MIXED", atmosphere: "POSITIVE", music: "POSITIVE", "art-direction": "POSITIVE" },
-    observations: [{ topic: "story", polarity: "CRITICISM", content: "Cutscenes restate the theme of connection after the deliveries have already demonstrated it." }],
   },
   {
     work: "stardew-valley",
     reviewer: "priya-raman",
-    reviewedOn: "2018-06-12",
+    reviewedOn: "2018-06-12",
+
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "ENDGAME",
@@ -376,12 +386,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "Context, and then the work itself",
     body: "I did consciously adjust because one person made it. That adjustment turned out not to be doing much work. The town, the seasons, and the way chores become a calendar are well executed on an ordinary standard. I enjoyed the years I spent there. Solo development explains the edges. It is not the reason the days feel good.",
     judgments: { gameplay: "POSITIVE", atmosphere: "POSITIVE", music: "POSITIVE", story: "POSITIVE", "technical-quality": "POSITIVE" },
-    observations: [{ topic: "music", polarity: "PRAISE", content: "The seasonal music makes an ordinary workday feel like a place." }],
   },
   {
     work: "stardew-valley",
     reviewer: "owen-hale",
-    reviewedOn: "2017-03-08",
+    reviewedOn: "2017-03-08",
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -395,7 +405,9 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "stardew-valley",
     reviewer: "naomi-okonkwo",
-    reviewedOn: "2019-09-15",
+    reviewedOn: "2019-09-15",
+
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "SUBSTANTIAL",
@@ -409,7 +421,8 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "stardew-valley",
     reviewer: "luis-ortega",
-    reviewedOn: "2020-04-21",
+    reviewedOn: "2020-04-21",
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -423,7 +436,8 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "starfield",
     reviewer: "owen-hale",
-    reviewedOn: "2023-10-18",
+    reviewedOn: "2023-10-18",
+
     enjoyment: "MIXED",
     execution: "MIXED",
     completion: "SUBSTANTIAL",
@@ -433,12 +447,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "A lot of landing, less arriving",
     body: "I wanted the feeling of going somewhere. Sometimes a moon provided it, and often the procedure of scanning and returning to the menu removed it. Enjoyment was mixed. Execution was mixed: conversations and a few faction lines are solid, and the exploration verb that the game advertises is thin. I have not finished every faction.",
     judgments: { "game-design": "MIXED", atmosphere: "MIXED", story: "MIXED", gameplay: "MIXED", "technical-quality": "MIXED" },
-    observations: [{ topic: "exploration", polarity: "CRITICISM", content: "Landing, scanning, and leaving became the same errand on planets that did not need a visit." }],
   },
   {
     work: "starfield",
     reviewer: "mira-chen",
-    reviewedOn: "2023-11-02",
+    reviewedOn: "2023-11-02",
+
     enjoyment: "NEGATIVE",
     execution: "NEGATIVE",
     completion: "SUBSTANTIAL",
@@ -448,12 +462,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "The exploration does not execute",
     body: "I was evaluating the exploration and role-playing craft against the standard I use for other large RPGs. The repeated points of interest, the loading between a city and its orbit, and the flatness of most planets are execution problems, not a matter of taste. I did not enjoy the hours. A few characters are better than the loop they are trapped in.",
     judgments: { gameplay: "NEGATIVE", "technical-quality": "MIXED", story: "MIXED", atmosphere: "NEGATIVE", performance: "MIXED" },
-    observations: [{ topic: "exploration", polarity: "CRITICISM", content: "The same abandoned facilities reappear often enough that discovery stops meaning anything." }],
   },
   {
     work: "starfield",
     reviewer: "luis-ortega",
-    reviewedOn: "2024-01-20",
+    reviewedOn: "2024-01-20",
+
     enjoyment: "MIXED",
     execution: "NEGATIVE",
     completion: "COMPLETED",
@@ -467,7 +481,9 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "starfield",
     reviewer: "samir-shah",
-    reviewedOn: "2024-03-09",
+    reviewedOn: "2024-03-09",
+
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -481,7 +497,8 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "starfield",
     reviewer: "naomi-okonkwo",
-    reviewedOn: "2023-09-22",
+    reviewedOn: "2023-09-22",
+
     enjoyment: "NEGATIVE",
     execution: "MIXED",
     completion: "ABANDONED",
@@ -491,12 +508,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "I left during the survey",
     body: "I abandoned it after the early survey loop had made its promise clear. I did not enjoy the procedure. Execution of the characters I met was mixed — a couple of companions were already distinct — and execution of exploration was not. This is an early leaving, not a completed campaign. I am not describing the ending.",
     judgments: { gameplay: "NEGATIVE", story: "MIXED", atmosphere: "NEGATIVE", "technical-quality": "MIXED" },
-    observations: [{ topic: "exploration", polarity: "CRITICISM", content: "The survey loop revealed itself quickly, and I did not believe later planets would change it." }],
   },
   {
     work: "elden-ring",
     reviewer: "mira-chen",
-    reviewedOn: "2022-04-16",
+    reviewedOn: "2022-04-16",
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -506,12 +523,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "Difficulty is not a defect here",
     body: "I evaluated combat craft and the open field as a designed space. Both execute. Fights teach through repetition without hiding the rule, and the map uses spectacle as information. I enjoyed it. I am not treating difficulty as a failure of execution; it is the standard the combat is built to. Technical problems on PC at launch were real and secondary.",
     judgments: { gameplay: "POSITIVE", "art-direction": "POSITIVE", atmosphere: "POSITIVE", "technical-quality": "MIXED", controls: "POSITIVE" },
-    observations: [{ topic: "difficulty", polarity: "PRAISE", content: "Bosses are hard in a way that still exposes the rule you missed." }],
   },
   {
     work: "elden-ring",
     reviewer: "owen-hale",
-    reviewedOn: "2022-03-28",
+    reviewedOn: "2022-03-28",
+
     enjoyment: "NEGATIVE",
     execution: "POSITIVE",
     completion: "SUBSTANTIAL",
@@ -521,12 +538,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "I can see that it is good. I was miserable.",
     body: "I got through a substantial portion of the map and several major bosses. The world is astonishing to move through, and the combat is coherent. I did not enjoy myself. Dying in the same courtyard for an evening stopped being information and became the whole night. That is a fact about my experience, not a claim that the fights are poorly made. I think the execution is strong. I stopped anyway.",
     judgments: { gameplay: "POSITIVE", atmosphere: "POSITIVE", "art-direction": "POSITIVE", story: "MIXED" },
-    observations: [{ topic: "difficulty", polarity: "CRITICISM", content: "Repeated deaths stopped teaching me and started ending the evening." }],
   },
   {
     work: "elden-ring",
     reviewer: "luis-ortega",
-    reviewedOn: "2022-06-30",
+    reviewedOn: "2022-06-30",
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -540,7 +557,8 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "elden-ring",
     reviewer: "naomi-okonkwo",
-    reviewedOn: "2022-03-04",
+    reviewedOn: "2022-03-04",
+
     enjoyment: "NEGATIVE",
     execution: "MIXED",
     completion: "EARLY",
@@ -550,12 +568,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "Borrowed, and returned early",
     body: "I borrowed it and returned it during the early hours. I did not enjoy the opacity or the punishment. I won't claim the whole game fails. What I played felt mixed in execution: the first open area is inviting, and the refusal to explain a stake in the ground is a design choice that locked me out. This is an early impression on purpose.",
     judgments: { gameplay: "MIXED", atmosphere: "POSITIVE", controls: "MIXED", story: "NEGATIVE" },
-    observations: [{ topic: "tutorial", polarity: "CRITICISM", content: "Essential actions are easy to miss, and the game treats that confusion as atmosphere." }],
   },
   {
     work: "elden-ring",
     reviewer: "samir-shah",
-    reviewedOn: "2022-08-14",
+    reviewedOn: "2022-08-14",
+
     enjoyment: "MIXED",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -569,7 +587,9 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "palworld",
     reviewer: "priya-raman",
-    reviewedOn: "2024-02-08",
+    reviewedOn: "2024-02-08",
+
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "SUBSTANTIAL",
@@ -579,12 +599,13 @@ export const evaluations: SeedEvaluation[] = [
     title: "The loop works inside the unfinished frame",
     body: "I adjusted because this is early access and because the team is not a giant one. Catching, building, and sending creatures to work already executes a satisfying loop, and I enjoyed the base coming alive. I am not using that adjustment to ignore crashes. Those happened. They were not the majority of the time. Positive execution here means the toy works, not that the product is finished.",
     judgments: { gameplay: "POSITIVE", "technical-quality": "MIXED", atmosphere: "POSITIVE", performance: "MIXED" },
-    observations: [{ topic: "technical-issues", polarity: "CRITICISM", content: "Crashes happened, and I am not folding them into the early-access allowance." }],
   },
   {
     work: "palworld",
     reviewer: "samir-shah",
-    reviewedOn: "2024-02-20",
+    reviewedOn: "2024-02-20",
+
+
     enjoyment: "POSITIVE",
     execution: "MIXED",
     completion: "SUBSTANTIAL",
@@ -598,7 +619,8 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "palworld",
     reviewer: "jonah-ellis",
-    reviewedOn: "2024-01-28",
+    reviewedOn: "2024-01-28",
+
     enjoyment: "POSITIVE",
     execution: "NEGATIVE",
     completion: "SUBSTANTIAL",
@@ -608,12 +630,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "I liked the joke. The software is not ready.",
     body: "I refuse the idea that early access or a smaller studio automatically moves the bar for stability. I enjoyed the first dozen hours. The execution, as software and as a survival system, was poor: hitches, clipping, and bases that stop functioning. A pleasant toy and a badly executed release can be the same purchase. That is my whole point in writing this down.",
     judgments: { "technical-quality": "NEGATIVE", performance: "NEGATIVE", gameplay: "MIXED", atmosphere: "POSITIVE" },
-    observations: [{ topic: "technical-issues", polarity: "CRITICISM", content: "Bases stopped functioning, and I am not treating that as an acceptable early-access texture." }],
   },
   {
     work: "palworld",
     reviewer: "mira-chen",
-    reviewedOn: "2024-03-01",
+    reviewedOn: "2024-03-01",
+
     enjoyment: "MIXED",
     execution: "NEGATIVE",
     completion: "EARLY",
@@ -627,7 +649,9 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "palworld",
     reviewer: "owen-hale",
-    reviewedOn: "2024-04-12",
+    reviewedOn: "2024-04-12",
+
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "SUBSTANTIAL",
@@ -641,7 +665,8 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "celeste",
     reviewer: "mira-chen",
-    reviewedOn: "2018-03-02",
+    reviewedOn: "2018-03-02",
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -651,12 +676,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "Precision without cruelty as the only tool",
     body: "The platforming executes. Rooms are short enough that failure is information, and the assist options mean the difficulty is a door rather than a wall. I enjoyed the climb and I think it is well made on an absolute standard. A small team does not need to be cited for that conclusion. The B-sides are where the craft is most obvious.",
     judgments: { gameplay: "POSITIVE", controls: "POSITIVE", music: "POSITIVE", story: "POSITIVE", "technical-quality": "POSITIVE" },
-    observations: [{ topic: "difficulty", polarity: "PRAISE", content: "Rooms are short, so a failure teaches the next attempt instead of taxing an hour." }],
   },
   {
     work: "celeste",
     reviewer: "owen-hale",
-    reviewedOn: "2018-02-14",
+    reviewedOn: "2018-02-14",
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -666,12 +691,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "The mountain and the panic",
     body: "I was in it for how the climb felt, and the story of why Madeline is climbing. Both landed. I enjoyed it even when I was stuck, because the game kept treating a retry as ordinary. The music is part of that kindness. Execution of the feel — the jump, the dash, the recovery — is excellent in the only sense I mean: it does the thing cleanly.",
     judgments: { gameplay: "POSITIVE", music: "POSITIVE", story: "POSITIVE", atmosphere: "POSITIVE", controls: "POSITIVE" },
-    observations: [{ topic: "music", polarity: "PRAISE", content: "The music makes a long series of deaths feel like one ascent." }],
   },
   {
     work: "celeste",
     reviewer: "naomi-okonkwo",
-    reviewedOn: "2018-05-19",
+    reviewedOn: "2018-05-19",
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -685,7 +710,8 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "celeste",
     reviewer: "luis-ortega",
-    reviewedOn: "2019-01-11",
+    reviewedOn: "2019-01-11",
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "POST_GAME",
@@ -699,7 +725,8 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "no-mans-sky",
     reviewer: "jonah-ellis",
-    reviewedOn: "2016-08-18",
+    reviewedOn: "2016-08-18",
+
     enjoyment: "NEGATIVE",
     execution: "NEGATIVE",
     completion: "SUBSTANTIAL",
@@ -709,12 +736,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "Launch week, on the standard of what was sold",
     body: "I am writing about the launch version, because that is what I played. Judged against what a finished exploration game needs to do, and against the breadth that was described, it was not well executed. Planets repeated their surprises immediately. Multiplayer was absent. I did not enjoy the loop once the first system had shown me the template. Later repairs are a different evaluation.",
     judgments: { gameplay: "NEGATIVE", "technical-quality": "NEGATIVE", atmosphere: "MIXED", "game-design": "NEGATIVE" },
-    observations: [{ topic: "exploration", polarity: "CRITICISM", content: "At launch, a second planet was usually the first planet with a different sky." }],
   },
   {
     work: "no-mans-sky",
     reviewer: "mira-chen",
-    reviewedOn: "2016-09-30",
+    reviewedOn: "2016-09-30",
+
     enjoyment: "NEGATIVE",
     execution: "MIXED",
     completion: "SUBSTANTIAL",
@@ -728,7 +755,9 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "no-mans-sky",
     reviewer: "priya-raman",
-    reviewedOn: "2023-05-06",
+    reviewedOn: "2023-05-06",
+
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "SUBSTANTIAL",
@@ -738,12 +767,13 @@ export const evaluations: SeedEvaluation[] = [
     title: "A later version, under a stated context",
     body: "I adjusted my standard because I was playing a game that had been rebuilt in public for years, and because I knew the launch had been a different object. In 2023 I enjoyed the wandering, and I think the exploration loop now executes: bases, variety, and a reason to land. That contextual frame is part of the judgment. It should not be quoted as a review of the first month.",
     judgments: { gameplay: "POSITIVE", atmosphere: "POSITIVE", "game-design": "POSITIVE", "technical-quality": "MIXED", music: "POSITIVE" },
-    observations: [{ topic: "exploration", polarity: "PRAISE", content: "By 2023, landing usually offered a reason to stay rather than a single resource and a skybox." }],
   },
   {
     work: "no-mans-sky",
     reviewer: "owen-hale",
-    reviewedOn: "2021-12-02",
+    reviewedOn: "2021-12-02",
+
+
     enjoyment: "POSITIVE",
     execution: "MIXED",
     completion: "SUBSTANTIAL",
@@ -757,7 +787,9 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "no-mans-sky",
     reviewer: "luis-ortega",
-    reviewedOn: "2024-08-19",
+    reviewedOn: "2024-08-19",
+
+
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -771,7 +803,8 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "the-green-knight",
     reviewer: "adele-march",
-    reviewedOn: "2021-08-12",
+    reviewedOn: "2021-08-12",
+
     enjoyment: "MIXED",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -780,12 +813,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "A successful omen I only partly wanted",
     body: "I watched it once, beginning to end, which for a film is the whole work. I was evaluating the artistic experience. Lowery executes the poem's strange courtesy: the images commit, the pace refuses a modern quest, and Dev Patel holds the doubt in the center. I did not straightforwardly enjoy it. Long passages asked for a patience I only sometimes had. Execution positive, enjoyment mixed.",
     judgments: { cinematography: "POSITIVE", acting: "POSITIVE", writing: "POSITIVE", atmosphere: "POSITIVE", music: "POSITIVE", editing: "MIXED" },
-    observations: [{ topic: "pacing", polarity: "CRITICISM", content: "Several passages extend a single omen until my patience, not the image, became the subject." }],
   },
   {
     work: "the-green-knight",
     reviewer: "owen-hale",
-    reviewedOn: "2021-09-03",
+    reviewedOn: "2021-09-03",
+
     enjoyment: "NEGATIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -794,12 +827,12 @@ export const evaluations: SeedEvaluation[] = [
     title: "Beautiful, and I was ready for it to end",
     body: "I saw the craft. The camera treats landscape as a moral fact, and the lead performance is precise. I did not enjoy the sitting. The film's refusal to hurry became, for me, the entire second half. That is an experience judgment. I still think the film does what it is attempting, and I would not call the pace a mistake just because I wanted a different one.",
     judgments: { cinematography: "POSITIVE", acting: "POSITIVE", editing: "NEGATIVE", atmosphere: "POSITIVE", writing: "MIXED", music: "POSITIVE" },
-    observations: [{ topic: "pacing", polarity: "CRITICISM", content: "The second half's refusal to hurry turned patience into the whole experience." }],
   },
   {
     work: "the-green-knight",
     reviewer: "samir-shah",
-    reviewedOn: "2022-01-15",
+    reviewedOn: "2022-01-15",
+
     enjoyment: "MIXED",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -812,7 +845,8 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "the-green-knight",
     reviewer: "luis-ortega",
-    reviewedOn: "2021-12-28",
+    reviewedOn: "2021-12-28",
+
     enjoyment: "POSITIVE",
     execution: "MIXED",
     completion: "COMPLETED",
@@ -821,6 +855,5 @@ export const evaluations: SeedEvaluation[] = [
     title: "I liked the ordeal more than I admired every cut",
     body: "I enjoyed the film. Gawain's reluctance is allowed to be petty, which made me like him, and the ending earns the time. Execution is mixed rather than a triumph: the images are controlled, and some editorial rhythms in the middle repeat a foggy beat until it thins. Enjoyment ahead of execution, for once, in my own notes.",
     judgments: { acting: "POSITIVE", cinematography: "POSITIVE", editing: "NEGATIVE", writing: "POSITIVE", atmosphere: "POSITIVE", music: "MIXED" },
-    observations: [{ topic: "pacing", polarity: "CRITICISM", content: "The middle repeats a foggy, stalled rhythm until the ordeal starts to feel decorated." }],
   },
 ];

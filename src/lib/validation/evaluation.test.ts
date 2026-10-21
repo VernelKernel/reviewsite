@@ -66,11 +66,6 @@ describe("evaluation validation", () => {
     expect(tooLong.ok).toBe(false);
   });
 
-  it("requires pasted prose when the review is imported", () => {
-    const result = parseEvaluationForm(form({ ...base, reviewBody: "", imported: "on" }));
-    expect(result.ok).toBe(false);
-  });
-
   it("accepts a draft", () => {
     const result = parseEvaluationForm(form({ ...base, intent: "draft" }));
     expect(result.ok).toBe(true);
@@ -130,32 +125,6 @@ describe("evaluation validation", () => {
         data.append("sectionBody", prose);
         data.append("sectionDimension", "story");
         data.append("sectionBody", prose);
-      }),
-    );
-    expect(result.ok).toBe(false);
-  });
-
-  it("ignores dimension sections when the review is imported", () => {
-    const result = parseEvaluationForm(
-      form({ ...base, imported: "on", reviewMode: "sections" }, (data) => {
-        data.set("reviewOpening", "This opening should not replace the pasted review.");
-        data.append("sectionDimension", "story");
-        data.append("sectionBody", "The plot lost me, and that decided it.");
-      }),
-    );
-    expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.data.sections).toEqual([]);
-      expect(result.data.reviewBody).toBe(base.reviewBody);
-    }
-  });
-
-  it("still checks an observation that is present on a draft", () => {
-    const result = parseEvaluationForm(
-      form({ ...base, intent: "draft" }, (data) => {
-        data.append("observationTopic", "topic-1");
-        data.append("observationPolarity", "PRAISE");
-        data.append("observationContent", "Nope");
       }),
     );
     expect(result.ok).toBe(false);

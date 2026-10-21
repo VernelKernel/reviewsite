@@ -90,7 +90,6 @@ function ReviewColumn({
 function AudienceExcerpt({ review }: { review: ReviewCardModel }) {
   const date = formatDate(review.reviewedOn);
   const body = review.review?.body ? excerpt(review.review.body) : null;
-  const observation = review.observations[0];
   const imported = review.review?.source === "IMPORTED";
 
   return (
@@ -109,8 +108,6 @@ function AudienceExcerpt({ review }: { review: ReviewCardModel }) {
       />
       {body ? (
         <p className="excerpt-body">{body}</p>
-      ) : observation ? (
-        <p className="excerpt-body">{observation.content}</p>
       ) : (
         <p className="meta">No written review.</p>
       )}

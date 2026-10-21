@@ -50,21 +50,6 @@ export const GAME_ENJOYMENT_SLUGS = [
   "satisfaction",
 ] as const;
 
-export const OBSERVATION_TOPICS = [
-  "tutorial",
-  "controls",
-  "performance",
-  "difficulty",
-  "pacing",
-  "writing",
-  "music",
-  "technical-issues",
-  "combat",
-  "exploration",
-  "story",
-  "interface",
-] as const;
-
 export type Stance = (typeof STANCES)[number];
 export type Completion = (typeof COMPLETIONS)[number];
 export type PlaytimeBucket = (typeof PLAYTIME_BUCKETS)[number];

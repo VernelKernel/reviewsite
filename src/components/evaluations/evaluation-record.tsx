@@ -42,8 +42,6 @@ export function EvaluationRecord({
   const enjoymentAxes: RadarAxis[] = judged
     .filter((judgment) => judgment.dimension.family === "ENJOYMENT")
     .map((judgment) => ({ name: judgment.dimension.name, stance: judgment.stance as StanceName, mattered: judgment.mattered }));
-  const strengths = evaluation.observations.filter((item) => item.polarity === "PRAISE").map((item) => item.content);
-  const weaknesses = evaluation.observations.filter((item) => item.polarity === "CRITICISM").map((item) => item.content);
   const genres = [...work.genres].sort((left, right) => Number(right.isPrimary) - Number(left.isPrimary));
   const glance = glanceItems(evaluation);
   const related = work.evaluations.filter((item) => item.id !== evaluation.id);
@@ -55,8 +53,6 @@ export function EvaluationRecord({
     enjoyment,
     execution,
     axes,
-    strengths,
-    weaknesses,
   };
 
   return (
@@ -117,37 +113,6 @@ export function EvaluationRecord({
               </section>
             ) : null}
           </section>
-
-          {strengths.length > 0 || weaknesses.length > 0 ? (
-            <div className="evaluation-cards">
-              {strengths.length > 0 ? (
-                <section className="note-card note-card-praise" aria-labelledby="strengths">
-                  <h2 id="strengths">
-                    <i className="flair-icon" data-icon="beacon" aria-hidden="true" />
-                    Strengths
-                  </h2>
-                  <ul>
-                    {strengths.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </section>
-              ) : null}
-              {weaknesses.length > 0 ? (
-                <section className="note-card note-card-criticism" aria-labelledby="weaknesses">
-                  <h2 id="weaknesses">
-                    <i className="flair-icon" data-icon="warning" aria-hidden="true" />
-                    Weaknesses
-                  </h2>
-                  <ul>
-                    {weaknesses.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </section>
-              ) : null}
-            </div>
-          ) : null}
 
           <section id="details" className="evaluation-details">
             <h2>Details</h2>

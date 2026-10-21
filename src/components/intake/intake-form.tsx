@@ -99,6 +99,7 @@ export function IntakeForm({
   const current = steps.find((step) => step.id === active) ?? steps[0];
   const currentIndex = steps.findIndex((step) => step.id === current.id) + 1;
   const byline = [platform, ...genresChosen].map((item) => item.trim()).filter((item) => item && item !== unspecified);
+  const glance = glanceItems({ platform, completion, ownership });
   const titleMissing = title.trim().length < 2;
   const platformMissing = platform.trim().length === 0 || platform === unspecified;
   const genreMissing = genresChosen.every((genre) => genre === unspecified);
@@ -371,6 +372,20 @@ export function IntakeForm({
                 ) : null}
               </div>
             </section>
+            {glance.length > 0 ? (
+              <section className="evaluation-panel" aria-labelledby="intake-glance">
+                <h2 id="intake-glance">At a glance</h2>
+                <ul className="glance-list">
+                  {glance.map((item) => (
+                    <li key={item.label}>
+                      <i className="flair-icon" data-icon={item.icon} aria-hidden="true" />
+                      <strong>{item.value}</strong>
+                      <span>{item.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
             <div className="builder-publish">
               {showRequirements ? (
                 <p className="form-error" id="chart-requirements" role="alert">
@@ -384,6 +399,22 @@ export function IntakeForm({
       </div>
     </form>
   );
+}
+
+function glanceItems({
+  platform,
+  completion,
+  ownership,
+}: {
+  platform: string;
+  completion: string;
+  ownership: string;
+}): { value: string; label: string; icon: "gamepad" | "replay" | "lock" }[] {
+  const items: { value: string; label: string; icon: "gamepad" | "replay" | "lock" }[] = [];
+  if (platform && platform !== unspecified) items.push({ value: platform, label: "Platform", icon: "gamepad" });
+  if (completion && completion !== "UNKNOWN") items.push({ value: completionLabel[completion] ?? completion, label: "Completion", icon: "replay" });
+  if (ownership) items.push({ value: ownershipLabel[ownership] ?? ownership, label: "Access", icon: "lock" });
+  return items;
 }
 
 function recordStance(

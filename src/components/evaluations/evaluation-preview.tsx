@@ -4,7 +4,7 @@ import { useFormStatus } from "react-dom";
 import { DimensionReading } from "@/components/evaluations/dimension-reading";
 import { EvaluationGraph } from "@/components/evaluations/evaluation-graph";
 import { ArtImage } from "@/components/works/work-art";
-import { completionLabel, ownershipLabel, playtimeLabel } from "@/lib/domain/labels";
+import { completionLabel, ownershipLabel, playtimeLabel, stanceClass, stanceLabel } from "@/lib/domain/labels";
 import { personalHeadline } from "@/lib/intake/judgments";
 import type { RadarAxis, StanceName } from "@/lib/evaluations/radar";
 import type { WorkArt } from "@/lib/works/present";
@@ -69,31 +69,28 @@ export function EvaluationPreview({
             { label: "Enjoyment", stance: isStance(enjoyment) ? enjoyment : null, axes: enjoymentAxes },
           ]}
         />
-        <section className="evaluation-panel" aria-labelledby="builder-execution-breakdown">
-          <h2 id="builder-execution-breakdown">Execution breakdown</h2>
-          {isStance(execution) ? null : <p className="meta">Execution not selected</p>}
-          {workAxes.length > 0 ? (
-            <ul className="dimension-breakdown">
-              {workAxes.map((axis) => (
-                <BreakdownRow key={axis.name} axis={axis} />
-              ))}
-            </ul>
-          ) : isStance(execution) ? (
-            <p className="meta">No dimensions judged.</p>
-          ) : null}
-        </section>
-        <section className="evaluation-panel" aria-labelledby="builder-enjoyment-breakdown">
-          <h2 id="builder-enjoyment-breakdown">Enjoyment breakdown</h2>
-          {isStance(enjoyment) ? null : <p className="meta">Enjoyment not selected</p>}
-          {enjoymentAxes.length > 0 ? (
-            <ul className="dimension-breakdown">
-              {enjoymentAxes.map((axis) => (
-                <BreakdownRow key={axis.name} axis={axis} />
-              ))}
-            </ul>
-          ) : isStance(enjoyment) ? (
-            <p className="meta">No dimensions judged.</p>
-          ) : null}
+        <section className="evaluation-panel" aria-labelledby="builder-key-impressions">
+          <h2 id="builder-key-impressions">Key impressions</h2>
+          <div className="preview-group">
+            {isStance(enjoyment) ? <StanceMeter label="Enjoyment" stance={enjoyment} /> : <p className="meta">Enjoyment not selected</p>}
+            {enjoymentAxes.length > 0 ? (
+              <ul className="dimension-breakdown">
+                {enjoymentAxes.map((axis) => (
+                  <BreakdownRow key={axis.name} axis={axis} />
+                ))}
+              </ul>
+            ) : null}
+          </div>
+          <div className="preview-group">
+            {isStance(execution) ? <StanceMeter label="Execution" stance={execution} /> : <p className="meta">Execution not selected</p>}
+            {workAxes.length > 0 ? (
+              <ul className="dimension-breakdown">
+                {workAxes.map((axis) => (
+                  <BreakdownRow key={axis.name} axis={axis} />
+                ))}
+              </ul>
+            ) : null}
+          </div>
         </section>
         {glance.length > 0 ? (
           <section className="evaluation-panel" aria-labelledby="builder-glance">
@@ -109,9 +106,6 @@ export function EvaluationPreview({
             </ul>
           </section>
         ) : null}
-        <p className="builder-preview-note">
-          A visual record of your experience. Publishing turns this into a shareable page with both charts, the breakdowns, and your notes.
-        </p>
         <div className="builder-publish">
           <IntentButton intent="publish">{publishLabel}</IntentButton>
         </div>
@@ -125,6 +119,21 @@ function BreakdownRow({ axis }: { axis: RadarAxis }) {
     <li>
       <DimensionReading name={axis.name} stance={axis.stance} mattered={axis.mattered} />
     </li>
+  );
+}
+
+function StanceMeter({ label, stance }: { label: string; stance: StanceName }) {
+  const icon = label === "Enjoyment" ? "heart" : "gear";
+  return (
+    <div className="stance-meter">
+      <div className="stance-meter-head">
+        <strong>
+          <i className="flair-icon" data-icon={icon} aria-hidden="true" />
+          {label}
+        </strong>
+        <span className={stanceClass(stance)}>{stanceLabel[stance]}</span>
+      </div>
+    </div>
   );
 }
 
@@ -154,7 +163,7 @@ export function isStance(value: string): value is StanceName {
 export function IntentButton({ intent, children }: { intent: "draft" | "publish"; children: string }) {
   const { pending, data } = useFormStatus();
   const active = pending && data?.get("intent") === intent;
-  const label = active ? (intent === "draft" ? "Saving draft…" : "Saving evaluation…") : children;
+  const label = active ? (intent === "draft" ? "Saving draft…" : "Saving review…") : children;
   return (
     <button
       className={intent === "publish" ? "btn btn-primary" : "btn btn-secondary"}

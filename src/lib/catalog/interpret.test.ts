@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { dimensions, topics } from "../../../prisma/seed/catalog";
-import { GAME_DIMENSION_SLUGS, GAME_ENJOYMENT_DIMENSIONS, GAME_ENJOYMENT_SLUGS, OBSERVATION_TOPICS } from "./evaluation-fields";
+import { dimensions } from "../../../prisma/seed/catalog";
+import { GAME_DIMENSION_SLUGS, GAME_ENJOYMENT_DIMENSIONS, GAME_ENJOYMENT_SLUGS } from "./evaluation-fields";
 import {
   criticInterpretationPrompt,
   criticPlatformPrompt,
@@ -25,13 +25,8 @@ describe("review interpretation", () => {
         { dimension: "gameplay", stance: "POSITIVE" },
         { dimension: "gameplay", stance: "NEGATIVE" },
       ],
-      observations: [
-        { topic: "combat", polarity: "PRAISE", content: "The fights stay readable." },
-        { topic: "inventory", polarity: "CRITICISM", content: "The menus are slow." },
-      ],
     });
     expect(reading?.judgments).toEqual([{ dimension: "gameplay", stance: "POSITIVE" }]);
-    expect(reading?.observations).toEqual([{ topic: "combat", polarity: "PRAISE", content: "The fights stay readable." }]);
     expect(reading?.enjoyment).toBe("POSITIVE");
     expect(reading?.execution).toBe("MIXED");
     expect(reading?.impression).toBeNull();
@@ -135,7 +130,7 @@ describe("review interpretation", () => {
     }
   });
 
-  it("uses the same dimensions and topics as the seed catalog", () => {
+  it("uses the same dimensions as the seed catalog", () => {
     const gameDimensions = dimensions
       .filter((dimension) => dimension.appliesTo.includes("GAME") && dimension.family !== "ENJOYMENT")
       .map((dimension) => dimension.slug);
@@ -145,7 +140,6 @@ describe("review interpretation", () => {
       .sort((left, right) => left.sortOrder - right.sortOrder);
     expect([...GAME_ENJOYMENT_SLUGS]).toEqual(enjoyment.map((dimension) => dimension.slug));
     expect(GAME_ENJOYMENT_DIMENSIONS.map((dimension) => dimension.question)).toEqual(enjoyment.map((dimension) => dimension.description));
-    expect([...OBSERVATION_TOPICS]).toEqual(topics.map(([slug]) => slug));
   });
 
   it("keeps enjoyment dimensions in experience order for each work type", () => {

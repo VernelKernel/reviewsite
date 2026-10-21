@@ -8,7 +8,7 @@ export function assertSubmissionRate(key: string): void {
   const now = Date.now();
   const recent = (hits.get(key) ?? []).filter((timestamp) => now - timestamp < WINDOW_MS);
   if (recent.length >= LIMIT) {
-    throw new DomainError("Too many evaluations were submitted for this identity in the last hour. Try again later.");
+    throw new DomainError("Too many reviews were submitted for this identity in the last hour. Try again later.");
   }
   recent.push(now);
   hits.set(key, recent);

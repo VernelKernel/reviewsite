@@ -131,11 +131,6 @@ enum ReviewSource {
   MIGRATED
 }
 
-enum ObservationPolarity {
-  PRAISE
-  CRITICISM
-}
-
 enum RelationKind {
   SAME_SERIES
   SEQUEL
@@ -454,10 +449,9 @@ model Evaluation {
   reviewer ReviewerProfile @relation(fields: [reviewerId], references: [id], onDelete: Restrict)
   platform Platform?       @relation(fields: [platformId], references: [id])
 
-  review       Review?
-  judgments    EvaluationJudgment[]
-  observations Observation[]
-  reports      Report[]
+  review    Review?
+  judgments EvaluationJudgment[]
+  reports   Report[]
   intake       Intake?
 
   @@unique([reviewerId, workId])
@@ -524,31 +518,6 @@ model EvaluationJudgment {
 
   @@unique([evaluationId, dimensionId])
   @@index([dimensionId, stance])
-}
-
-model Topic {
-  id   String @id @default(cuid())
-  slug String @unique
-  name String
-
-  observations Observation[]
-}
-
-model Observation {
-  id           String              @id @default(cuid())
-  evaluationId String
-  topicId      String
-  polarity     ObservationPolarity
-  content      String
-
-  evaluation Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
-  topic      Topic      @relation(fields: [topicId], references: [id], onDelete: Restrict)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([evaluationId])
-  @@index([topicId, polarity])
 }
 
 model WorkRelation {

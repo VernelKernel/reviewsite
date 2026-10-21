@@ -16,7 +16,6 @@ import type { WorkArt } from "@/lib/works/present";
 
 type Option = { id: string; name: string };
 type Judgment = { dimensionId: string; stance: string; mattered?: string | null };
-type Observation = { topicId: string; polarity: string; content: string };
 type Genre = { name: string; slug: string };
 
 const completions = ["JUST_STARTED", "EARLY", "SUBSTANTIAL", "COMPLETED", "ENDGAME", "POST_GAME", "ABANDONED", "UNKNOWN"];
@@ -38,7 +37,6 @@ export function EvaluationForm({
   canDraft,
   hasEvaluation,
   dimensions,
-  topics,
   platforms,
   defaults,
 }: {
@@ -50,7 +48,6 @@ export function EvaluationForm({
   canDraft: boolean;
   hasEvaluation: boolean;
   dimensions: DimensionOption[];
-  topics: Option[];
   platforms: Option[];
   defaults: {
     email: string;
@@ -65,11 +62,7 @@ export function EvaluationForm({
     impression: string;
     reviewBody: string;
     reviewSections: StoredSection[];
-    imported: boolean;
-    importSourceName: string;
-    importSourceUrl: string;
     judgments: Judgment[];
-    observations: Observation[];
   } | null;
 }) {
   const action = saveEvaluation.bind(null, workType, slug);
@@ -77,7 +70,6 @@ export function EvaluationForm({
   const [active, setActive] = useState("basics");
   const [stickyTop, setStickyTop] = useState(88);
   const [impression, setImpression] = useState(defaults?.impression ?? "");
-  const [imported, setImported] = useState(defaults?.imported ?? false);
   const [enjoyment, setEnjoyment] = useState(defaults?.enjoyment ?? "");
   const [execution, setExecution] = useState(defaults?.execution ?? "");
   const [completion, setCompletion] = useState(defaults?.completion ?? "SUBSTANTIAL");
@@ -97,11 +89,6 @@ export function EvaluationForm({
     return next;
   });
   const [judgedOrder, setJudgedOrder] = useState<string[]>(() => initialJudgedOrder(defaults));
-  const [observations, setObservations] = useState<Observation[]>(
-    defaults?.observations.length
-      ? defaults.observations
-      : [{ topicId: topics[0]?.id ?? "", polarity: "CRITICISM", content: "" }],
-  );
 
   useEffect(() => {
     if (!state.error && !state.draftSaved) return;
@@ -153,7 +140,7 @@ export function EvaluationForm({
         <h1>{workType === "MOVIE" ? "Movie" : "Game"}</h1>
       </header>
 
-      <nav className="builder-track" aria-label="Evaluation sections">
+      <nav className="builder-track" aria-label="Review sections">
         <ol className="builder-track-steps">
           {steps.map((step, index) => (
             <li key={step.id}>
@@ -268,8 +255,7 @@ export function EvaluationForm({
             </label>
           </div>
           <fieldset>
-            <legend className="legend">Who is evaluating</legend>
-            <p className="meta">An email keeps this evaluation attached to you on this server. It is not a verified login.</p>
+            <p className="meta">An email keeps this review attached to you on this server. It is not a verified login.</p>
             <div className="builder-fields">
               <label className="field">
                 <span>Display name</span>
@@ -296,16 +282,18 @@ export function EvaluationForm({
           <fieldset aria-labelledby="builder-enjoyment">
             <StancePills name="enjoyment" value={enjoyment} onChange={setEnjoyment} />
           </fieldset>
-          <DimensionChoices
-            legend="Enjoyment, if you want to be more specific"
-            note="Leave a row as “Skip” when it did not matter or you don’t have a view. These are optional, and they stay separate from the headline."
-            dimensions={enjoymentDimensions}
-            values={judgments}
-            mattered={mattered}
-            onStance={(dimensionId, stance) => recordStance(setJudgments, setMattered, setJudgedOrder, dimensionId, stance)}
-            onMattered={(dimensionId, next) => setMattered((current) => ({ ...current, [dimensionId]: next }))}
-            split
-          />
+          {isStance(enjoyment) ? (
+            <DimensionChoices
+              legend="Enjoyment, if you want to be more specific"
+              note="Leave a row as “Skip” when it did not matter or you don’t have a view. These are optional, and they stay separate from the headline."
+              dimensions={enjoymentDimensions}
+              values={judgments}
+              mattered={mattered}
+              onStance={(dimensionId, stance) => recordStance(setJudgments, setMattered, setJudgedOrder, dimensionId, stance)}
+              onMattered={(dimensionId, next) => setMattered((current) => ({ ...current, [dimensionId]: next }))}
+              split
+            />
+          ) : null}
         </section>
 
         <section className="panel builder-section" id="execution" aria-labelledby="builder-execution">
@@ -322,16 +310,18 @@ export function EvaluationForm({
             <legend className="legend">Was it well executed?</legend>
             <StancePills name="execution" value={execution} onChange={setExecution} />
           </fieldset>
-          <DimensionChoices
-            legend="Execution, if you want to be more specific"
-            note="Leave a row as “Skip” when it did not matter or you don’t have a view. Three or more judged dimensions draw the radar."
-            dimensions={workDimensions}
-            values={judgments}
-            mattered={mattered}
-            onStance={(dimensionId, stance) => recordStance(setJudgments, setMattered, setJudgedOrder, dimensionId, stance)}
-            onMattered={(dimensionId, next) => setMattered((current) => ({ ...current, [dimensionId]: next }))}
-            split
-          />
+          {isStance(execution) ? (
+            <DimensionChoices
+              legend="Execution, if you want to be more specific"
+              note="Leave a row as “Skip” when it did not matter or you don’t have a view. Three or more judged dimensions draw the radar."
+              dimensions={workDimensions}
+              values={judgments}
+              mattered={mattered}
+              onStance={(dimensionId, stance) => recordStance(setJudgments, setMattered, setJudgedOrder, dimensionId, stance)}
+              onMattered={(dimensionId, next) => setMattered((current) => ({ ...current, [dimensionId]: next }))}
+              split
+            />
+          ) : null}
         </section>
 
         <section className="panel builder-section" id="notes" aria-labelledby="builder-notes">
@@ -339,18 +329,8 @@ export function EvaluationForm({
             <span className="builder-index" aria-hidden="true">
               4
             </span>
-            <div>
-              <h2 id="builder-notes">Review</h2>
-              <p className="meta">The quotable line, the review, and any specific thing you noticed.</p>
-            </div>
+            <h2 id="builder-notes">Review</h2>
           </header>
-          <label className="choice">
-            <input type="checkbox" name="imported" checked={imported} onChange={(event) => setImported(event.target.checked)} />
-            <span>
-              This text was written somewhere else
-              <small>Imported reviews stay marked as imported.</small>
-            </span>
-          </label>
           <label className="field">
             <span>Overall impression</span>
             <input
@@ -358,91 +338,22 @@ export function EvaluationForm({
               maxLength={80}
               value={impression}
               onChange={(event) => setImpression(event.target.value)}
-              placeholder="Two short clauses are enough."
+              placeholder="Sky Highs. Low Ground."
             />
-            <p className="meta">{impression.length}/80. One line someone could quote. Leave it blank if you would rather write the review.</p>
+            <p className="meta">{impression.length}/80. Witty one liner summation. Optional.</p>
           </label>
           <label className="field">
-            <span>Title, optional</span>
-            <input name="reviewTitle" maxLength={140} defaultValue={defaults?.reviewTitle ?? ""} />
+            <span>Personal Heading</span>
+            <input name="reviewTitle" maxLength={140} placeholder="Optional" defaultValue={defaults?.reviewTitle ?? ""} />
           </label>
           <ReviewComposer
             label="Review"
+            hideLabel
             judged={judged}
             catalog={dimensions}
             initialBody={defaults?.reviewBody ?? ""}
             initialSections={defaults?.reviewSections ?? []}
-            forcedContinuous={imported}
           />
-          <label className="field">
-            <span>Original publication, if imported</span>
-            <input name="importSourceName" maxLength={120} defaultValue={defaults?.importSourceName ?? ""} />
-          </label>
-          <label className="field">
-            <span>Source URL, if imported</span>
-            <input name="importSourceUrl" type="url" placeholder="https://" defaultValue={defaults?.importSourceUrl ?? ""} />
-          </label>
-          <fieldset>
-            <legend className="legend">A specific observation, optional</legend>
-            {observations.map((observation, index) => (
-              <div className="panel" key={index}>
-                {observations.length > 1 ? (
-                  <div className="observation-draft-actions">
-                    <button
-                      className="btn btn-secondary"
-                      type="button"
-                      onClick={() => removeObservation(setObservations, index)}
-                      aria-label={`Remove observation ${index + 1}`}
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ) : null}
-                <label className="field">
-                  <span>Topic</span>
-                  <select
-                    name="observationTopic"
-                    value={observation.topicId}
-                    onChange={(event) => updateObservation(setObservations, index, { topicId: event.target.value })}
-                  >
-                    {topics.map((topic) => (
-                      <option key={topic.id} value={topic.id}>
-                        {topic.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="field">
-                  <span>Praise or criticism</span>
-                  <select
-                    name="observationPolarity"
-                    value={observation.polarity}
-                    onChange={(event) => updateObservation(setObservations, index, { polarity: event.target.value })}
-                  >
-                    <option value="PRAISE">Praise</option>
-                    <option value="CRITICISM">Criticism</option>
-                  </select>
-                </label>
-                <label className="field">
-                  <span>What did you actually see?</span>
-                  <textarea
-                    name="observationContent"
-                    value={observation.content}
-                    onChange={(event) => updateObservation(setObservations, index, { content: event.target.value })}
-                  />
-                </label>
-              </div>
-            ))}
-            {observations.length < 8 ? (
-              <button
-                className="btn btn-secondary"
-                type="button"
-                onClick={() => setObservations((rows) => [...rows, { topicId: topics[0]?.id ?? "", polarity: "CRITICISM", content: "" }])}
-              >
-                Add another observation
-              </button>
-            ) : null}
-          </fieldset>
         </section>
         {canDraft ? (
           <div className="builder-actions">
@@ -463,7 +374,7 @@ export function EvaluationForm({
         execution={execution}
         workAxes={workAxes}
         enjoymentAxes={enjoymentAxes}
-        publishLabel={hasEvaluation && !canDraft ? "Update evaluation" : "Publish evaluation"}
+        publishLabel={hasEvaluation && !canDraft ? "Update review" : "Publish Review"}
       />
       </div>
     </form>
@@ -512,16 +423,4 @@ function scrollToStep(id: string) {
   const node = document.getElementById(id);
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   node?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-}
-
-function updateObservation(
-  setObservations: Dispatch<SetStateAction<Observation[]>>,
-  index: number,
-  patch: Partial<Observation>,
-) {
-  setObservations((rows) => rows.map((row, rowIndex) => (rowIndex === index ? { ...row, ...patch } : row)));
-}
-
-function removeObservation(setObservations: Dispatch<SetStateAction<Observation[]>>, index: number) {
-  setObservations((rows) => rows.filter((_, rowIndex) => rowIndex !== index));
 }

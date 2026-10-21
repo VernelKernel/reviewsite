@@ -1,6 +1,5 @@
 export type StanceValue = "POSITIVE" | "MIXED" | "NEGATIVE";
 export type DimensionFamilyValue = "WORK" | "ENJOYMENT";
-export type PolarityValue = "PRAISE" | "CRITICISM";
 
 export type Distribution = {
   positive: number;
@@ -22,7 +21,6 @@ export type LandscapeEvaluation = {
     sortOrder?: number;
     family?: DimensionFamilyValue;
   }[];
-  observations: { topicSlug: string; topicName: string; polarity: PolarityValue }[];
 };
 
 export type CountShare = {
@@ -38,14 +36,6 @@ export type DimensionLandscape = {
   distribution: Distribution;
 };
 
-export type TopicLandscape = {
-  slug: string;
-  name: string;
-  praise: number;
-  criticism: number;
-  total: number;
-};
-
 export type ReviewLandscape = {
   sampleSize: number;
   /** Core outlets present. Rows without an outlet name count toward this so older aggregates stay stable. */
@@ -55,7 +45,6 @@ export type ReviewLandscape = {
   dimensions: DimensionLandscape[];
   enjoymentDimensions: DimensionLandscape[];
   completions: CountShare[];
-  topics: TopicLandscape[];
   agreement: string[];
   disagreement: string[];
   sampleNote: string;
@@ -175,7 +164,6 @@ export function buildLandscape(evaluations: LandscapeEvaluation[]): ReviewLandsc
 
   const dimensionMap = new Map<string, DimensionLandscape>();
   const enjoymentMap = new Map<string, DimensionLandscape>();
-  const topicMap = new Map<string, TopicLandscape>();
 
   for (const evaluation of evaluations) {
     for (const judgment of evaluation.judgments) {
@@ -190,26 +178,12 @@ export function buildLandscape(evaluations: LandscapeEvaluation[]): ReviewLandsc
       current.distribution = addStance(current.distribution, judgment.stance);
       bucket.set(judgment.dimensionSlug, current);
     }
-    for (const observation of evaluation.observations) {
-      const current = topicMap.get(observation.topicSlug) ?? {
-        slug: observation.topicSlug,
-        name: observation.topicName,
-        praise: 0,
-        criticism: 0,
-        total: 0,
-      };
-      if (observation.polarity === "PRAISE") current.praise += 1;
-      else current.criticism += 1;
-      current.total += 1;
-      topicMap.set(observation.topicSlug, current);
-    }
   }
 
   const dimensions = [...dimensionMap.values()].sort((a, b) => b.distribution.count - a.distribution.count);
   const enjoymentDimensions = [...enjoymentMap.values()].sort(
     (a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name),
   );
-  const topics = [...topicMap.values()].sort((a, b) => b.total - a.total);
   const agreement: string[] = [];
   const disagreement: string[] = [];
   const sampleSize = evaluations.length;
@@ -258,15 +232,6 @@ export function buildLandscape(evaluations: LandscapeEvaluation[]): ReviewLandsc
       }
     }
 
-    for (const topic of topics) {
-      if (topic.criticism >= 2 && topic.criticism > topic.praise) {
-        disagreement.push(`Several reviewers mention ${topic.name.toLowerCase()} as a criticism.`);
-      }
-      if (topic.praise >= 2 && topic.praise > topic.criticism) {
-        agreement.push(`Several reviewers mention ${topic.name.toLowerCase()} as praise.`);
-      }
-    }
-
     const early = evaluations.filter((evaluation) => EARLY.has(evaluation.completion));
     const completed = evaluations.filter((evaluation) => COMPLETED.has(evaluation.completion));
     if (early.length >= 2 && completed.length >= 2) {
@@ -292,7 +257,6 @@ export function buildLandscape(evaluations: LandscapeEvaluation[]): ReviewLandsc
     dimensions,
     enjoymentDimensions,
     completions: countGroup(evaluations.map((evaluation) => ({ key: evaluation.completion, label: evaluation.completion }))),
-    topics,
     agreement: unique(agreement).slice(0, 4),
     disagreement: unique(disagreement).slice(0, 5),
     sampleNote: sampleNote(sampleSize),

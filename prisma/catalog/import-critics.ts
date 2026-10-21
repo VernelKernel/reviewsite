@@ -151,14 +151,10 @@ async function main() {
   const tracked = await prisma.trackedOutlet.findMany({ where: { lookup: "sitemap", archiveUrl: { not: null } } });
   const extraOutlets: Outlet[] = tracked.flatMap((row) => (row.archiveUrl ? [archiveOutlet(row.slug, row.name, row.host, row.archiveUrl)] : []));
 
-  const [dimensionIds, topicIds] = dryRun
-    ? [[], []]
-    : await Promise.all([
-        prisma.dimension.findMany({ select: { id: true, slug: true } }),
-        prisma.topic.findMany({ select: { id: true, slug: true } }),
-      ]);
+  const dimensionIds: { id: string; slug: string }[] = dryRun
+    ? []
+    : await prisma.dimension.findMany({ select: { id: true, slug: true } });
   const dimensionId = new Map(dimensionIds.map((dimension) => [dimension.slug, dimension.id]));
-  const topicId = new Map(topicIds.map((topic) => [topic.slug, topic.id]));
 
   let found = 0;
   let written = 0;
@@ -238,15 +234,6 @@ async function main() {
               create: reading.judgments
                 .filter((judgment) => dimensionId.has(judgment.dimension))
                 .map((judgment) => ({ dimensionId: dimensionId.get(judgment.dimension)!, stance: judgment.stance })),
-            },
-            observations: {
-              create: reading.observations
-                .filter((observation) => topicId.has(observation.topic))
-                .map((observation) => ({
-                  topicId: topicId.get(observation.topic)!,
-                  polarity: observation.polarity,
-                  content: observation.content,
-                })),
             },
           },
         });

@@ -8,7 +8,6 @@ function evaluation(overrides: Partial<LandscapeEvaluation> = {}): LandscapeEval
     execution: "POSITIVE",
     completion: "COMPLETED",
     judgments: [],
-    observations: [],
     ...overrides,
   };
 }

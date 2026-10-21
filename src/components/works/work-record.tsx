@@ -264,11 +264,6 @@ export function toReview(
       .slice()
       .sort((left, right) => left.dimension.sortOrder - right.dimension.sortOrder)
       .map((judgment) => ({ name: judgment.dimension.name, stance: judgment.stance })),
-    observations: evaluation.observations.map((observation) => ({
-      topic: observation.topic.name,
-      polarity: observation.polarity,
-      content: observation.content,
-    })),
     review: evaluation.review
       ? {
           title: evaluation.review.title,

@@ -26,7 +26,6 @@ export type ReviewCardModel = {
   population: "CRITIC" | "AUDIENCE";
   reviewedOn: Date | null;
   judgments: { name: string; stance: string }[];
-  observations: { topic: string; polarity: string; content: string }[];
   review: {
     title: string | null;
     body: string;
@@ -94,14 +93,6 @@ export function ReviewCard({ review, linked = true }: { review: ReviewCardModel;
       ) : (
         <p className="meta">No written review. The structured judgments above are the evaluation.</p>
       )}
-      {review.observations.map((observation) => (
-        <div className="observation" key={`${observation.topic}-${observation.content}`}>
-          <strong>
-            {observation.topic} · {observation.polarity === "PRAISE" ? "Praise" : "Criticism"}
-          </strong>
-          <p>{observation.content}</p>
-        </div>
-      ))}
       {review.review?.source === "IMPORTED" ? (
         <p className="provenance">
           Imported

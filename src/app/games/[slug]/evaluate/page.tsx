@@ -50,7 +50,6 @@ export async function EvaluateScreen({
           family: dimension.family,
           description: dimension.description,
         }))}
-        topics={options.topics.map((topic) => ({ id: topic.id, name: topic.name }))}
         platforms={work.platforms.map((platform) => ({ id: platform.platform.id, name: platform.platform.name }))}
         defaults={
           user?.profile
@@ -71,20 +70,11 @@ export async function EvaluateScreen({
                     dimensionId: section.dimensionId,
                     body: section.body,
                   })) ?? [],
-                imported: existing?.review?.source === "IMPORTED",
-                importSourceName: existing?.review?.importSourceName ?? "",
-                importSourceUrl: existing?.review?.importSourceUrl ?? "",
                 judgments:
                   existing?.judgments.map((judgment) => ({
                     dimensionId: judgment.dimensionId,
                     stance: judgment.stance,
                     mattered: judgment.mattered,
-                  })) ?? [],
-                observations:
-                  existing?.observations.map((observation) => ({
-                    topicId: observation.topicId,
-                    polarity: observation.polarity,
-                    content: observation.content,
                   })) ?? [],
               }
             : null

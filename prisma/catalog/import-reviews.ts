@@ -1,5 +1,5 @@
 import { MIN_REVIEW_CHARS, REVIEWS_PER_GAME } from "../../src/lib/catalog/config";
-import { dimensions, topics } from "../seed/catalog";
+import { dimensions } from "../seed/catalog";
 import type { PrismaClient } from "../../src/generated/prisma/client";
 import { slugify } from "../../src/lib/catalog/parse";
 import {
@@ -105,9 +105,6 @@ export async function ensureEvaluationTaxonomy(prisma: PrismaClient) {
       create: dimension,
     });
   }
-  for (const [slug, name] of topics) {
-    await prisma.topic.upsert({ where: { slug }, update: { name }, create: { slug, name } });
-  }
 }
 
 export type ReviewLoadOptions = {
@@ -204,12 +201,8 @@ export async function importSteamEvaluations(
     console.error(`Could not read reviews for ${input.title}: ${error instanceof Error ? error.message : "request failed"}`);
     return 0;
   }
-  const [dimensionIds, topicIds] = await Promise.all([
-    prisma.dimension.findMany({ select: { id: true, slug: true } }),
-    prisma.topic.findMany({ select: { id: true, slug: true } }),
-  ]);
+  const dimensionIds = await prisma.dimension.findMany({ select: { id: true, slug: true } });
   const dimensionId = new Map(dimensionIds.map((dimension) => [dimension.slug, dimension.id]));
-  const topicId = new Map(topicIds.map((topic) => [topic.slug, topic.id]));
   let imported = 0;
 
   for (const review of selected) {
@@ -255,15 +248,6 @@ export async function importSteamEvaluations(
             create: reading.judgments
               .filter((judgment) => dimensionId.has(judgment.dimension))
               .map((judgment) => ({ dimensionId: dimensionId.get(judgment.dimension)!, stance: judgment.stance })),
-          },
-          observations: {
-            create: reading.observations
-              .filter((observation) => topicId.has(observation.topic))
-              .map((observation) => ({
-                topicId: topicId.get(observation.topic)!,
-                polarity: observation.polarity,
-                content: observation.content,
-              })),
           },
         },
       });

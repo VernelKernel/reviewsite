@@ -8,7 +8,6 @@ export async function clearDatabase(prisma: PrismaClient) {
   await prisma.steamReception.deleteMany();
   await prisma.workTag.deleteMany();
   await prisma.report.deleteMany();
-  await prisma.observation.deleteMany();
   await prisma.evaluationJudgment.deleteMany();
   await prisma.review.deleteMany();
   await prisma.evaluation.deleteMany();
@@ -28,7 +27,6 @@ export async function clearDatabase(prisma: PrismaClient) {
   await prisma.authenticationIdentity.deleteMany();
   await prisma.user.deleteMany();
   await prisma.dimension.deleteMany();
-  await prisma.topic.deleteMany();
   await prisma.tag.deleteMany();
   await prisma.genre.deleteMany();
   await prisma.platform.deleteMany();

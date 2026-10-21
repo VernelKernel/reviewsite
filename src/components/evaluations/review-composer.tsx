@@ -12,7 +12,6 @@ export function ReviewComposer({
   catalog,
   initialBody,
   initialSections,
-  forcedContinuous = false,
   hideLabel = false,
   maxLength = 20000,
 }: {
@@ -21,7 +20,6 @@ export function ReviewComposer({
   catalog: { id: string; name: string }[];
   initialBody: string;
   initialSections: StoredSection[];
-  forcedContinuous?: boolean;
   hideLabel?: boolean;
   maxLength?: number;
 }) {
@@ -34,34 +32,13 @@ export function ReviewComposer({
   const snapshot = useRef<{ opening: string; blocks: SectionBlock[] } | null>(
     seeded ? { opening: seeded.opening, blocks: seeded.blocks } : null,
   );
-  const forcing = useRef(false);
-  const openingRef = useRef(opening);
-  const blocksRef = useRef(blocks);
-  openingRef.current = opening;
-  blocksRef.current = blocks;
 
   useEffect(() => {
-    if (mode !== "sections" || forcedContinuous) return;
+    if (mode !== "sections") return;
     setBlocks((current) => syncSectionBlocks(current, judged.map((item) => item.id)));
-  }, [mode, forcedContinuous, judged]);
+  }, [mode, judged]);
 
-  useEffect(() => {
-    if (forcedContinuous) {
-      if (forcing.current) return;
-      forcing.current = true;
-      if (mode === "sections") {
-        snapshot.current = { opening: openingRef.current, blocks: blocksRef.current };
-        setContinuous(flattenSections([{ body: openingRef.current }, ...blocksRef.current]));
-        setContinuousDirty(false);
-      }
-      return;
-    }
-    if (!forcing.current) return;
-    forcing.current = false;
-    if (continuousDirty) setMode("continuous");
-  }, [forcedContinuous, continuousDirty, mode]);
-
-  const showSections = mode === "sections" && !forcedContinuous;
+  const showSections = mode === "sections";
   const names = new Map(catalog.map((dimension) => [dimension.id, dimension.name]));
   for (const item of judged) names.set(item.id, item.name);
   const stanceFor = new Map(judged.map((item) => [item.id, item.stance]));
@@ -100,16 +77,14 @@ export function ReviewComposer({
     <div className="review-composer">
       <div className="review-composer-head">
         {hideLabel ? null : <span>{label}</span>}
-        {forcedContinuous ? null : (
-          <div className="shape-segment" role="radiogroup" aria-label="How this review is written">
-            <button type="button" aria-checked={mode === "continuous"} onClick={() => choose("continuous")}>
-              Continuous
-            </button>
-            <button type="button" aria-checked={mode === "sections"} onClick={() => choose("sections")}>
-              By dimension
-            </button>
-          </div>
-        )}
+        <div className="shape-segment" role="radiogroup" aria-label="How this review is written">
+          <button type="button" aria-checked={mode === "continuous"} onClick={() => choose("continuous")}>
+            Continuous
+          </button>
+          <button type="button" aria-checked={mode === "sections"} onClick={() => choose("sections")}>
+            By dimension
+          </button>
+        </div>
       </div>
       {showSections ? (
         <div className="review-stack">

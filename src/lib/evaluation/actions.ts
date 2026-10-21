@@ -31,24 +31,17 @@ export async function saveEvaluation(
       include: { platforms: true },
     });
     if (!work || work.status === "ARCHIVED" || work.status === "DRAFT") {
-      return { error: "That work is not open for evaluation." };
+      return { error: "That work is not open for review." };
     }
 
     if (input.platformId && !work.platforms.some((platform) => platform.platformId === input.platformId)) {
       return { error: "Choose a platform this work was actually evaluated on." };
     }
 
-    const [dimensions, topics] = await Promise.all([
-      prisma.dimension.findMany({ where: { appliesTo: { has: work.workType } } }),
-      prisma.topic.findMany(),
-    ]);
+    const dimensions = await prisma.dimension.findMany({ where: { appliesTo: { has: work.workType } } });
     const dimensionIds = new Set(dimensions.map((dimension) => dimension.id));
-    const topicIds = new Set(topics.map((topic) => topic.id));
     if (input.judgments.some((judgment) => !dimensionIds.has(judgment.dimensionId))) {
       return { error: "One of those dimensions does not apply to this work." };
-    }
-    if (input.observations.some((observation) => !topicIds.has(observation.topicId))) {
-      return { error: "One of those topics is not in the catalog." };
     }
     if (input.sections.some((section) => section.dimensionId && !dimensionIds.has(section.dimensionId))) {
       return { error: "One of those dimensions does not apply to this work." };
@@ -59,10 +52,10 @@ export async function saveEvaluation(
       where: { reviewerId_workId: { reviewerId: reviewer.id, workId: work.id } },
     });
     if (existing && (existing.status === "HIDDEN" || existing.status === "REMOVED")) {
-      return { error: "This evaluation is not open for changes." };
+      return { error: "This review is not open for changes." };
     }
     if (!publishing && existing && existing.status !== "DRAFT") {
-      return { error: "This evaluation is already published. Update it to keep it published." };
+      return { error: "This review is already published. Update it to keep it published." };
     }
 
     const status = publishing ? "PUBLISHED" : "DRAFT";
@@ -104,18 +97,6 @@ export async function saveEvaluation(
         });
       }
 
-      await tx.observation.deleteMany({ where: { evaluationId: saved.id } });
-      if (input.observations.length > 0) {
-        await tx.observation.createMany({
-          data: input.observations.map((observation) => ({
-            evaluationId: saved.id,
-            topicId: observation.topicId,
-            polarity: observation.polarity,
-            content: observation.content,
-          })),
-        });
-      }
-
       if (input.reviewBody || input.impression) {
         const review = await tx.review.upsert({
           where: { evaluationId: saved.id },
@@ -124,21 +105,21 @@ export async function saveEvaluation(
             title: input.reviewTitle ?? null,
             impression: input.impression ?? null,
             body: input.reviewBody ?? "",
-            source: input.imported ? "IMPORTED" : "INTERNAL",
-            importSourceName: input.imported ? (input.importSourceName ?? null) : null,
-            importSourceUrl: input.imported ? (input.importSourceUrl ?? null) : null,
+            source: "INTERNAL",
+            importSourceName: null,
+            importSourceUrl: null,
           },
           update: {
             title: input.reviewTitle ?? null,
             impression: input.impression ?? null,
             body: input.reviewBody ?? "",
-            source: input.imported ? "IMPORTED" : "INTERNAL",
-            importSourceName: input.imported ? (input.importSourceName ?? null) : null,
-            importSourceUrl: input.imported ? (input.importSourceUrl ?? null) : null,
+            source: "INTERNAL",
+            importSourceName: null,
+            importSourceUrl: null,
           },
         });
         await tx.reviewSection.deleteMany({ where: { reviewId: review.id } });
-        if (!input.imported && input.sections.length > 0) {
+        if (input.sections.length > 0) {
           await tx.reviewSection.createMany({
             data: input.sections.map((section, index) => ({
               reviewId: review.id,
@@ -168,6 +149,6 @@ export async function saveEvaluation(
     if (error instanceof DomainError) return { error: error.message };
     if (typeof error === "object" && error && "digest" in error) throw error;
     console.error(error);
-    return { error: publishing ? "We couldn't save this evaluation. Nothing was published." : "We couldn't save this draft. Nothing was saved." };
+    return { error: publishing ? "We couldn't save this review. Nothing was published." : "We couldn't save this draft. Nothing was saved." };
   }
 }

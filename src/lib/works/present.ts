@@ -57,7 +57,6 @@ export function toLandscapeInput(evaluation: {
     stance: LandscapeEvaluation["judgments"][number]["stance"];
     dimension: { slug: string; name: string; sortOrder?: number; family?: "WORK" | "ENJOYMENT" };
   }[];
-  observations: { polarity: LandscapeEvaluation["observations"][number]["polarity"]; topic: { slug: string; name: string } }[];
 }): LandscapeEvaluation & { population: Population } {
   return {
     population: evaluation.population === "CRITIC" ? "CRITIC" : "AUDIENCE",
@@ -71,11 +70,6 @@ export function toLandscapeInput(evaluation: {
       stance: judgment.stance,
       sortOrder: judgment.dimension.sortOrder,
       family: judgment.dimension.family === "ENJOYMENT" ? "ENJOYMENT" : "WORK",
-    })),
-    observations: evaluation.observations.map((observation) => ({
-      topicSlug: observation.topic.slug,
-      topicName: observation.topic.name,
-      polarity: observation.polarity,
     })),
   };
 }
