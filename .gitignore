@@ -12,3 +12,6 @@ next-env.d.ts
 *.tsbuildinfo
 prisma/catalog/.cache
 backups
+/test-results/
+/playwright-report/
+/blob-report/

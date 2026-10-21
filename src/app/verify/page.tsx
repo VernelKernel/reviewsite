@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import { VerifyCodeForm } from "@/components/auth/auth-forms";
 import { readChallengeEmail } from "@/lib/auth/challenge-cookie";
+import { safeReturnPath } from "@/lib/auth/return-path";
 
 export const metadata: Metadata = {
   title: "Enter code",
   description: "Enter the 6-digit code from your email to finish signing in.",
 };
 
-export default async function VerifyPage({ searchParams }: { searchParams: Promise<{ notice?: string }> }) {
-  const notice = (await searchParams).notice;
+export default async function VerifyPage({ searchParams }: { searchParams: Promise<{ notice?: string; next?: string }> }) {
+  const params = await searchParams;
+  const notice = params.notice;
+  const next = safeReturnPath(params.next);
   const email = await readChallengeEmail();
 
   return (
@@ -23,7 +26,7 @@ export default async function VerifyPage({ searchParams }: { searchParams: Promi
             ) : (
               <p className="lede">We sent a 6-digit code. Enter it here to finish.</p>
             )}
-            <VerifyCodeForm email={email} />
+            <VerifyCodeForm email={email} next={next} />
           </>
         ) : (
           <>

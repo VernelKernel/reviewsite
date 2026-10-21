@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
-import { reviewHref, reviewerCompareHref, reviewerHref, workHref } from "@/lib/domain/labels";
+import { evaluateHref, reviewHref, reviewerCompareHref, reviewerHref, workHref } from "@/lib/domain/labels";
 
 export const metadata: Metadata = {
   title: "Your account",
-  description: "Your Frame account, public reviewer page, and published evaluations.",
+  description: "Your Frame account, public reviewer page, and reviews.",
 };
 
 function isEditor(role: string) {
@@ -17,20 +17,52 @@ export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const [evaluations, followed] = await Promise.all([
+  const [evaluations, intakes, followed] = await Promise.all([
     user.profile
       ? prisma.evaluation.findMany({
-          where: { reviewerId: user.profile.id, status: "PUBLISHED" },
-          orderBy: { reviewedOn: "desc" },
-          select: { id: true, work: { select: { title: true, slug: true, workType: true } } },
+          where: { reviewerId: user.profile.id, status: { in: ["DRAFT", "PUBLISHED"] } },
+          orderBy: { updatedAt: "desc" },
+          select: {
+            id: true,
+            status: true,
+            updatedAt: true,
+            work: { select: { title: true, slug: true, workType: true } },
+          },
         })
       : Promise.resolve([]),
+    prisma.intake.findMany({
+      where: { userId: user.id, evaluationId: null },
+      orderBy: { updatedAt: "desc" },
+      select: { id: true, rawTitle: true, draft: true, updatedAt: true },
+    }),
     prisma.followedReviewer.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
       include: { reviewer: { select: { slug: true, displayName: true } } },
     }),
   ]);
+
+  const reviews = [
+    ...evaluations.map((evaluation) => ({
+      id: evaluation.id,
+      title: evaluation.work.title,
+      state: evaluation.status === "DRAFT" ? "Draft" : "Published",
+      href:
+        evaluation.status === "DRAFT"
+          ? evaluateHref(evaluation.work.workType, evaluation.work.slug)
+          : user.profile
+            ? reviewHref(evaluation.work.workType, evaluation.work.slug, user.profile.slug)
+            : workHref(evaluation.work.workType, evaluation.work.slug),
+      updatedAt: evaluation.updatedAt.getTime(),
+    })),
+    ...intakes.map((intake) => ({
+      id: intake.id,
+      title: intake.rawTitle,
+      state: intake.draft ? "Draft" : "Published",
+      href: `/review/${intake.id}`,
+      updatedAt: intake.updatedAt.getTime(),
+    })),
+  ].sort((left, right) => right.updatedAt - left.updatedAt);
 
   return (
     <main className="page shell">
@@ -49,21 +81,19 @@ export default async function DashboardPage() {
           </a>
         </div>
 
-        <section className="account-section" aria-labelledby="evaluations-heading">
-          <h2 id="evaluations-heading">Published evaluations</h2>
-          {evaluations.length === 0 || !user.profile ? (
-            <p className="empty">No published evaluations yet.</p>
+        <section className="account-section" aria-labelledby="reviews-heading">
+          <h2 id="reviews-heading">Reviews</h2>
+          {reviews.length === 0 ? (
+            <p className="empty">No reviews yet.</p>
           ) : (
             <div className="profile-list">
-              {evaluations.map((evaluation) => (
-                <article className="review-card" key={evaluation.id}>
+              {reviews.map((review) => (
+                <article className="review-card account-review" key={review.id}>
                   <header>
-                    <a className="reviewer-link" href={workHref(evaluation.work.workType, evaluation.work.slug)}>
-                      {evaluation.work.title}
+                    <a className="reviewer-link" href={review.href}>
+                      {review.title}
                     </a>
-                    <a className="quiet-link" href={reviewHref(evaluation.work.workType, evaluation.work.slug, user.profile!.slug)}>
-                      Evaluation
-                    </a>
+                    <span className="meta">{review.state}</span>
                   </header>
                 </article>
               ))}

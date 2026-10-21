@@ -1,16 +1,40 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { requestVerification, resendVerification, type IntakeActionState } from "@/lib/intake/actions";
 
-export function IdentityGate({ intakeId, emailPending }: { intakeId: string; emailPending: boolean }) {
+export function IdentityGate({
+  intakeId,
+  emailPending,
+  devLink,
+}: {
+  intakeId: string;
+  emailPending: boolean;
+  devLink?: string | null;
+}) {
   const request = requestVerification.bind(null, intakeId);
   const [state, action] = useActionState(request, {} as IntakeActionState);
   const [resend, resendAction] = useActionState(async (_previous: IntakeActionState) => resendVerification(intakeId), {} as IntakeActionState);
   const notice = state.error ?? resend.error;
   const sent = state.sent || resend.sent;
-  const devLink = state.devLink ?? resend.devLink;
+  const [cookieLink, setCookieLink] = useState<string | null>(null);
+  useEffect(() => {
+    const read = () => {
+      const row = document.cookie.split("; ").find((part) => part.startsWith("frame_dev_verify="));
+      if (!row) return;
+      const raw = row.slice("frame_dev_verify=".length);
+      try {
+        setCookieLink(decodeURIComponent(raw));
+      } catch {
+        setCookieLink(raw);
+      }
+    };
+    read();
+    const timer = window.setTimeout(read, 250);
+    return () => window.clearTimeout(timer);
+  }, [emailPending, sent]);
+  const link = state.devLink ?? resend.devLink ?? devLink ?? cookieLink;
 
   return (
     <section className="panel" aria-labelledby="verify-heading">
@@ -24,9 +48,9 @@ export function IdentityGate({ intakeId, emailPending }: { intakeId: string; ema
         </p>
       ) : null}
       {sent ? <p className="meta">Check your email for the verification link.</p> : null}
-      {devLink ? (
+      {link ? (
         <p className="meta">
-          Development link: <a href={devLink}>{devLink}</a>
+          Development link: <a href={link}>{link}</a>
         </p>
       ) : null}
       {emailPending || sent ? (

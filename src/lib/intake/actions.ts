@@ -1,10 +1,11 @@
 "use server";
 
 import { randomBytes } from "node:crypto";
-import { headers } from "next/headers";
+import { revalidatePath } from "next/cache";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { Prisma } from "@/generated/prisma/client";
-import { hashToken, ensureReviewerProfile, openSession } from "../auth/session";
+import { hashToken, ensureReviewerProfile, getCurrentUser, openSession } from "../auth/session";
 import { prisma } from "../db/client";
 import { DomainError } from "../domain/relations";
 import { assertSubmissionRate } from "../evaluation/rate-limit";
@@ -15,6 +16,7 @@ import { normalizeTitle } from "./normalize";
 import { isMattered, type MatteredName } from "../evaluations/mattered";
 import { completionSchema, ownershipSchema } from "../validation/evaluation";
 import { flattenSections, readSectionFields, readStoredSections } from "../reviews/sections";
+import { readJudgments } from "./judgments";
 import { resolveIntake } from "./resolve";
 
 export type IntakeActionState = { error?: string; sent?: boolean; devLink?: string };
@@ -35,34 +37,38 @@ export async function createIntake(_previous: IntakeActionState, formData: FormD
   const normalizedTitle = normalizeTitle(rawTitle);
   if (normalizedTitle.length < 2) return { error: "Enter the title of the work." };
 
+  const drafting = formData.get("intent") === "draft";
   const enjoyment = stanceOf(formData.get("enjoyment"));
   const execution = stanceOf(formData.get("execution"));
-  if (!enjoyment || !execution) return { error: "Answer enjoyment and execution." };
+  if (!drafting && (!enjoyment || !execution)) return { error: "Answer enjoyment and execution." };
 
-  const rawPlatform = optionalText(formData.get("platform"), CONTEXT_MAX);
+  const platformText = optionalText(formData.get("platform"), CONTEXT_MAX);
   const genreValues = formData
     .getAll("genre")
     .map((value) => String(value).trim())
-    .filter(Boolean);
+    .filter((value) => Boolean(value) && value !== "Not specified");
   const rawGenre = genreValues.join(", ");
   const sectional = formData.get("reviewMode") === "sections";
   const reviewSections = sectional ? readSectionFields(formData) : [];
   const reviewBody = sectional ? flattenSections(reviewSections) || null : optionalText(formData.get("reviewBody"), NOTE_MAX);
-  if (reviewBody === undefined || rawPlatform === undefined || rawGenre === undefined) {
+  if (reviewBody === undefined || platformText === undefined || rawGenre === undefined) {
     return { error: "One of those fields is too long." };
   }
-  if (!rawPlatform || genreValues.length === 0 || rawGenre.length > 240) return { error: "Choose a platform and genre." };
+  const rawPlatform = platformText && platformText !== "Not specified" ? platformText : null;
+  if (!drafting && (!rawPlatform || genreValues.length === 0 || rawGenre.length > 240)) return { error: "Choose a platform and genre." };
+  if (rawGenre.length > 240) return { error: "Choose a platform and genre." };
   const completion = completionSchema.safeParse(formData.get("completion"));
   if (!completion.success) return { error: "Choose how much of the work you experienced." };
   const ownershipText = String(formData.get("ownership") ?? "").trim();
   const ownership = ownershipText ? ownershipSchema.safeParse(ownershipText) : null;
   if (ownership && !ownership.success) return { error: "Choose how you had access." };
   const [platformMatch, genreCatalog] = await Promise.all([
-    prisma.platform.findFirst({ where: { name: rawPlatform }, select: { id: true } }),
-    prisma.genre.findMany({ select: { name: true } }),
+    rawPlatform ? prisma.platform.findFirst({ where: { name: rawPlatform }, select: { id: true } }) : Promise.resolve(null),
+    genreValues.length > 0 ? prisma.genre.findMany({ select: { name: true } }) : Promise.resolve([]),
   ]);
   const knownGenres = new Set(genreCatalog.map((genre) => genre.name));
-  if (!platformMatch || genreValues.some((name) => !knownGenres.has(name))) return { error: "Choose a platform and genre." };
+  if (rawPlatform && !platformMatch) return { error: "Choose a platform and genre." };
+  if (genreValues.some((name) => !knownGenres.has(name))) return { error: "Choose a platform and genre." };
   if (reviewBody && reviewBody.length > NOTE_MAX) return { error: "One of those fields is too long." };
 
   try {
@@ -91,10 +97,11 @@ export async function createIntake(_previous: IntakeActionState, formData: FormD
   const workIds = new Set(dimensions.filter((dimension) => dimension.family === "WORK").map((dimension) => dimension.id));
   const judgedEnjoyment = judgments.filter((judgment) => enjoymentIds.has(judgment.dimensionId)).length;
   const judgedWork = judgments.filter((judgment) => workIds.has(judgment.dimensionId)).length;
-  if (judgedEnjoyment < 3 || judgedWork < 3) {
+  if (!drafting && (judgedEnjoyment < 3 || judgedWork < 3)) {
     return { error: "At least three dimensions are required." };
   }
 
+  const user = await getCurrentUser();
   const secret = randomBytes(32).toString("base64url");
   const intake = await prisma.intake.create({
     data: {
@@ -103,19 +110,29 @@ export async function createIntake(_previous: IntakeActionState, formData: FormD
       rawTitle,
       normalizedTitle,
       rawPlatform,
-      rawGenre,
+      rawGenre: rawGenre || null,
       enjoyment,
       execution,
+      draft: drafting,
       completion: completion.data,
       ownership: ownership?.data ?? null,
       reviewBody,
       reviewSections: readStoredSections(reviewSections) as Prisma.InputJsonValue,
       judgments: judgments as Prisma.InputJsonValue,
-      expiresAt: new Date(Date.now() + ANONYMOUS_MS),
+      userId: user?.id ?? null,
+      expiresAt: user ? null : new Date(Date.now() + ANONYMOUS_MS),
     },
     select: { id: true },
   });
   await writeIntakeSecret(secret);
+  if (user?.emailVerified && !drafting) {
+    if (!user.profile) await ensureReviewerProfile(user.id, reviewerName(user.email));
+    try {
+      await resolveIntake(intake.id);
+    } catch (error) {
+      console.error(`Resolve after publish failed: ${error instanceof Error ? error.message : "resolve failed"}`);
+    }
+  }
   redirect(`/review/${intake.id}`);
 }
 
@@ -156,6 +173,7 @@ export async function requestVerification(
 
   const issued = await issueToken(user.id, intake.id);
   const url = verificationUrl(issued);
+  await rememberDevVerificationLink(url);
   let mail: { sent: boolean; logged: boolean };
   try {
     mail = await sendVerificationEmail({ to: email, url });
@@ -179,6 +197,7 @@ export async function resendVerification(intakeId: string): Promise<IntakeAction
   }
   const issued = await issueToken(intake.user.id, intake.id);
   const url = verificationUrl(issued);
+  await rememberDevVerificationLink(url);
   try {
     const mail = await sendVerificationEmail({ to: intake.user.email, url });
     if (process.env.NODE_ENV !== "production") return { sent: true, devLink: url };
@@ -243,6 +262,12 @@ export async function resendFromToken(_previous: IntakeActionState, formData: Fo
   }
 }
 
+async function rememberDevVerificationLink(url: string) {
+  if (process.env.NODE_ENV === "production") return;
+  const store = await cookies();
+  store.set("frame_dev_verify", url, { httpOnly: false, sameSite: "lax", path: "/", maxAge: 600 });
+}
+
 async function issueToken(userId: string, intakeId: string): Promise<string> {
   const raw = randomBytes(32).toString("base64url");
   await prisma.verificationToken.create({
@@ -254,6 +279,42 @@ async function issueToken(userId: string, intakeId: string): Promise<string> {
     },
   });
   return raw;
+}
+
+export async function publishIntakeDraft(intakeId: string, _previous: IntakeActionState): Promise<IntakeActionState> {
+  const intake = await loadOwnedIntake(intakeId);
+  const user = await getCurrentUser();
+  if (!intake?.draft || !user || intake.userId !== user.id) return { error: "This draft could not be found." };
+  if (!user.emailVerified) return { error: "Verify your email before publishing." };
+  if (!intake.enjoyment || !intake.execution || !intake.rawPlatform || !intake.rawGenre) {
+    return { error: "Finish the review before publishing." };
+  }
+
+  const dimensions = await prisma.dimension.findMany({
+    where: { appliesTo: { has: intake.workType } },
+    select: { id: true, family: true },
+  });
+  const enjoymentIds = new Set(dimensions.filter((dimension) => dimension.family === "ENJOYMENT").map((dimension) => dimension.id));
+  const workIds = new Set(dimensions.filter((dimension) => dimension.family === "WORK").map((dimension) => dimension.id));
+  const judgments = readJudgments(intake.judgments);
+  const judgedEnjoyment = judgments.filter((judgment) => enjoymentIds.has(judgment.dimensionId)).length;
+  const judgedWork = judgments.filter((judgment) => workIds.has(judgment.dimensionId)).length;
+  if (judgedEnjoyment < 3 || judgedWork < 3) return { error: "At least three dimensions are required." };
+
+  await prisma.intake.update({ where: { id: intake.id }, data: { draft: false } });
+  try {
+    await resolveIntake(intake.id);
+  } catch (error) {
+    console.error(`Resolve after publishing a draft failed: ${error instanceof Error ? error.message : "resolve failed"}`);
+  }
+  revalidatePath("/dashboard");
+  revalidatePath(`/review/${intake.id}`);
+  redirect(`/review/${intake.id}`);
+}
+
+function reviewerName(email: string): string {
+  const local = email.split("@")[0]?.replace(/[^a-zA-Z0-9]+/g, " ").trim() ?? "";
+  return local.length >= 2 ? local.slice(0, 48) : "Reviewer";
 }
 
 function stanceOf(value: FormDataEntryValue | null): "POSITIVE" | "MIXED" | "NEGATIVE" | null {

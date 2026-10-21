@@ -9,8 +9,6 @@ function form(values: Record<string, string>, extras?: (data: FormData) => void)
 }
 
 const base = {
-  email: "ada@example.com",
-  displayName: "Ada",
   enjoyment: "POSITIVE",
   execution: "NEGATIVE",
   completion: "COMPLETED",

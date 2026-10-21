@@ -94,22 +94,3 @@ export async function closeSession() {
   }
   store.set(SESSION_COOKIE, "", sessionCookieOptions(0));
 }
-
-export async function establishReviewer(input: { email: string; displayName: string }) {
-  const email = input.email.trim().toLowerCase();
-  const existing = await prisma.user.findUnique({ where: { email } });
-  const user =
-    existing ??
-    (await prisma.user.create({
-      data: {
-        email,
-        identities: {
-          create: { provider: "EMAIL", providerAccountId: email },
-        },
-      },
-    }));
-
-  const profile = await ensureReviewerProfile(user.id, input.displayName);
-  await openSession(user.id);
-  return profile;
-}

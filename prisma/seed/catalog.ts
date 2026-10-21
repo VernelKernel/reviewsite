@@ -189,23 +189,6 @@ export type WorkSeed = {
 
 export const works: WorkSeed[] = [
   {
-    slug: "hades",
-    title: "Hades",
-    workType: "GAME",
-    synopsis: "A roguelike in which Zagreus fights toward the surface, and the story advances in the conversations between runs.",
-    genres: ["action", "roguelike"],
-    platforms: ["pc", "switch"],
-    creators: [
-      { slug: "supergiant-games", name: "Supergiant Games", role: "DEVELOPER" },
-      { slug: "supergiant-games", name: "Supergiant Games", role: "PUBLISHER" },
-    ],
-    releases: [
-      { platform: "pc", date: "2020-09-17" },
-      { platform: "switch", date: "2020-09-17" },
-    ],
-    art: { bg: "#2A1214", ink: "#F2E4C8", accent: "#C45A3C", mute: "#6E2430", motif: "ring" },
-  },
-  {
     slug: "hades-ii",
     title: "Hades II",
     workType: "GAME",
@@ -404,4 +387,4 @@ export const works: WorkSeed[] = [
   },
 ];
 
-export const relations = [{ from: "hades-ii", to: "hades", kind: "SEQUEL" as const }];
+export const relations: { from: string; to: string; kind: "SEQUEL" }[] = [];

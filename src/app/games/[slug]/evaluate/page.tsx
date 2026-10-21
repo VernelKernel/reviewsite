@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EvaluationForm } from "@/components/evaluations/evaluation-form";
 import { getCurrentUser } from "@/lib/auth/session";
+import { evaluateHref } from "@/lib/domain/labels";
 import { workArt } from "@/lib/works/present";
 import { evaluationFormOptions, getWork, reviewerEvaluation } from "@/lib/works/queries";
 
@@ -51,11 +52,11 @@ export async function EvaluateScreen({
           description: dimension.description,
         }))}
         platforms={work.platforms.map((platform) => ({ id: platform.platform.id, name: platform.platform.name }))}
+        signedIn={Boolean(user)}
+        returnPath={evaluateHref(workType, slug)}
         defaults={
           user?.profile
             ? {
-                email: user.email,
-                displayName: user.profile.displayName,
                 enjoyment: existing?.enjoyment ?? "",
                 execution: existing?.execution ?? "",
                 completion: existing?.completion ?? "SUBSTANTIAL",

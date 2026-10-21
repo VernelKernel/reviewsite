@@ -38,6 +38,8 @@ export function EvaluationForm({
   hasEvaluation,
   dimensions,
   platforms,
+  signedIn,
+  returnPath,
   defaults,
 }: {
   workType: WorkType;
@@ -49,9 +51,9 @@ export function EvaluationForm({
   hasEvaluation: boolean;
   dimensions: DimensionOption[];
   platforms: Option[];
+  signedIn: boolean;
+  returnPath: string;
   defaults: {
-    email: string;
-    displayName: string;
     enjoyment: string;
     execution: string;
     completion: string;
@@ -183,7 +185,7 @@ export function EvaluationForm({
         ) : null}
         {state.draftSaved ? (
           <p className="builder-status" id="builder-feedback" role="status">
-            Draft saved. It stays off the work page until you publish.
+            Draft saved. It is listed on your account and stays off the work page until you publish.
           </p>
         ) : null}
         <section className="panel builder-section" id="basics" aria-labelledby="builder-basics">
@@ -254,19 +256,14 @@ export function EvaluationForm({
               </select>
             </label>
           </div>
-          <fieldset>
-            <p className="meta">An email keeps this review attached to you on this server. It is not a verified login.</p>
-            <div className="builder-fields">
-              <label className="field">
-                <span>Display name</span>
-                <input name="displayName" required minLength={2} maxLength={48} defaultValue={defaults?.displayName ?? ""} autoComplete="name" />
-              </label>
-              <label className="field">
-                <span>Email</span>
-                <input name="email" type="email" required autoComplete="email" defaultValue={defaults?.email ?? ""} />
-              </label>
-            </div>
-          </fieldset>
+          {signedIn ? null : (
+            <p className="meta">
+              <a href={`/login?next=${encodeURIComponent(returnPath)}`}>Sign in</a>
+              {" or "}
+              <a href={`/signup?next=${encodeURIComponent(returnPath)}`}>create an account</a>
+              {" to save this review."}
+            </p>
+          )}
         </section>
 
         <section className="panel builder-section" id="enjoyment" aria-labelledby="builder-enjoyment">

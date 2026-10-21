@@ -662,8 +662,9 @@ model Intake {
   normalizedTitle String
   rawPlatform     String?
   rawGenre        String?
-  enjoyment       Stance
-  execution       Stance
+  enjoyment       Stance?
+  execution       Stance?
+  draft           Boolean           @default(false)
   completion      CompletionStatus  @default(SUBSTANTIAL)
   ownership       OwnershipContext?
   reviewBody      String?

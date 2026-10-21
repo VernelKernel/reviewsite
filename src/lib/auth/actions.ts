@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { DomainError } from "../domain/relations";
 import { isValidEmail, normalizeEmail } from "./email";
 import { beginLogin, beginSignup, confirmLoginCode, resendLoginCode } from "./login-code";
+import { safeReturnPath } from "./return-path";
 import { closeSession } from "./session";
 
 export type AuthActionState = { error?: string; unknownEmail?: boolean };
@@ -22,7 +23,7 @@ export async function requestSignup(_previous: AuthActionState, formData: FormDa
 
   try {
     const result = await beginSignup(email, displayName);
-    redirect(result.existing ? "/verify?notice=existing" : "/verify");
+    redirect(verifyPath(result.existing ? "existing" : null, String(formData.get("next") ?? "")));
   } catch (error) {
     if (isRedirect(error)) throw error;
     return failure(error);
@@ -38,7 +39,7 @@ export async function requestLogin(_previous: AuthActionState, formData: FormDat
     if (result === "missing") {
       return { error: "No account for that email.", unknownEmail: true };
     }
-    redirect("/verify");
+    redirect(verifyPath(null, String(formData.get("next") ?? "")));
   } catch (error) {
     if (isRedirect(error)) throw error;
     return failure(error);
@@ -48,7 +49,7 @@ export async function requestLogin(_previous: AuthActionState, formData: FormDat
 export async function submitLoginCode(_previous: AuthActionState, formData: FormData): Promise<AuthActionState> {
   try {
     await confirmLoginCode(String(formData.get("code") ?? ""));
-    redirect("/dashboard");
+    redirect(safeReturnPath(String(formData.get("next") ?? "")) ?? "/dashboard");
   } catch (error) {
     if (isRedirect(error)) throw error;
     if (error instanceof DomainError) return { error: error.message };
@@ -69,6 +70,15 @@ export async function resendLoginCodeAction(_previous: AuthActionState, _formDat
 export async function logout() {
   await closeSession();
   redirect("/");
+}
+
+function verifyPath(notice: string | null, nextValue: string): string {
+  const params = new URLSearchParams();
+  if (notice) params.set("notice", notice);
+  const next = safeReturnPath(nextValue);
+  if (next) params.set("next", next);
+  const query = params.toString();
+  return query ? `/verify?${query}` : "/verify";
 }
 
 function isRedirect(error: unknown): boolean {

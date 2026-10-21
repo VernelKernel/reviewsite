@@ -4180,6 +4180,10 @@ body:has(.mockup-sheet) .page {
   font-size: var(--text-h3);
 }
 
+.account-review header {
+  margin-bottom: 0;
+}
+
 .nav-drawer-root {
   position: fixed;
   inset: 0;

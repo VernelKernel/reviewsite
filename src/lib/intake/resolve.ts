@@ -31,7 +31,7 @@ export async function resolvePendingIntakes() {
   if (removed.count > 0) console.info(`Removed ${removed.count} expired anonymous intakes.`);
 
   const rows = await prisma.intake.findMany({
-    where: { matchStatus: { in: ["PENDING", "AMBIGUOUS"] }, user: { emailVerified: { not: null } } },
+    where: { draft: false, matchStatus: { in: ["PENDING", "AMBIGUOUS"] }, user: { emailVerified: { not: null } } },
     select: { id: true },
   });
   for (const row of rows) {
@@ -48,10 +48,16 @@ export async function resolveIntake(intakeId: string): Promise<void> {
     where: { id: intakeId },
     include: { user: { include: { profile: true } } },
   });
-  if (!intake?.user?.emailVerified || !intake.user.profile || !intake.userId) return;
+  if (!intake?.user?.emailVerified || !intake.user.profile || !intake.userId || intake.draft) return;
+  if (!intake.enjoyment || !intake.execution) return;
   if (intake.matchStatus === "MATCHED" || intake.matchStatus === "FAILED" || intake.matchStatus === "UNMATCHED") return;
 
-  const resolvable: Resolvable = { ...intake, user: { profile: intake.user.profile } };
+  const resolvable: Resolvable = {
+    ...intake,
+    enjoyment: intake.enjoyment,
+    execution: intake.execution,
+    user: { profile: intake.user.profile },
+  };
   let local: TitleCandidate[] = [];
   try {
     local = await findLocalCandidates(intake.workType, intake.normalizedTitle);

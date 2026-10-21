@@ -40,8 +40,6 @@ const emptyToUndefined = (value: unknown) => {
 };
 
 const evaluationShape = {
-  email: z.string().trim().email("Enter an email so this review can stay attached to you."),
-  displayName: z.string().trim().min(2, "Use a name of at least 2 characters.").max(48),
   enjoyment: stanceSchema,
   execution: stanceSchema,
   completion: completionSchema,
@@ -120,8 +118,6 @@ export function parseEvaluationForm(formData: FormData) {
   const sections = sectional ? readSectionFields(formData) : [];
   const flattened = sectional ? flattenSections(sections) : undefined;
   const parsed = schema.safeParse({
-    email: formData.get("email"),
-    displayName: formData.get("displayName"),
     enjoyment: formData.get("enjoyment"),
     execution: formData.get("execution"),
     completion: formData.get("completion"),

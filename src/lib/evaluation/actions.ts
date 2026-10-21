@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { WorkType } from "@/generated/prisma/client";
-import { establishReviewer } from "../auth/session";
+import { ensureReviewerProfile, getCurrentUser } from "../auth/session";
 import { prisma } from "../db/client";
 import { DomainError } from "../domain/relations";
 import { evaluateHref, reviewHref, workHref } from "../domain/labels";
@@ -24,7 +24,10 @@ export async function saveEvaluation(
 
   try {
     const input = parsed.data;
-    assertSubmissionRate(input.email.toLowerCase());
+    const user = await getCurrentUser();
+    if (!user) redirect(`/login?next=${encodeURIComponent(evaluateHref(workType, slug))}`);
+    assertSubmissionRate(`user:${user.id}`);
+    const reviewer = user.profile ?? (await ensureReviewerProfile(user.id, reviewerName(user.email)));
 
     const work = await prisma.work.findUnique({
       where: { workType_slug: { workType, slug } },
@@ -47,7 +50,6 @@ export async function saveEvaluation(
       return { error: "One of those dimensions does not apply to this work." };
     }
 
-    const reviewer = await establishReviewer({ email: input.email, displayName: input.displayName });
     const existing = await prisma.evaluation.findUnique({
       where: { reviewerId_workId: { reviewerId: reviewer.id, workId: work.id } },
     });
@@ -137,6 +139,7 @@ export async function saveEvaluation(
     });
 
     revalidatePath(evaluateHref(work.workType, work.slug));
+    revalidatePath("/dashboard");
     if (!publishing) return { draftSaved: true };
 
     revalidatePath(workHref(work.workType, work.slug));
@@ -151,4 +154,9 @@ export async function saveEvaluation(
     console.error(error);
     return { error: publishing ? "We couldn't save this review. Nothing was published." : "We couldn't save this draft. Nothing was saved." };
   }
+}
+
+function reviewerName(email: string): string {
+  const local = email.split("@")[0]?.replace(/[^a-zA-Z0-9]+/g, " ").trim() ?? "";
+  return local.length >= 2 ? local.slice(0, 48) : "Reviewer";
 }

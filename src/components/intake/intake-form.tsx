@@ -1,11 +1,11 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
-import { useFormStatus } from "react-dom";
 import type { WorkType } from "@/generated/prisma/client";
 import { DimensionChoices, type DimensionOption } from "@/components/evaluations/dimension-fields";
 import { DimensionReading } from "@/components/evaluations/dimension-reading";
 import { EvaluationGraph } from "@/components/evaluations/evaluation-graph";
+import { IntentButton } from "@/components/evaluations/evaluation-preview";
 import { StancePills } from "@/components/evaluations/stance-pills";
 import { ReviewComposer } from "@/components/evaluations/review-composer";
 import type { PersonalAxis } from "@/components/intake/personal-shape";
@@ -117,6 +117,19 @@ export function IntakeForm({
   const showRequirements = chartFeedback !== null && requirementMessage !== null;
 
   function onCreateChart(event: FormEvent<HTMLFormElement>) {
+    const submitter = (event.nativeEvent as SubmitEvent).submitter;
+    const intent = submitter instanceof HTMLButtonElement ? submitter.value : "publish";
+    if (intent === "draft") {
+      if (title.trim().length >= 2) {
+        setChartFeedback(null);
+        return;
+      }
+      event.preventDefault();
+      setChartFeedback("Enter the title of the work.");
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      document.getElementById("basics")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+      return;
+    }
     if (!requirementMessage) {
       setChartFeedback(null);
       return;
@@ -389,10 +402,11 @@ export function IntakeForm({
             <div className="builder-publish">
               {showRequirements ? (
                 <p className="form-error" id="chart-requirements" role="alert">
-                  {requirementMessage}
+                  {chartFeedback}
                 </p>
               ) : null}
-              <SeeChartButton />
+              <IntentButton intent="draft">Save draft</IntentButton>
+              <IntentButton intent="publish">Publish Review</IntentButton>
             </div>
           </div>
         </aside>
@@ -504,14 +518,5 @@ function StanceMeter({ label, stance }: { label: string; stance: PersonalAxis["s
         <span className={stanceClass(stance)}>{stanceLabel[stance]}</span>
       </div>
     </div>
-  );
-}
-
-function SeeChartButton() {
-  const { pending } = useFormStatus();
-  return (
-    <button className="btn btn-primary" type="submit" disabled={pending} aria-busy={pending}>
-      {pending ? "Saving your review…" : "Publish Review"}
-    </button>
   );
 }

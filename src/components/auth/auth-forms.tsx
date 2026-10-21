@@ -13,10 +13,11 @@ function SubmitButton({ idle, pending }: { idle: string; pending: string }) {
   );
 }
 
-export function SignupForm() {
+export function SignupForm({ next }: { next?: string | null }) {
   const [state, action] = useActionState(requestSignup, {} as AuthActionState);
   return (
     <form className="form-layout account-form" action={action}>
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       {state.error ? (
         <p className="form-error" role="alert">
           {state.error}
@@ -35,10 +36,11 @@ export function SignupForm() {
   );
 }
 
-export function LoginForm() {
+export function LoginForm({ next }: { next?: string | null }) {
   const [state, action] = useActionState(requestLogin, {} as AuthActionState);
   return (
     <form className="form-layout account-form" action={action}>
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       {state.error ? (
         <p className="form-error" role="alert">
           {state.error} {state.unknownEmail ? <a href="/signup">Create an account</a> : null}
@@ -53,7 +55,7 @@ export function LoginForm() {
   );
 }
 
-export function VerifyCodeForm({ email }: { email: string }) {
+export function VerifyCodeForm({ email, next }: { email: string; next?: string | null }) {
   const [state, action] = useActionState(submitLoginCode, {} as AuthActionState);
   const [resend, resendAction] = useActionState(resendLoginCodeAction, {} as AuthActionState);
   const notice = state.error ?? resend.error;
@@ -66,6 +68,7 @@ export function VerifyCodeForm({ email }: { email: string }) {
         </p>
       ) : null}
       <form className="form-layout" action={action}>
+        {next ? <input type="hidden" name="next" value={next} /> : null}
         <label className="field">
           <span>6-digit code</span>
           <input

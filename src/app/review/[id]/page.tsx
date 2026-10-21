@@ -1,7 +1,9 @@
+import { cookies } from "next/headers";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DimensionReading } from "@/components/evaluations/dimension-reading";
 import { IdentityGate } from "@/components/intake/identity-gate";
+import { PublishDraft } from "@/components/intake/publish-draft";
 import { PersonalDownload } from "@/components/intake/personal-download";
 import { PersonalShape } from "@/components/intake/personal-shape";
 import { stanceClass, stanceLabel, workHref } from "@/lib/domain/labels";
@@ -32,8 +34,10 @@ export default async function ReviewChartPage({ params }: { params: Promise<{ id
   });
   const axes = readings.filter((reading) => reading.family !== "ENJOYMENT");
   const enjoymentAxes = readings.filter((reading) => reading.family === "ENJOYMENT");
-  const headline = personalHeadline(intake.enjoyment, intake.execution);
+  const headline =
+    intake.enjoyment && intake.execution ? personalHeadline(intake.enjoyment, intake.execution) : "Saved as a draft.";
   const verified = Boolean(intake.user?.emailVerified);
+  const devVerify = process.env.NODE_ENV === "production" ? null : (await cookies()).get("frame_dev_verify")?.value ?? null;
   const headingId = "personal-chart-title";
   const noteSections = await intakeSections(intake.reviewSections);
 
@@ -48,7 +52,11 @@ export default async function ReviewChartPage({ params }: { params: Promise<{ id
             <PersonalShape axes={axes} labelledBy={headingId} />
           </div>
           <div className="personal-readings">
-            <StanceMeter label="Enjoyment" stance={intake.enjoyment} />
+            {intake.enjoyment ? (
+              <StanceMeter label="Enjoyment" stance={intake.enjoyment} />
+            ) : (
+              <p className="meta">Enjoyment not selected</p>
+            )}
             {enjoymentAxes.length > 0 ? (
               <ul className="dimension-breakdown" aria-label="Enjoyment dimensions">
                 {enjoymentAxes.map((axis) => (
@@ -58,7 +66,11 @@ export default async function ReviewChartPage({ params }: { params: Promise<{ id
                 ))}
               </ul>
             ) : null}
-            <StanceMeter label="Execution" stance={intake.execution} />
+            {intake.execution ? (
+              <StanceMeter label="Execution" stance={intake.execution} />
+            ) : (
+              <p className="meta">Execution not selected</p>
+            )}
             {intake.rawPlatform ? <p className="meta">Platform: {intake.rawPlatform}</p> : null}
             {intake.rawGenre ? <p className="meta">Genre: {intake.rawGenre}</p> : null}
           </div>
@@ -71,19 +83,23 @@ export default async function ReviewChartPage({ params }: { params: Promise<{ id
         <MatchNote
           status={intake.matchStatus}
           note={intake.matchNote}
+          draft={intake.draft}
           work={intake.work ? { title: intake.work.title, href: intake.work.status === "PUBLISHED" ? workHref(intake.work.workType, intake.work.slug) : null } : null}
           verified={verified}
         />
-        <PersonalDownload
-          title={intake.rawTitle}
-          headline={headline}
-          enjoyment={intake.enjoyment}
-          execution={intake.execution}
-          axes={axes}
-          enabled={verified}
-        />
+        {intake.enjoyment && intake.execution ? (
+          <PersonalDownload
+            title={intake.rawTitle}
+            headline={headline}
+            enjoyment={intake.enjoyment}
+            execution={intake.execution}
+            axes={axes}
+            enabled={verified}
+          />
+        ) : null}
+        {intake.draft && verified ? <PublishDraft intakeId={intake.id} /> : null}
       </section>
-      {verified ? null : <IdentityGate intakeId={intake.id} emailPending={Boolean(intake.userId)} />}
+      {verified ? null : <IdentityGate intakeId={intake.id} emailPending={Boolean(intake.userId)} devLink={devVerify} />}
     </main>
   );
 }
@@ -122,14 +138,17 @@ async function intakeSections(value: unknown) {
 function MatchNote({
   status,
   note,
+  draft,
   work,
   verified,
 }: {
   status: string;
   note: string | null;
+  draft: boolean;
   work: { title: string; href: string | null } | null;
   verified: boolean;
 }) {
+  if (draft) return <p className="meta">This draft is on your account. Publish it when the review is ready.</p>;
   if (!verified) {
     return <p className="meta">Matching this title to a work waits until your email is verified.</p>;
   }
