@@ -10,14 +10,7 @@ export type OverlapEvaluation = {
   reviewerSlug: string;
   enjoyment: StanceValue;
   execution: StanceValue;
-  lens: string | null;
-  standard: string | null;
   judgments: PlacementJudgment[];
-};
-
-export type OverlapFilter = {
-  lens?: string;
-  standard?: string;
 };
 
 export type ShelfWork = {
@@ -49,9 +42,9 @@ export type ReviewerOverlap = {
   summary: string;
 };
 
-export function compareReviewers(yours: OverlapEvaluation[], theirs: OverlapEvaluation[], filter: OverlapFilter = {}): ReviewerOverlap {
-  const yourRows = yours.filter((row) => matches(row, filter));
-  const theirRows = theirs.filter((row) => matches(row, filter));
+export function compareReviewers(yours: OverlapEvaluation[], theirs: OverlapEvaluation[]): ReviewerOverlap {
+  const yourRows = yours;
+  const theirRows = theirs;
   const yourByWork = new Map(yourRows.map((row) => [row.workId, row]));
   const theirByWork = new Map(theirRows.map((row) => [row.workId, row]));
   const shared: SharedWork[] = [];
@@ -88,12 +81,6 @@ export function overlapSummary(sharedCount: number, enjoymentMatches: number, ex
   if (sharedCount === 0) return "No works in common.";
   const works = sharedCount === 1 ? "1 work in common" : `${sharedCount} works in common`;
   return `${works}. Enjoyment matches on ${enjoymentMatches}. Execution matches on ${executionMatches}.`;
-}
-
-function matches(row: OverlapEvaluation, filter: OverlapFilter): boolean {
-  if (filter.lens && row.lens !== filter.lens) return false;
-  if (filter.standard && row.standard !== filter.standard) return false;
-  return true;
 }
 
 function shelf(row: OverlapEvaluation): ShelfWork {

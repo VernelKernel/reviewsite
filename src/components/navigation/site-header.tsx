@@ -36,7 +36,7 @@ export function SiteFooter() {
   return (
     <footer className="site-footer">
       <div className="shell footer-inner">
-        <p>Frame keeps enjoyment, execution, and the reviewer’s standard visible.</p>
+        <p>Frame keeps enjoyment and execution visible.</p>
         <p>A small catalog, on purpose. Pages get better when evaluations accumulate.</p>
       </div>
     </footer>

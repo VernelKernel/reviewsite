@@ -32,8 +32,6 @@ function audienceRow(slug: string, audience: Distribution, sortOrder: number) {
 
 function evaluation(overrides: Partial<LandscapeEvaluation> = {}): LandscapeEvaluation {
   return {
-    lens: "MIXED",
-    standard: "ABSOLUTE",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -127,16 +125,6 @@ describe("review landscape", () => {
     ]);
     expect(landscape.dimensions.map((dimension) => dimension.slug)).toEqual(["gameplay"]);
     expect(landscape.enjoymentDimensions.map((dimension) => dimension.slug)).toEqual(["engagement", "fun"]);
-  });
-
-  it("notes when standards groups describe execution differently", () => {
-    const landscape = buildLandscape([
-      evaluation({ standard: "CONTEXTUAL", execution: "POSITIVE" }),
-      evaluation({ standard: "CONTEXTUAL", execution: "POSITIVE" }),
-      evaluation({ standard: "ABSOLUTE", execution: "NEGATIVE" }),
-      evaluation({ standard: "ABSOLUTE", execution: "NEGATIVE" }),
-    ]);
-    expect(landscape.disagreement.some((line) => line.includes("expectations"))).toBe(true);
   });
 
   it("keeps critics and audience in separate samples", () => {

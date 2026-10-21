@@ -16,6 +16,7 @@ type Resolvable = {
   enjoyment: "POSITIVE" | "MIXED" | "NEGATIVE";
   execution: "POSITIVE" | "MIXED" | "NEGATIVE";
   completion: "JUST_STARTED" | "EARLY" | "SUBSTANTIAL" | "COMPLETED" | "ENDGAME" | "POST_GAME" | "ABANDONED" | "UNKNOWN";
+  ownership: "OWNED" | "GIFTED" | "SUBSCRIPTION" | "BORROWED" | "REVIEW_COPY" | "FREE" | "OTHER" | null;
   reviewBody: string | null;
   reviewSections: unknown;
   judgments: unknown;

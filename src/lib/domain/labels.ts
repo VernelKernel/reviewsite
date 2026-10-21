@@ -1,15 +1,3 @@
-export const lensLabel: Record<string, string> = {
-  EXECUTION: "Execution-focused",
-  EXPERIENCE: "Experience-focused",
-  MIXED: "Mixed approach",
-};
-
-export const standardLabel: Record<string, string> = {
-  ABSOLUTE: "Absolute standard",
-  CONTEXTUAL: "Contextual standard",
-  MIXED: "Mixed standard",
-};
-
 export const stanceLabel: Record<string, string> = {
   POSITIVE: "Positive",
   MIXED: "Mixed",

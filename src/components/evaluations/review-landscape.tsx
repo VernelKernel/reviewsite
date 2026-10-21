@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { pairedSampleNote, type ReviewLandscape, type ShapeMode } from "@/lib/aggregation/landscape";
-import { completionLabel, lensLabel, standardLabel } from "@/lib/domain/labels";
+import { completionLabel } from "@/lib/domain/labels";
 import { DimensionShape, type Focus } from "./dimension-shape";
 import { PopulationSegment } from "./population-segment";
 
@@ -74,57 +74,29 @@ export function ReviewLandscapeView({
         <div className="landscape">
           <DimensionShape critics={critics} audience={audience} rows={rows} focus={focus} onFocus={onFocus} share={share} />
           {showAudience && audience.sampleSize > 0 ? (
-            <ApproachSplit
-              approachTitle={critics.sampleSize > 0 ? "Audience approach" : "Approach"}
-              experienceTitle={critics.sampleSize > 0 ? "How much the audience experienced" : "How much they experienced"}
+            <ExperienceList
+              title={critics.sampleSize > 0 ? "How much the audience experienced" : "How much they experienced"}
               landscape={audience}
             />
           ) : null}
-          {showCritics && critics.sampleSize > 0 ? (
-            <ApproachSplit approachTitle="Critic approach" experienceTitle="How much critics experienced" landscape={critics} />
-          ) : null}
+          {showCritics && critics.sampleSize > 0 ? <ExperienceList title="How much critics experienced" landscape={critics} /> : null}
         </div>
       )}
     </section>
   );
 }
 
-function ApproachSplit({
-  approachTitle,
-  experienceTitle,
-  landscape,
-}: {
-  approachTitle: string;
-  experienceTitle: string;
-  landscape: ReviewLandscape;
-}) {
+function ExperienceList({ title, landscape }: { title: string; landscape: ReviewLandscape }) {
   return (
-    <div className="split reading-measure">
-      <div>
-        <h3>{approachTitle}</h3>
-        <ul className="evidence-list">
-          {landscape.lenses.map((item) => (
-            <li key={item.key}>
-              {lensLabel[item.key] ?? item.label} · {item.count}
-            </li>
-          ))}
-          {landscape.standards.map((item) => (
-            <li key={item.key}>
-              {standardLabel[item.key] ?? item.label} · {item.count}
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div>
-        <h3>{experienceTitle}</h3>
-        <ul className="evidence-list">
-          {landscape.completions.map((item) => (
-            <li key={item.key}>
-              {completionLabel[item.key] ?? item.label} · {item.count}
-            </li>
-          ))}
-        </ul>
-      </div>
+    <div className="reading-measure">
+      <h3>{title}</h3>
+      <ul className="evidence-list">
+        {landscape.completions.map((item) => (
+          <li key={item.key}>
+            {completionLabel[item.key] ?? item.label} · {item.count}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

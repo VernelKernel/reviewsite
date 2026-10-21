@@ -1,6 +1,5 @@
 import {
   completionLabel,
-  lensLabel,
   ownershipLabel,
   playtimeLabel,
   reviewerHref,
@@ -8,7 +7,6 @@ import {
   workHref,
   stanceClass,
   stanceLabel,
-  standardLabel,
 } from "@/lib/domain/labels";
 import { ReviewProse, type ReviewHeading } from "@/components/reviews/review-prose";
 import { formatDate } from "@/lib/works/present";
@@ -18,9 +16,6 @@ export type ReviewCardModel = {
   workSlug: string;
   reviewerName: string;
   reviewerSlug: string;
-  lens: string | null;
-  standard: string | null;
-  standardNote: string | null;
   enjoyment: string;
   execution: string;
   completion: string;
@@ -45,8 +40,6 @@ export type ReviewCardModel = {
 
 export function ReviewCard({ review, linked = true }: { review: ReviewCardModel; linked?: boolean }) {
   const context = [
-    review.lens ? lensLabel[review.lens] : null,
-    review.standard ? standardLabel[review.standard] : null,
     completionLabel[review.completion],
     review.playtime !== "UNKNOWN" ? playtimeLabel[review.playtime] : null,
   ]
@@ -91,7 +84,6 @@ export function ReviewCard({ review, linked = true }: { review: ReviewCardModel;
           ))}
         </tbody>
       </table>
-      {review.standardNote ? <p className="context-line">Standard note: {review.standardNote}</p> : null}
       {review.ownership ? <p className="context-line">Access: {ownershipLabel[review.ownership]}</p> : null}
       {review.review ? (
         <div className="review-reading">

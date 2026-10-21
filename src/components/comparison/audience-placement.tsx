@@ -20,13 +20,6 @@ export function AudiencePlacementView({ placement }: { placement: AudiencePlacem
           </div>
         ))}
       </div>
-      {placement.context.length > 0 ? (
-        <ul className="evidence-list">
-          {placement.context.map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
-      ) : null}
     </section>
   );
 }

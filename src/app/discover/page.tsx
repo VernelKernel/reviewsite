@@ -6,7 +6,7 @@ import { landscapeFor } from "@/lib/works/present";
 
 export const metadata: Metadata = {
   title: "Discover",
-  description: "Patterns inside a genre: enjoyment against execution, disagreement, and standards.",
+  description: "Patterns inside a genre: enjoyment against execution, and disagreement.",
 };
 
 export default async function DiscoverPage({

@@ -202,7 +202,15 @@ p {
 }
 
 .evaluation-builder .field input,
-.evaluation-builder .field textarea {
+.evaluation-builder .field textarea,
+.evaluation-builder select[name="platformId"],
+.evaluation-builder select[name="playtime"],
+.evaluation-builder select[name="completion"],
+.evaluation-builder select[name="ownership"],
+.evaluation-builder select[name="platformId"] option,
+.evaluation-builder select[name="playtime"] option,
+.evaluation-builder select[name="completion"] option,
+.evaluation-builder select[name="ownership"] option {
   font-size: var(--text-meta);
 }
 
@@ -4538,6 +4546,52 @@ body:has(.mockup-sheet) .page {
 .builder-dimensions .dimension-row select,
 .stance-pill {
   min-height: 2.75rem;
+}
+
+.evaluation-builder .builder-fields .field:has(select) {
+  position: relative;
+}
+
+.evaluation-builder .builder-fields select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2.2rem;
+  border-radius: var(--radius-lg);
+  line-height: 1.35;
+  cursor: pointer;
+  background-image: none;
+}
+
+.evaluation-builder .builder-fields select:hover {
+  border-color: var(--color-accent);
+}
+
+.evaluation-builder .builder-fields select:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.evaluation-builder .builder-fields select:active {
+  border-color: var(--color-accent-active);
+}
+
+.evaluation-builder .builder-fields .field:has(select)::after {
+  content: "";
+  position: absolute;
+  right: 0.85rem;
+  bottom: calc((2.75rem - 0.7rem) / 2);
+  width: 0.7rem;
+  height: 0.7rem;
+  background-color: var(--color-text-muted);
+  pointer-events: none;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.2 4.4 6 8.1 9.8 4.4' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.2 4.4 6 8.1 9.8 4.4' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-position: center;
+  mask-size: contain;
+  -webkit-mask-size: contain;
 }
 
 .search-select {

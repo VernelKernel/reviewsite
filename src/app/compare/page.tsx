@@ -48,7 +48,6 @@ export default async function ComparePage({
           {selected.map((work) => {
             const landscapes = landscapesFor(work);
             const art = workArt(work.media);
-            const standards = landscapes.audience.disagreement.find((line) => line.includes("expectations"));
             return (
               <section className="compare-column" key={compareKey(work)} aria-labelledby={`compare-${work.slug}`}>
                 <a className="compare-art" href={workHref(work.workType, work.slug)}>
@@ -59,7 +58,6 @@ export default async function ComparePage({
                     <a href={workHref(work.workType, work.slug)}>{work.title}</a>
                   </h2>
                   <PopulationGauges critics={landscapes.critics} audience={landscapes.audience} heading="h3" />
-                  {standards ? <p>{standards}</p> : null}
                   <CompareRemove itemKey={compareKey(work)} title={work.title} />
                 </div>
               </section>

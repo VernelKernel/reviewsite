@@ -63,18 +63,6 @@ enum MediaVisibility {
   PRIVATE
 }
 
-enum EvaluationLens {
-  EXPERIENCE
-  EXECUTION
-  MIXED
-}
-
-enum EvaluationStandard {
-  ABSOLUTE
-  CONTEXTUAL
-  MIXED
-}
-
 enum Stance {
   POSITIVE
   MIXED
@@ -452,10 +440,6 @@ model Evaluation {
   updatedAt  DateTime  @updatedAt
   reviewedOn DateTime?
 
-  lens         EvaluationLens?
-  standard     EvaluationStandard?
-  standardNote String?
-
   enjoyment Stance
   execution Stance
 
@@ -481,8 +465,6 @@ model Evaluation {
   @@index([workId, reviewedOn])
   @@index([workId, population])
   @@index([reviewerId])
-  @@index([lens])
-  @@index([standard])
 }
 
 model Review {
@@ -714,6 +696,7 @@ model Intake {
   enjoyment       Stance
   execution       Stance
   completion      CompletionStatus  @default(SUBSTANTIAL)
+  ownership       OwnershipContext?
   reviewBody      String?
   reviewSections  Json              @default("[]")
   judgments       Json              @default("[]")

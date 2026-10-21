@@ -20,8 +20,6 @@ export const cardInclude = {
     select: {
       enjoyment: true,
       execution: true,
-      lens: true,
-      standard: true,
       completion: true,
       population: true,
       review: { select: { importSourceName: true } },

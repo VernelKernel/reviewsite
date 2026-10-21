@@ -10,8 +10,6 @@ export type PlacementEvaluation = {
   reviewerId: string;
   enjoyment: StanceValue;
   execution: StanceValue;
-  lens: string | null;
-  standard: string | null;
   judgments: PlacementJudgment[];
 };
 
@@ -25,19 +23,6 @@ export type PlacementLine = {
 
 export type AudiencePlacement = {
   lines: PlacementLine[];
-  context: string[];
-};
-
-const LENS_PHRASE: Record<string, string> = {
-  EXECUTION: "an execution-focused approach",
-  EXPERIENCE: "an experience-focused approach",
-  MIXED: "a mixed approach",
-};
-
-const STANDARD_PHRASE: Record<string, string> = {
-  ABSOLUTE: "an absolute standard",
-  CONTEXTUAL: "a contextual standard",
-  MIXED: "a mixed standard",
 };
 
 export function placeAudience(viewer: PlacementEvaluation, rows: PlacementEvaluation[]): AudiencePlacement {
@@ -58,11 +43,7 @@ export function placeAudience(viewer: PlacementEvaluation, rows: PlacementEvalua
       ),
     ),
   ];
-  const context = [
-    approachSentence(viewer.lens, others.map((row) => row.lens), "approach", LENS_PHRASE),
-    approachSentence(viewer.standard, others.map((row) => row.standard), "standard", STANDARD_PHRASE),
-  ].filter((line): line is string => Boolean(line));
-  return { lines, context };
+  return { lines };
 }
 
 function stanceLine(
@@ -102,32 +83,4 @@ export function countPhrase(distribution: Distribution): string {
   if (parts.length <= 1) return parts[0] ?? "none recorded a stance";
   if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
   return `${parts[0]}, ${parts[1]}, and ${parts[2]}`;
-}
-
-function approachSentence(
-  yours: string | null,
-  others: (string | null)[],
-  noun: "approach" | "standard",
-  phrases: Record<string, string>,
-): string | null {
-  if (!yours || !phrases[yours]) return null;
-  const recorded = others.filter((value): value is string => Boolean(value && phrases[value]));
-  if (recorded.length === 0) return null;
-  const counts = new Map<string, number>();
-  for (const value of recorded) counts.set(value, (counts.get(value) ?? 0) + 1);
-  let top: string | null = null;
-  let topCount = 0;
-  let tie = false;
-  for (const [value, count] of counts) {
-    if (count > topCount) {
-      top = value;
-      topCount = count;
-      tie = false;
-    } else if (count === topCount) {
-      tie = true;
-    }
-  }
-  if (!top || tie || top === yours) return null;
-  const article = noun === "approach" ? "an approach" : "a standard";
-  return `You used ${phrases[yours]}. Of ${recorded.length} other evaluations that recorded ${article}, ${topCount} used ${phrases[top]}.`;
 }

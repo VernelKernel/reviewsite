@@ -69,9 +69,6 @@ export async function saveEvaluation(
     const reviewedOn = publishing ? (existing?.reviewedOn ?? new Date()) : (existing?.reviewedOn ?? null);
     const savedFields = {
       status,
-      lens: input.lens ?? null,
-      standard: input.standard ?? null,
-      standardNote: input.standardNote ?? null,
       enjoyment: input.enjoyment,
       execution: input.execution,
       completion: input.completion,

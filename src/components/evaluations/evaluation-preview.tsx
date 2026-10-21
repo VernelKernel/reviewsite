@@ -4,17 +4,12 @@ import { useFormStatus } from "react-dom";
 import { DimensionReading } from "@/components/evaluations/dimension-reading";
 import { EvaluationGraph } from "@/components/evaluations/evaluation-graph";
 import { ArtImage } from "@/components/works/work-art";
-import {
-  completionLabel,
-  lensLabel,
-  ownershipLabel,
-  playtimeLabel,
-} from "@/lib/domain/labels";
+import { completionLabel, ownershipLabel, playtimeLabel } from "@/lib/domain/labels";
 import { personalHeadline } from "@/lib/intake/judgments";
 import type { RadarAxis, StanceName } from "@/lib/evaluations/radar";
 import type { WorkArt } from "@/lib/works/present";
 
-type GlanceItem = { value: string; label: string; icon: "gamepad" | "clock" | "replay" | "star" | "lock" };
+type GlanceItem = { value: string; label: string; icon: "gamepad" | "clock" | "replay" | "lock" };
 
 export function EvaluationPreview({
   title,
@@ -23,7 +18,6 @@ export function EvaluationPreview({
   platformName,
   playtime,
   completion,
-  lens,
   ownership,
   enjoyment,
   execution,
@@ -37,7 +31,6 @@ export function EvaluationPreview({
   platformName: string;
   playtime: string;
   completion: string;
-  lens: string;
   ownership: string;
   enjoyment: string;
   execution: string;
@@ -45,27 +38,22 @@ export function EvaluationPreview({
   enjoymentAxes: RadarAxis[];
   publishLabel: string;
 }) {
-  const headline =
-    isStance(enjoyment) && isStance(execution) ? personalHeadline(enjoyment, execution) : "Your evaluation updates as you answer.";
+  const headline = isStance(enjoyment) && isStance(execution) ? personalHeadline(enjoyment, execution) : null;
   const byline = [
     platformName,
     ...genres.slice(0, 2).map((genre) => genre.name),
     playtime && playtime !== "UNKNOWN" ? playtimeLabel[playtime] : "",
   ].filter(Boolean);
-  const glance = glanceItems({ platformName, playtime, completion, lens, ownership });
+  const glance = glanceItems({ platformName, playtime, completion, ownership });
 
   return (
     <aside className="builder-preview" id="preview" aria-label="Live preview">
       <div className="panel builder-preview-scroll">
-        <header className="builder-preview-head">
-          <p className="kicker">Live preview</p>
-          <p className="meta">Your evaluation updates as you answer.</p>
-        </header>
         <div className="builder-work">
           <ArtImage art={art} shape="tall" className="builder-poster" decorative />
           <div>
             <p className="builder-work-title">{title}</p>
-            <p className="lede">{headline}</p>
+            {headline ? <p className="lede">{headline}</p> : null}
             {byline.length > 0 ? (
               <p className="evaluation-byline">
                 {byline.map((item) => (
@@ -144,20 +132,17 @@ function glanceItems({
   platformName,
   playtime,
   completion,
-  lens,
   ownership,
 }: {
   platformName: string;
   playtime: string;
   completion: string;
-  lens: string;
   ownership: string;
 }): GlanceItem[] {
   const items: GlanceItem[] = [];
   if (platformName) items.push({ value: platformName, label: "Platform", icon: "gamepad" });
   if (playtime && playtime !== "UNKNOWN") items.push({ value: playtimeLabel[playtime] ?? playtime, label: "Playtime", icon: "clock" });
   if (completion && completion !== "UNKNOWN") items.push({ value: completionLabel[completion] ?? completion, label: "Completion", icon: "replay" });
-  if (lens) items.push({ value: lensLabel[lens] ?? lens, label: "Lens", icon: "star" });
   if (ownership) items.push({ value: ownershipLabel[ownership] ?? ownership, label: "Access", icon: "lock" });
   return items;
 }

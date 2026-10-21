@@ -17,7 +17,7 @@ export async function generateMetadata({
     title: `${evaluation.reviewer.displayName} on ${work.title}`,
     description:
       evaluation.review?.impression ||
-      `How ${evaluation.reviewer.displayName} evaluated ${work.title}, including lens, standard, enjoyment, and execution.`,
+      `How ${evaluation.reviewer.displayName} evaluated ${work.title}, including enjoyment and execution.`,
     alternates: { canonical: reviewHref(work.workType, work.slug, evaluation.reviewer.slug) },
   };
 }

@@ -3,8 +3,6 @@ import { flattenSections, readSectionFields, type StoredSection } from "../revie
 
 export const stanceSchema = z.enum(["POSITIVE", "MIXED", "NEGATIVE"]);
 export const matteredSchema = z.enum(["A_LITTLE", "QUITE_A_BIT", "MATTERS_A_LOT"]);
-export const lensSchema = z.enum(["EXPERIENCE", "EXECUTION", "MIXED"]);
-export const standardSchema = z.enum(["ABSOLUTE", "CONTEXTUAL", "MIXED"]);
 export const completionSchema = z.enum([
   "JUST_STARTED",
   "EARLY",
@@ -44,7 +42,6 @@ const emptyToUndefined = (value: unknown) => {
 const evaluationShape = {
   email: z.string().trim().email("Enter an email so this evaluation can stay attached to you."),
   displayName: z.string().trim().min(2, "Use a name of at least 2 characters.").max(48),
-  standardNote: z.preprocess(emptyToUndefined, z.string().max(280).optional()),
   enjoyment: stanceSchema,
   execution: stanceSchema,
   completion: completionSchema,
@@ -113,21 +110,9 @@ function refineEvaluation(
   }
 }
 
-export const evaluationInputSchema = z
-  .object({
-    ...evaluationShape,
-    lens: lensSchema,
-    standard: standardSchema,
-  })
-  .superRefine(refineEvaluation);
+export const evaluationInputSchema = z.object(evaluationShape).superRefine(refineEvaluation);
 
-export const evaluationDraftSchema = z
-  .object({
-    ...evaluationShape,
-    lens: z.preprocess(emptyToUndefined, lensSchema.optional()),
-    standard: z.preprocess(emptyToUndefined, standardSchema.optional()),
-  })
-  .superRefine(refineEvaluation);
+export const evaluationDraftSchema = z.object(evaluationShape).superRefine(refineEvaluation);
 
 export type EvaluationInput = z.infer<typeof evaluationInputSchema>;
 export type EvaluationDraftInput = z.infer<typeof evaluationDraftSchema>;
@@ -168,9 +153,6 @@ export function parseEvaluationForm(formData: FormData) {
   const parsed = schema.safeParse({
     email: formData.get("email"),
     displayName: formData.get("displayName"),
-    lens: formData.get("lens"),
-    standard: formData.get("standard"),
-    standardNote: formData.get("standardNote"),
     enjoyment: formData.get("enjoyment"),
     execution: formData.get("execution"),
     completion: formData.get("completion"),

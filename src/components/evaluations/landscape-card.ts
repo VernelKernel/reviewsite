@@ -14,7 +14,7 @@ import {
   type ShapePoint,
   type ShapeTone,
 } from "@/lib/aggregation/landscape";
-import { completionLabel, lensLabel } from "@/lib/domain/labels";
+import { completionLabel } from "@/lib/domain/labels";
 import { fieldModelFrom, guideRings, paintField } from "@/lib/evaluations/field";
 import { radarPoint } from "@/lib/evaluations/radar";
 import { shareFileName, WATERMARK_LINE, WATERMARK_NAME } from "@/lib/share/targets";
@@ -402,8 +402,6 @@ function drawGlance(ctx: CanvasRenderingContext2D, palette: Palette, input: Land
   if (rows.includes("critics")) items.push({ value: criticCoverage(input.critics.coverageCount), label: "Critic outlets" });
   if (rows.includes("audience")) items.push({ value: String(input.audience.sampleSize), label: "Audience evaluations" });
   const landscapes = rows.map((population) => (population === "critics" ? input.critics : input.audience));
-  const lens = topShare(landscapes.map((landscape) => landscape.lenses));
-  if (lens) items.push({ value: lensLabel[lens] ?? lens, label: "Most common approach" });
   const completion = topShare(landscapes.map((landscape) => landscape.completions));
   if (completion) items.push({ value: completionLabel[completion] ?? completion, label: "Most common experience" });
   if (items.length === 0) return y - 20;

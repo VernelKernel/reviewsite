@@ -57,9 +57,6 @@ export async function EvaluateScreen({
             ? {
                 email: user.email,
                 displayName: user.profile.displayName,
-                lens: existing?.lens ?? "",
-                standard: existing?.standard ?? "",
-                standardNote: existing?.standardNote ?? "",
                 enjoyment: existing?.enjoyment ?? "",
                 execution: existing?.execution ?? "",
                 completion: existing?.completion ?? "SUBSTANTIAL",

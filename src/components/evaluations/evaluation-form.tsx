@@ -23,11 +23,10 @@ const completions = ["JUST_STARTED", "EARLY", "SUBSTANTIAL", "COMPLETED", "ENDGA
 const playtimes = ["LESS_THAN_ONE_HOUR", "ONE_TO_FIVE_HOURS", "FIVE_TO_TEN_HOURS", "TEN_TO_TWENTY_HOURS", "TWENTY_TO_FIFTY_HOURS", "FIFTY_PLUS_HOURS", "UNKNOWN"];
 const ownerships = ["OWNED", "SUBSCRIPTION", "BORROWED", "GIFTED", "REVIEW_COPY", "FREE", "OTHER"];
 const steps = [
-  { id: "basics", anchor: "basics", label: "Basics" },
+  { id: "basics", anchor: "basics", label: "Media" },
   { id: "enjoyment", anchor: "enjoyment", label: "Enjoyment" },
   { id: "execution", anchor: "execution", label: "Execution" },
-  { id: "notes", anchor: "notes", label: "Notes" },
-  { id: "preview", anchor: "preview-anchor", label: "Preview" },
+  { id: "notes", anchor: "notes", label: "Review" },
 ];
 
 export function EvaluationForm({
@@ -56,9 +55,6 @@ export function EvaluationForm({
   defaults: {
     email: string;
     displayName: string;
-    lens: string;
-    standard: string;
-    standardNote: string;
     enjoyment: string;
     execution: string;
     completion: string;
@@ -84,8 +80,6 @@ export function EvaluationForm({
   const [imported, setImported] = useState(defaults?.imported ?? false);
   const [enjoyment, setEnjoyment] = useState(defaults?.enjoyment ?? "");
   const [execution, setExecution] = useState(defaults?.execution ?? "");
-  const [lens, setLens] = useState(defaults?.lens ?? "");
-  const [standard, setStandard] = useState(defaults?.standard ?? "");
   const [completion, setCompletion] = useState(defaults?.completion ?? "SUBSTANTIAL");
   const [playtime, setPlaytime] = useState(defaults?.playtime ?? "UNKNOWN");
   const [ownership, setOwnership] = useState(defaults?.ownership ?? "");
@@ -210,10 +204,7 @@ export function EvaluationForm({
             <span className="builder-index" aria-hidden="true">
               1
             </span>
-            <div>
-              <h2 id="builder-basics">Work and basics</h2>
-              <p className="meta">Start with the work you are evaluating, then the context of this judgment.</p>
-            </div>
+            <h2 id="builder-basics">Media</h2>
           </header>
           <div className="builder-work">
             <ArtImage art={art} shape="tall" className="builder-poster" />
@@ -249,7 +240,7 @@ export function EvaluationForm({
               <select name="playtime" value={playtime} onChange={(event) => setPlaytime(event.target.value)}>
                 {playtimes.map((value) => (
                   <option key={value} value={value}>
-                    {playtimeLabel[value]}
+                    {value === "UNKNOWN" ? "Not specified" : playtimeLabel[value]}
                   </option>
                 ))}
               </select>
@@ -259,7 +250,7 @@ export function EvaluationForm({
               <select name="completion" value={completion} onChange={(event) => setCompletion(event.target.value)}>
                 {completions.map((value) => (
                   <option key={value} value={value}>
-                    {completionLabel[value]}
+                    {value === "UNKNOWN" ? "Not specified" : completionLabel[value]}
                   </option>
                 ))}
               </select>
@@ -276,26 +267,6 @@ export function EvaluationForm({
               </select>
             </label>
           </div>
-          <fieldset>
-            <legend className="legend">What were you primarily evaluating?</legend>
-            <div className="choice-grid">
-              <Choice name="lens" value="EXECUTION" checked={lens === "EXECUTION"} onChange={setLens} title="Execution" detail="Gameplay, craft, technical quality, whether it does what it attempts." />
-              <Choice name="lens" value="EXPERIENCE" checked={lens === "EXPERIENCE"} onChange={setLens} title="Experience" detail="Story, artistic experience, or how it felt to spend time with it." />
-              <Choice name="lens" value="MIXED" checked={lens === "MIXED"} onChange={setLens} title="A combination" detail="Execution and experience both shaped the judgment." />
-            </div>
-          </fieldset>
-          <fieldset>
-            <legend className="legend">Did the work’s circumstances affect your standards?</legend>
-            <div className="choice-grid">
-              <Choice name="standard" value="ABSOLUTE" checked={standard === "ABSOLUTE"} onChange={setStandard} title="No" detail="Essentially the same standards I use for other works." />
-              <Choice name="standard" value="MIXED" checked={standard === "MIXED"} onChange={setStandard} title="Somewhat" detail="Context mattered, but it did not replace my usual standard." />
-              <Choice name="standard" value="CONTEXTUAL" checked={standard === "CONTEXTUAL"} onChange={setStandard} title="Yes" detail="I consciously adjusted expectations." />
-            </div>
-            <label className="field">
-              <span>If you adjusted, what circumstances mattered? Optional.</span>
-              <input name="standardNote" maxLength={280} defaultValue={defaults?.standardNote ?? ""} />
-            </label>
-          </fieldset>
           <fieldset>
             <legend className="legend">Who is evaluating</legend>
             <p className="meta">An email keeps this evaluation attached to you on this server. It is not a verified login.</p>
@@ -369,7 +340,7 @@ export function EvaluationForm({
               4
             </span>
             <div>
-              <h2 id="builder-notes">Notes</h2>
+              <h2 id="builder-notes">Review</h2>
               <p className="meta">The quotable line, the review, and any specific thing you noticed.</p>
             </div>
           </header>
@@ -473,7 +444,6 @@ export function EvaluationForm({
             ) : null}
           </fieldset>
         </section>
-        <div id="preview-anchor" className="builder-anchor" />
         {canDraft ? (
           <div className="builder-actions">
             <IntentButton intent="draft">Save draft</IntentButton>
@@ -488,7 +458,6 @@ export function EvaluationForm({
         platformName={platformName}
         playtime={playtime}
         completion={completion}
-        lens={lens}
         ownership={ownership}
         enjoyment={enjoyment}
         execution={execution}
@@ -540,37 +509,9 @@ function axesFor(dimensions: DimensionOption[], judgments: Record<string, string
 }
 
 function scrollToStep(id: string) {
-  const narrow = window.matchMedia("(max-width: 1100px)").matches;
-  const targetId = id === "preview" ? (narrow ? "preview" : "preview-anchor") : id;
-  const node = document.getElementById(targetId);
+  const node = document.getElementById(id);
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   node?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-}
-
-function Choice({
-  name,
-  value,
-  title,
-  detail,
-  checked,
-  onChange,
-}: {
-  name: string;
-  value: string;
-  title: string;
-  detail: string;
-  checked: boolean;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <label className="choice">
-      <input type="radio" name={name} value={value} checked={checked} onChange={() => onChange(value)} />
-      <span>
-        {title}
-        <small>{detail}</small>
-      </span>
-    </label>
-  );
 }
 
 function updateObservation(

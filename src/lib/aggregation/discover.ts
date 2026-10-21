@@ -18,7 +18,7 @@ export type ShelfWork = {
 };
 
 export type EvidenceShelf = {
-  id: "apart" | "divided" | "standards";
+  id: "apart" | "divided";
   title: string;
   description: string;
   works: ShelfWork[];
@@ -77,12 +77,6 @@ export function evidenceShelves(works: DiscoverWork[]): EvidenceShelf[] {
       ),
     );
 
-  const standardsLine = "Reviewers who adjusted their expectations and reviewers who did not describe execution differently.";
-  const standards = eligible
-    .filter((work) => work.landscape.disagreement.some((line) => line.includes("expectations")))
-    .sort((a, b) => b.landscape.sampleSize - a.landscape.sampleSize || a.title.localeCompare(b.title))
-    .map((work) => shelfWork(work, `${standardsLine} ${sampleLine(work.landscape.sampleSize)}`));
-
   return [
     {
       id: "apart",
@@ -95,13 +89,6 @@ export function evidenceShelves(works: DiscoverWork[]): EvidenceShelf[] {
       title: "Execution is divided",
       description: `Works in this set where no single execution stance holds the evaluations together. A work needs ${MIN_SAMPLE} or more evaluations to be included.`,
       works: divided,
-    },
-    {
-      id: "standards",
-      title: "Standards change the reading",
-      description:
-        "Works in this set where reviewers who adjusted their expectations and reviewers who did not describe execution differently.",
-      works: standards,
     },
   ];
 }

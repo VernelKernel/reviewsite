@@ -1,5 +1,3 @@
-export const LENSES = ["EXPERIENCE", "EXECUTION", "MIXED"] as const;
-export const STANDARDS = ["ABSOLUTE", "CONTEXTUAL", "MIXED"] as const;
 export const STANCES = ["POSITIVE", "MIXED", "NEGATIVE"] as const;
 export const COMPLETIONS = [
   "JUST_STARTED",
@@ -67,8 +65,6 @@ export const OBSERVATION_TOPICS = [
   "interface",
 ] as const;
 
-export type Lens = (typeof LENSES)[number];
-export type Standard = (typeof STANDARDS)[number];
 export type Stance = (typeof STANCES)[number];
 export type Completion = (typeof COMPLETIONS)[number];
 export type PlaytimeBucket = (typeof PLAYTIME_BUCKETS)[number];

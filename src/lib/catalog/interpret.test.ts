@@ -68,13 +68,11 @@ describe("review interpretation", () => {
       execution: "MIXED",
       judgments: [{ dimension: "technical-quality", stance: "NEGATIVE" }],
     });
-    expect(reading?.lens).toBeNull();
-    expect(reading?.standard).toBeNull();
     expect(reading?.completion).toBe("UNKNOWN");
     expect(reading?.platform).toBeNull();
     expect(reading?.judgments).toEqual([{ dimension: "technical-quality", stance: "NEGATIVE" }]);
     const prompt = criticInterpretationPrompt({ title: "Alkurai", outlet: "IGN", body: "The port stutters." });
-    expect(prompt).toContain("Leave lens empty");
+    expect(prompt).not.toContain("lens:");
     expect(prompt).toContain("Leave platform empty");
   });
 

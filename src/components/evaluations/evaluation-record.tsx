@@ -4,7 +4,6 @@ import { EvaluationNav } from "@/components/evaluations/evaluation-nav";
 import { EvaluationShare } from "@/components/evaluations/evaluation-share";
 import {
   completionLabel,
-  lensLabel,
   ownershipLabel,
   playtimeLabel,
   reviewHref,
@@ -152,7 +151,6 @@ export function EvaluationRecord({
 
           <section id="details" className="evaluation-details">
             <h2>Details</h2>
-            {evaluation.standardNote ? <p>{evaluation.standardNote}</p> : null}
             {evaluation.review?.title ? <h3>{evaluation.review.title}</h3> : null}
             {body ? (
               <ReviewProse
@@ -223,14 +221,13 @@ function DimensionBreakdown({ id, title, axes }: { id: string; title: string; ax
   );
 }
 
-type GlanceItem = { value: string; label: string; icon: "gamepad" | "clock" | "replay" | "star" | "lock" };
+type GlanceItem = { value: string; label: string; icon: "gamepad" | "clock" | "replay" | "lock" };
 
 function glanceItems(evaluation: Evaluation): GlanceItem[] {
   const items: GlanceItem[] = [];
   if (evaluation.platform) items.push({ value: evaluation.platform.name, label: "Platform", icon: "gamepad" });
   if (evaluation.playtime !== "UNKNOWN") items.push({ value: playtimeLabel[evaluation.playtime], label: "Playtime", icon: "clock" });
   if (evaluation.completion !== "UNKNOWN") items.push({ value: completionLabel[evaluation.completion], label: "Completion", icon: "replay" });
-  if (evaluation.lens) items.push({ value: lensLabel[evaluation.lens], label: "Lens", icon: "star" });
   if (evaluation.ownership) items.push({ value: ownershipLabel[evaluation.ownership], label: "Access", icon: "lock" });
   return items;
 }

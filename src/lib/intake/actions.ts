@@ -13,6 +13,7 @@ import { loadOwnedIntake } from "./access";
 import { writeIntakeSecret } from "./cookie";
 import { normalizeTitle } from "./normalize";
 import { isMattered, type MatteredName } from "../evaluations/mattered";
+import { completionSchema, ownershipSchema } from "../validation/evaluation";
 import { flattenSections, readSectionFields, readStoredSections } from "../reviews/sections";
 import { resolveIntake } from "./resolve";
 
@@ -51,6 +52,11 @@ export async function createIntake(_previous: IntakeActionState, formData: FormD
     return { error: "One of those fields is too long." };
   }
   if (!rawPlatform || genreValues.length === 0 || rawGenre.length > 240) return { error: "Choose a platform and genre." };
+  const completion = completionSchema.safeParse(formData.get("completion"));
+  if (!completion.success) return { error: "Choose how much of the work you experienced." };
+  const ownershipText = String(formData.get("ownership") ?? "").trim();
+  const ownership = ownershipText ? ownershipSchema.safeParse(ownershipText) : null;
+  if (ownership && !ownership.success) return { error: "Choose how you had access." };
   const [platformMatch, genreCatalog] = await Promise.all([
     prisma.platform.findFirst({ where: { name: rawPlatform }, select: { id: true } }),
     prisma.genre.findMany({ select: { name: true } }),
@@ -100,6 +106,8 @@ export async function createIntake(_previous: IntakeActionState, formData: FormD
       rawGenre,
       enjoyment,
       execution,
+      completion: completion.data,
+      ownership: ownership?.data ?? null,
       reviewBody,
       reviewSections: readStoredSections(reviewSections) as Prisma.InputJsonValue,
       judgments: judgments as Prisma.InputJsonValue,

@@ -1,6 +1,4 @@
 type Stance = "POSITIVE" | "MIXED" | "NEGATIVE";
-type Lens = "EXPERIENCE" | "EXECUTION" | "MIXED";
-type Standard = "ABSOLUTE" | "CONTEXTUAL" | "MIXED";
 type Completion = "JUST_STARTED" | "EARLY" | "SUBSTANTIAL" | "COMPLETED" | "ENDGAME" | "POST_GAME" | "ABANDONED";
 type Playtime = "LESS_THAN_ONE_HOUR" | "ONE_TO_FIVE_HOURS" | "FIVE_TO_TEN_HOURS" | "TEN_TO_TWENTY_HOURS" | "TWENTY_TO_FIFTY_HOURS" | "FIFTY_PLUS_HOURS";
 type Ownership = "OWNED" | "GIFTED" | "SUBSCRIPTION" | "BORROWED" | "REVIEW_COPY" | "FREE";
@@ -9,9 +7,6 @@ export type SeedEvaluation = {
   work: string;
   reviewer: string;
   reviewedOn: string;
-  lens: Lens;
-  standard: Standard;
-  standardNote?: string;
   enjoyment: Stance;
   execution: Stance;
   completion: Completion;
@@ -29,9 +24,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "hades",
     reviewer: "mira-chen",
-    reviewedOn: "2021-02-11",
-    lens: "EXECUTION",
-    standard: "ABSOLUTE",
+    reviewedOn: "2021-02-11",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -46,9 +39,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "hades",
     reviewer: "owen-hale",
-    reviewedOn: "2021-04-02",
-    lens: "EXPERIENCE",
-    standard: "ABSOLUTE",
+    reviewedOn: "2021-04-02",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -63,9 +54,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "hades",
     reviewer: "luis-ortega",
-    reviewedOn: "2022-01-19",
-    lens: "MIXED",
-    standard: "ABSOLUTE",
+    reviewedOn: "2022-01-19",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "ENDGAME",
@@ -80,9 +69,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "hades",
     reviewer: "adele-march",
-    reviewedOn: "2021-06-08",
-    lens: "EXPERIENCE",
-    standard: "ABSOLUTE",
+    reviewedOn: "2021-06-08",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -96,10 +83,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "hades-ii",
     reviewer: "priya-raman",
-    reviewedOn: "2024-07-14",
-    lens: "EXPERIENCE",
-    standard: "CONTEXTUAL",
-    standardNote: "Early access, and a sequel still adding regions. I am not treating missing endings as a finished campaign.",
+    reviewedOn: "2024-07-14",
     enjoyment: "POSITIVE",
     execution: "MIXED",
     completion: "SUBSTANTIAL",
@@ -114,10 +98,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "hades-ii",
     reviewer: "samir-shah",
-    reviewedOn: "2024-09-02",
-    lens: "MIXED",
-    standard: "CONTEXTUAL",
-    standardNote: "Judged as an in-progress sequel, not as a 1.0 action game.",
+    reviewedOn: "2024-09-02",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "SUBSTANTIAL",
@@ -131,10 +112,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "hades-ii",
     reviewer: "mira-chen",
-    reviewedOn: "2024-08-20",
-    lens: "EXECUTION",
-    standard: "ABSOLUTE",
-    standardNote: "I knew it was early access and still used the standard I use for finished action games.",
+    reviewedOn: "2024-08-20",
     enjoyment: "POSITIVE",
     execution: "NEGATIVE",
     completion: "SUBSTANTIAL",
@@ -149,9 +127,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "hades-ii",
     reviewer: "jonah-ellis",
-    reviewedOn: "2024-06-18",
-    lens: "EXECUTION",
-    standard: "ABSOLUTE",
+    reviewedOn: "2024-06-18",
     enjoyment: "MIXED",
     execution: "NEGATIVE",
     completion: "EARLY",
@@ -166,10 +142,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "hades-ii",
     reviewer: "naomi-okonkwo",
-    reviewedOn: "2024-05-28",
-    lens: "EXPERIENCE",
-    standard: "MIXED",
-    standardNote: "I discounted missing endgame, not roughness in the hours I did play.",
+    reviewedOn: "2024-05-28",
     enjoyment: "POSITIVE",
     execution: "MIXED",
     completion: "EARLY",
@@ -184,9 +157,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "cyberpunk-2077",
     reviewer: "adele-march",
-    reviewedOn: "2021-03-04",
-    lens: "EXPERIENCE",
-    standard: "ABSOLUTE",
+    reviewedOn: "2021-03-04",
     enjoyment: "POSITIVE",
     execution: "MIXED",
     completion: "COMPLETED",
@@ -204,10 +175,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "cyberpunk-2077",
     reviewer: "owen-hale",
-    reviewedOn: "2023-11-12",
-    lens: "EXPERIENCE",
-    standard: "CONTEXTUAL",
-    standardNote: "Played after several major patches. I am describing that version, not launch week.",
+    reviewedOn: "2023-11-12",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -221,9 +189,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "cyberpunk-2077",
     reviewer: "jonah-ellis",
-    reviewedOn: "2020-12-20",
-    lens: "EXECUTION",
-    standard: "ABSOLUTE",
+    reviewedOn: "2020-12-20",
     enjoyment: "MIXED",
     execution: "NEGATIVE",
     completion: "SUBSTANTIAL",
@@ -239,9 +205,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "cyberpunk-2077",
     reviewer: "luis-ortega",
-    reviewedOn: "2021-08-30",
-    lens: "MIXED",
-    standard: "ABSOLUTE",
+    reviewedOn: "2021-08-30",
     enjoyment: "POSITIVE",
     execution: "NEGATIVE",
     completion: "COMPLETED",
@@ -256,9 +220,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "cyberpunk-2077",
     reviewer: "naomi-okonkwo",
-    reviewedOn: "2021-01-09",
-    lens: "EXPERIENCE",
-    standard: "ABSOLUTE",
+    reviewedOn: "2021-01-09",
     enjoyment: "POSITIVE",
     execution: "MIXED",
     completion: "SUBSTANTIAL",
@@ -272,9 +234,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "baldurs-gate-3",
     reviewer: "luis-ortega",
-    reviewedOn: "2023-10-02",
-    lens: "MIXED",
-    standard: "ABSOLUTE",
+    reviewedOn: "2023-10-02",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -289,9 +249,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "baldurs-gate-3",
     reviewer: "adele-march",
-    reviewedOn: "2023-11-18",
-    lens: "EXPERIENCE",
-    standard: "ABSOLUTE",
+    reviewedOn: "2023-11-18",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -306,9 +264,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "baldurs-gate-3",
     reviewer: "mira-chen",
-    reviewedOn: "2024-01-07",
-    lens: "EXECUTION",
-    standard: "ABSOLUTE",
+    reviewedOn: "2024-01-07",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -322,9 +278,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "baldurs-gate-3",
     reviewer: "samir-shah",
-    reviewedOn: "2024-02-16",
-    lens: "MIXED",
-    standard: "ABSOLUTE",
+    reviewedOn: "2024-02-16",
     enjoyment: "POSITIVE",
     execution: "MIXED",
     completion: "COMPLETED",
@@ -339,9 +293,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "death-stranding",
     reviewer: "adele-march",
-    reviewedOn: "2020-01-22",
-    lens: "EXPERIENCE",
-    standard: "ABSOLUTE",
+    reviewedOn: "2020-01-22",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -356,9 +308,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "death-stranding",
     reviewer: "owen-hale",
-    reviewedOn: "2020-03-02",
-    lens: "EXPERIENCE",
-    standard: "ABSOLUTE",
+    reviewedOn: "2020-03-02",
     enjoyment: "NEGATIVE",
     execution: "MIXED",
     completion: "SUBSTANTIAL",
@@ -373,9 +323,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "death-stranding",
     reviewer: "mira-chen",
-    reviewedOn: "2020-08-19",
-    lens: "EXECUTION",
-    standard: "ABSOLUTE",
+    reviewedOn: "2020-08-19",
     enjoyment: "MIXED",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -389,9 +337,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "death-stranding",
     reviewer: "luis-ortega",
-    reviewedOn: "2022-10-11",
-    lens: "MIXED",
-    standard: "ABSOLUTE",
+    reviewedOn: "2022-10-11",
     enjoyment: "NEGATIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -405,9 +351,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "death-stranding",
     reviewer: "samir-shah",
-    reviewedOn: "2020-05-27",
-    lens: "MIXED",
-    standard: "ABSOLUTE",
+    reviewedOn: "2020-05-27",
     enjoyment: "MIXED",
     execution: "MIXED",
     completion: "COMPLETED",
@@ -422,10 +366,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "stardew-valley",
     reviewer: "priya-raman",
-    reviewedOn: "2018-06-12",
-    lens: "EXPERIENCE",
-    standard: "CONTEXTUAL",
-    standardNote: "One developer. I adjusted for scope, then noticed I would have liked it under my usual standard too.",
+    reviewedOn: "2018-06-12",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "ENDGAME",
@@ -440,9 +381,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "stardew-valley",
     reviewer: "owen-hale",
-    reviewedOn: "2017-03-08",
-    lens: "EXPERIENCE",
-    standard: "ABSOLUTE",
+    reviewedOn: "2017-03-08",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -456,10 +395,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "stardew-valley",
     reviewer: "naomi-okonkwo",
-    reviewedOn: "2019-09-15",
-    lens: "EXPERIENCE",
-    standard: "CONTEXTUAL",
-    standardNote: "Small production, and I have not seen the late endgame.",
+    reviewedOn: "2019-09-15",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "SUBSTANTIAL",
@@ -473,9 +409,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "stardew-valley",
     reviewer: "luis-ortega",
-    reviewedOn: "2020-04-21",
-    lens: "MIXED",
-    standard: "ABSOLUTE",
+    reviewedOn: "2020-04-21",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -489,9 +423,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "starfield",
     reviewer: "owen-hale",
-    reviewedOn: "2023-10-18",
-    lens: "EXPERIENCE",
-    standard: "ABSOLUTE",
+    reviewedOn: "2023-10-18",
     enjoyment: "MIXED",
     execution: "MIXED",
     completion: "SUBSTANTIAL",
@@ -506,9 +438,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "starfield",
     reviewer: "mira-chen",
-    reviewedOn: "2023-11-02",
-    lens: "EXECUTION",
-    standard: "ABSOLUTE",
+    reviewedOn: "2023-11-02",
     enjoyment: "NEGATIVE",
     execution: "NEGATIVE",
     completion: "SUBSTANTIAL",
@@ -523,9 +453,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "starfield",
     reviewer: "luis-ortega",
-    reviewedOn: "2024-01-20",
-    lens: "MIXED",
-    standard: "ABSOLUTE",
+    reviewedOn: "2024-01-20",
     enjoyment: "MIXED",
     execution: "NEGATIVE",
     completion: "COMPLETED",
@@ -539,10 +467,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "starfield",
     reviewer: "samir-shah",
-    reviewedOn: "2024-03-09",
-    lens: "MIXED",
-    standard: "CONTEXTUAL",
-    standardNote: "I gave some room for the size of the simulated setting, not for repeated content.",
+    reviewedOn: "2024-03-09",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -556,9 +481,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "starfield",
     reviewer: "naomi-okonkwo",
-    reviewedOn: "2023-09-22",
-    lens: "EXPERIENCE",
-    standard: "ABSOLUTE",
+    reviewedOn: "2023-09-22",
     enjoyment: "NEGATIVE",
     execution: "MIXED",
     completion: "ABANDONED",
@@ -573,9 +496,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "elden-ring",
     reviewer: "mira-chen",
-    reviewedOn: "2022-04-16",
-    lens: "EXECUTION",
-    standard: "ABSOLUTE",
+    reviewedOn: "2022-04-16",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -590,9 +511,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "elden-ring",
     reviewer: "owen-hale",
-    reviewedOn: "2022-03-28",
-    lens: "EXPERIENCE",
-    standard: "ABSOLUTE",
+    reviewedOn: "2022-03-28",
     enjoyment: "NEGATIVE",
     execution: "POSITIVE",
     completion: "SUBSTANTIAL",
@@ -607,9 +526,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "elden-ring",
     reviewer: "luis-ortega",
-    reviewedOn: "2022-06-30",
-    lens: "MIXED",
-    standard: "ABSOLUTE",
+    reviewedOn: "2022-06-30",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -623,9 +540,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "elden-ring",
     reviewer: "naomi-okonkwo",
-    reviewedOn: "2022-03-04",
-    lens: "EXPERIENCE",
-    standard: "ABSOLUTE",
+    reviewedOn: "2022-03-04",
     enjoyment: "NEGATIVE",
     execution: "MIXED",
     completion: "EARLY",
@@ -640,9 +555,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "elden-ring",
     reviewer: "samir-shah",
-    reviewedOn: "2022-08-14",
-    lens: "MIXED",
-    standard: "ABSOLUTE",
+    reviewedOn: "2022-08-14",
     enjoyment: "MIXED",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -656,10 +569,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "palworld",
     reviewer: "priya-raman",
-    reviewedOn: "2024-02-08",
-    lens: "MIXED",
-    standard: "CONTEXTUAL",
-    standardNote: "Early access from a smaller studio. I adjusted for missing systems, not for crashes.",
+    reviewedOn: "2024-02-08",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "SUBSTANTIAL",
@@ -674,10 +584,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "palworld",
     reviewer: "samir-shah",
-    reviewedOn: "2024-02-20",
-    lens: "EXPERIENCE",
-    standard: "CONTEXTUAL",
-    standardNote: "Judged as an early-access survival toy, not a finished simulation.",
+    reviewedOn: "2024-02-20",
     enjoyment: "POSITIVE",
     execution: "MIXED",
     completion: "SUBSTANTIAL",
@@ -691,9 +598,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "palworld",
     reviewer: "jonah-ellis",
-    reviewedOn: "2024-01-28",
-    lens: "EXECUTION",
-    standard: "ABSOLUTE",
+    reviewedOn: "2024-01-28",
     enjoyment: "POSITIVE",
     execution: "NEGATIVE",
     completion: "SUBSTANTIAL",
@@ -708,9 +613,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "palworld",
     reviewer: "mira-chen",
-    reviewedOn: "2024-03-01",
-    lens: "EXECUTION",
-    standard: "ABSOLUTE",
+    reviewedOn: "2024-03-01",
     enjoyment: "MIXED",
     execution: "NEGATIVE",
     completion: "EARLY",
@@ -724,10 +627,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "palworld",
     reviewer: "owen-hale",
-    reviewedOn: "2024-04-12",
-    lens: "EXPERIENCE",
-    standard: "CONTEXTUAL",
-    standardNote: "Early access. I wanted to know if the hours felt good, knowing systems would change.",
+    reviewedOn: "2024-04-12",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "SUBSTANTIAL",
@@ -741,9 +641,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "celeste",
     reviewer: "mira-chen",
-    reviewedOn: "2018-03-02",
-    lens: "EXECUTION",
-    standard: "ABSOLUTE",
+    reviewedOn: "2018-03-02",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -758,9 +656,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "celeste",
     reviewer: "owen-hale",
-    reviewedOn: "2018-02-14",
-    lens: "EXPERIENCE",
-    standard: "ABSOLUTE",
+    reviewedOn: "2018-02-14",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -775,9 +671,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "celeste",
     reviewer: "naomi-okonkwo",
-    reviewedOn: "2018-05-19",
-    lens: "EXPERIENCE",
-    standard: "ABSOLUTE",
+    reviewedOn: "2018-05-19",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -791,9 +685,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "celeste",
     reviewer: "luis-ortega",
-    reviewedOn: "2019-01-11",
-    lens: "MIXED",
-    standard: "ABSOLUTE",
+    reviewedOn: "2019-01-11",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "POST_GAME",
@@ -807,9 +699,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "no-mans-sky",
     reviewer: "jonah-ellis",
-    reviewedOn: "2016-08-18",
-    lens: "EXECUTION",
-    standard: "ABSOLUTE",
+    reviewedOn: "2016-08-18",
     enjoyment: "NEGATIVE",
     execution: "NEGATIVE",
     completion: "SUBSTANTIAL",
@@ -824,9 +714,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "no-mans-sky",
     reviewer: "mira-chen",
-    reviewedOn: "2016-09-30",
-    lens: "EXECUTION",
-    standard: "ABSOLUTE",
+    reviewedOn: "2016-09-30",
     enjoyment: "NEGATIVE",
     execution: "MIXED",
     completion: "SUBSTANTIAL",
@@ -840,10 +728,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "no-mans-sky",
     reviewer: "priya-raman",
-    reviewedOn: "2023-05-06",
-    lens: "EXPERIENCE",
-    standard: "CONTEXTUAL",
-    standardNote: "Played the version available in 2023, and I am explicitly not grading 2016 by this standard.",
+    reviewedOn: "2023-05-06",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "SUBSTANTIAL",
@@ -858,10 +743,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "no-mans-sky",
     reviewer: "owen-hale",
-    reviewedOn: "2021-12-02",
-    lens: "EXPERIENCE",
-    standard: "CONTEXTUAL",
-    standardNote: "Judging the lived-in version I actually booted, after years of updates.",
+    reviewedOn: "2021-12-02",
     enjoyment: "POSITIVE",
     execution: "MIXED",
     completion: "SUBSTANTIAL",
@@ -875,10 +757,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "no-mans-sky",
     reviewer: "luis-ortega",
-    reviewedOn: "2024-08-19",
-    lens: "MIXED",
-    standard: "CONTEXTUAL",
-    standardNote: "A long-updated release. I am grading the game I finished, with that history in view.",
+    reviewedOn: "2024-08-19",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -892,9 +771,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "the-green-knight",
     reviewer: "adele-march",
-    reviewedOn: "2021-08-12",
-    lens: "EXPERIENCE",
-    standard: "ABSOLUTE",
+    reviewedOn: "2021-08-12",
     enjoyment: "MIXED",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -908,9 +785,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "the-green-knight",
     reviewer: "owen-hale",
-    reviewedOn: "2021-09-03",
-    lens: "EXPERIENCE",
-    standard: "ABSOLUTE",
+    reviewedOn: "2021-09-03",
     enjoyment: "NEGATIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -924,9 +799,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "the-green-knight",
     reviewer: "samir-shah",
-    reviewedOn: "2022-01-15",
-    lens: "MIXED",
-    standard: "ABSOLUTE",
+    reviewedOn: "2022-01-15",
     enjoyment: "MIXED",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -939,9 +812,7 @@ export const evaluations: SeedEvaluation[] = [
   {
     work: "the-green-knight",
     reviewer: "luis-ortega",
-    reviewedOn: "2021-12-28",
-    lens: "MIXED",
-    standard: "ABSOLUTE",
+    reviewedOn: "2021-12-28",
     enjoyment: "POSITIVE",
     execution: "MIXED",
     completion: "COMPLETED",

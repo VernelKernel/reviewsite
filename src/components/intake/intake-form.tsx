@@ -10,10 +10,14 @@ import { StancePills } from "@/components/evaluations/stance-pills";
 import { ReviewComposer } from "@/components/evaluations/review-composer";
 import type { PersonalAxis } from "@/components/intake/personal-shape";
 import { SearchableSelect, type CatalogOption } from "@/components/intake/searchable-select";
-import { stanceClass, stanceLabel } from "@/lib/domain/labels";
+import { completionLabel, ownershipLabel, stanceClass, stanceLabel } from "@/lib/domain/labels";
 import { isMattered } from "@/lib/evaluations/mattered";
 import { createIntake, type IntakeActionState } from "@/lib/intake/actions";
 import { judgedDimensions, rememberJudgment } from "@/lib/reviews/sections";
+
+const unspecified = "Not specified";
+const completions = ["JUST_STARTED", "EARLY", "SUBSTANTIAL", "COMPLETED", "ENDGAME", "POST_GAME", "ABANDONED", "UNKNOWN"];
+const ownerships = ["OWNED", "SUBSCRIPTION", "BORROWED", "GIFTED", "REVIEW_COPY", "FREE", "OTHER"];
 
 const steps = [
   { id: "basics", anchor: "basics", label: "Media" },
@@ -37,8 +41,10 @@ export function IntakeForm({
   const [active, setActive] = useState("basics");
   const [stickyTop, setStickyTop] = useState(88);
   const [title, setTitle] = useState("");
-  const [platform, setPlatform] = useState("");
-  const [genresChosen, setGenresChosen] = useState<string[]>([]);
+  const [platform, setPlatform] = useState(unspecified);
+  const [genresChosen, setGenresChosen] = useState<string[]>([unspecified]);
+  const [completion, setCompletion] = useState("UNKNOWN");
+  const [ownership, setOwnership] = useState("");
   const [enjoyment, setEnjoyment] = useState("");
   const [execution, setExecution] = useState("");
   const [judgments, setJudgments] = useState<Record<string, string>>({});
@@ -92,10 +98,10 @@ export function IntakeForm({
   );
   const current = steps.find((step) => step.id === active) ?? steps[0];
   const currentIndex = steps.findIndex((step) => step.id === current.id) + 1;
-  const byline = [platform.trim(), ...genresChosen].filter(Boolean);
+  const byline = [platform, ...genresChosen].map((item) => item.trim()).filter((item) => item && item !== unspecified);
   const titleMissing = title.trim().length < 2;
-  const platformMissing = platform.trim().length === 0;
-  const genreMissing = genresChosen.length === 0;
+  const platformMissing = platform.trim().length === 0 || platform === unspecified;
+  const genreMissing = genresChosen.every((genre) => genre === unspecified);
   const basicsMissing = titleMissing || platformMissing || genreMissing;
   const requirementMessage = chartRequirementMessage({
     titleMissing,
@@ -201,10 +207,10 @@ export function IntakeForm({
                 <SearchableSelect
                   label="Platform"
                   name="platform"
-                  options={platforms}
+                  options={[{ slug: "", name: unspecified }, ...platforms]}
                   value={platform}
                   invalid={showRequirements && platformMissing}
-                  onChange={(next) => setPlatform(typeof next === "string" ? next : "")}
+                  onChange={(next) => setPlatform(typeof next === "string" && next ? next : unspecified)}
                 />
               </div>
               <div className="field">
@@ -212,13 +218,34 @@ export function IntakeForm({
                 <SearchableSelect
                   label="Genre"
                   name="genre"
-                  options={genres}
+                  options={[{ slug: "", name: unspecified }, ...genres]}
                   multiple
                   value={genresChosen}
                   invalid={showRequirements && genreMissing}
-                  onChange={(next) => setGenresChosen(Array.isArray(next) ? next : [])}
+                  onChange={(next) => setGenresChosen(genreSelection(Array.isArray(next) ? next : []))}
                 />
               </div>
+              <label className="field">
+                <span>Completion</span>
+                <select name="completion" value={completion} onChange={(event) => setCompletion(event.target.value)}>
+                  {completions.map((value) => (
+                    <option key={value} value={value}>
+                      {value === "UNKNOWN" ? unspecified : completionLabel[value]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>How you had access</span>
+                <select name="ownership" value={ownership} onChange={(event) => setOwnership(event.target.value)}>
+                  <option value="">{unspecified}</option>
+                  {ownerships.map((value) => (
+                    <option key={value} value={value}>
+                      {ownershipLabel[value]}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
           </section>
 
@@ -293,9 +320,6 @@ export function IntakeForm({
 
         <aside className="builder-preview" id="preview" aria-label="Live preview">
           <div className="panel builder-preview-scroll">
-            <header className="builder-preview-head">
-              <p className="kicker">Live preview</p>
-            </header>
             <div>
               <p className="builder-work-title" id="intake-preview-title">
                 {title.trim() || "Untitled"}
@@ -372,6 +396,12 @@ function recordStance(
   setJudgments((current) => ({ ...current, [dimensionId]: stance }));
   if (!stance) setMattered((current) => ({ ...current, [dimensionId]: "" }));
   setOrder((order) => rememberJudgment(order, dimensionId, stance));
+}
+
+function genreSelection(names: string[]) {
+  if (names[names.length - 1] === unspecified) return [unspecified];
+  const chosen = names.filter((name) => name !== unspecified);
+  return chosen.length > 0 ? chosen : [unspecified];
 }
 
 function axesFor(dimensions: DimensionOption[], judgments: Record<string, string>, mattered: Record<string, string>): PersonalAxis[] {

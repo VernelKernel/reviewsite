@@ -11,8 +11,6 @@ function evaluation(overrides: Partial<OverlapEvaluation> = {}): OverlapEvaluati
     reviewerSlug: "you",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
-    lens: "EXPERIENCE",
-    standard: "ABSOLUTE",
     judgments: [],
     ...overrides,
   };
@@ -83,23 +81,5 @@ describe("reviewer overlap", () => {
       ],
     );
     expect(overlap.summary).toBe("2 works in common. Enjoyment matches on 1. Execution matches on 2.");
-  });
-
-  it("filters to a shared standard before counting", () => {
-    const overlap = compareReviewers(
-      [
-        evaluation({ workId: "a", title: "A", standard: "ABSOLUTE" }),
-        evaluation({ workId: "b", title: "B", standard: "CONTEXTUAL" }),
-      ],
-      [
-        evaluation({ reviewerId: "maya", reviewerSlug: "maya", workId: "a", title: "A", standard: "ABSOLUTE" }),
-        evaluation({ reviewerId: "maya", reviewerSlug: "maya", workId: "b", title: "B", standard: "ABSOLUTE" }),
-      ],
-      { standard: "CONTEXTUAL" },
-    );
-    expect(overlap.shared).toEqual([]);
-    expect(overlap.onlyYou.map((row) => row.workId)).toEqual(["b"]);
-    expect(overlap.onlyThem).toEqual([]);
-    expect(overlap.summary).toBe("No works in common.");
   });
 });

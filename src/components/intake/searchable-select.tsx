@@ -31,7 +31,7 @@ export function SearchableSelect({
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return options.filter((option) => {
-      if (multiple && selected.includes(option.name)) return false;
+      if (multiple && option.slug !== "" && selected.includes(option.name)) return false;
       return option.name.toLowerCase().includes(needle);
     });
   }, [multiple, options, query, selected]);
@@ -108,9 +108,12 @@ export function SearchableSelect({
   return (
     <div className="search-select" ref={rootRef}>
       {multiple ? (
-        selected.map((item) => <input key={item} type="hidden" name={name} value={item} />)
+        selected.flatMap((item) => {
+          const submitted = fieldValue(options, item);
+          return submitted ? [<input key={item} type="hidden" name={name} value={submitted} />] : [];
+        })
       ) : (
-        <input type="hidden" name={name} value={selected[0] ?? ""} />
+        <input type="hidden" name={name} value={fieldValue(options, selected[0] ?? "")} />
       )}
       <div
         className={`search-select-control${open ? " search-select-open" : ""}`}
@@ -123,7 +126,7 @@ export function SearchableSelect({
       >
         <div className="search-select-value">
           {shown.map((item) =>
-            multiple ? (
+            multiple && fieldValue(options, item) ? (
               <span className="search-select-chip" key={item}>
                 {item}
                 <button
@@ -203,4 +206,9 @@ export function SearchableSelect({
       ) : null}
     </div>
   );
+}
+
+function fieldValue(options: CatalogOption[], item: string) {
+  const option = options.find((entry) => entry.name === item);
+  return option?.slug === "" ? "" : item;
 }

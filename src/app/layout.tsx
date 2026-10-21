@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: { default: "Frame", template: "%s · Frame" },
-  description: "A review site that shows how a work was evaluated: enjoyment, execution, and the standard behind the judgment.",
+  description: "A review site that shows how a work was evaluated: enjoyment and execution, kept separate.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
 };
 

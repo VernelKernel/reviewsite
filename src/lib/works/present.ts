@@ -47,8 +47,6 @@ export function workArt(media: { kind: string; src: string; alt: string; isPrima
 }
 
 export function toLandscapeInput(evaluation: {
-  lens: LandscapeEvaluation["lens"];
-  standard: LandscapeEvaluation["standard"];
   enjoyment: LandscapeEvaluation["enjoyment"];
   execution: LandscapeEvaluation["execution"];
   completion: string;
@@ -64,8 +62,6 @@ export function toLandscapeInput(evaluation: {
   return {
     population: evaluation.population === "CRITIC" ? "CRITIC" : "AUDIENCE",
     outletName: evaluation.outletName ?? evaluation.review?.importSourceName ?? null,
-    lens: evaluation.lens,
-    standard: evaluation.standard,
     enjoyment: evaluation.enjoyment,
     execution: evaluation.execution,
     completion: evaluation.completion,

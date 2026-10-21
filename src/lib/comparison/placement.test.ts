@@ -6,8 +6,6 @@ function row(overrides: Partial<PlacementEvaluation> = {}): PlacementEvaluation 
     reviewerId: "other",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
-    lens: "EXPERIENCE",
-    standard: "ABSOLUTE",
     judgments: [],
     ...overrides,
   };
@@ -17,8 +15,6 @@ const viewer = row({
   reviewerId: "you",
   enjoyment: "POSITIVE",
   execution: "MIXED",
-  lens: "EXPERIENCE",
-  standard: "CONTEXTUAL",
   judgments: [{ slug: "story", name: "Story", stance: "NEGATIVE" }],
 });
 
@@ -71,22 +67,6 @@ describe("audience placement", () => {
     ]);
     const story = placement.lines.find((line) => line.key === "story");
     expect(story?.sentence).toBe("You call story negative. The other evaluation that judged story is positive.");
-  });
-
-  it("adds a standard sentence only when the viewer differs from the set", () => {
-    const placement = placeAudience(viewer, [
-      row({ reviewerId: "a", standard: "ABSOLUTE" }),
-      row({ reviewerId: "b", standard: "ABSOLUTE" }),
-      row({ reviewerId: "c", standard: "ABSOLUTE" }),
-    ]);
-    expect(placement.context).toEqual([
-      "You used a contextual standard. Of 3 other evaluations that recorded a standard, 3 used an absolute standard.",
-    ]);
-  });
-
-  it("stays quiet when the viewer shares the leading approach", () => {
-    const placement = placeAudience(viewer, [row({ reviewerId: "a", lens: "EXPERIENCE", standard: "CONTEXTUAL" })]);
-    expect(placement.context).toEqual([]);
   });
 
   it("says when the set is empty", () => {

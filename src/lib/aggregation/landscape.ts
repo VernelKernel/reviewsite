@@ -1,7 +1,5 @@
 export type StanceValue = "POSITIVE" | "MIXED" | "NEGATIVE";
 export type DimensionFamilyValue = "WORK" | "ENJOYMENT";
-export type LensValue = "EXPERIENCE" | "EXECUTION" | "MIXED";
-export type StandardValue = "ABSOLUTE" | "CONTEXTUAL" | "MIXED";
 export type PolarityValue = "PRAISE" | "CRITICISM";
 
 export type Distribution = {
@@ -12,8 +10,6 @@ export type Distribution = {
 };
 
 export type LandscapeEvaluation = {
-  lens: LensValue | null;
-  standard: StandardValue | null;
   enjoyment: StanceValue;
   execution: StanceValue;
   completion: string;
@@ -58,8 +54,6 @@ export type ReviewLandscape = {
   execution: Distribution;
   dimensions: DimensionLandscape[];
   enjoymentDimensions: DimensionLandscape[];
-  lenses: CountShare[];
-  standards: CountShare[];
   completions: CountShare[];
   topics: TopicLandscape[];
   agreement: string[];
@@ -158,6 +152,10 @@ function shareOf(distribution: Distribution, key: "positive" | "mixed" | "negati
   return distribution[key] / distribution.count;
 }
 
+function executionDistribution(evaluations: LandscapeEvaluation[]): Distribution {
+  return evaluations.reduce((distribution, evaluation) => addStance(distribution, evaluation.execution), emptyDistribution());
+}
+
 function countGroup(records: { key: string; label: string }[]): CountShare[] {
   const map = new Map<string, CountShare>();
   for (const record of records) {
@@ -166,10 +164,6 @@ function countGroup(records: { key: string; label: string }[]): CountShare[] {
     map.set(record.key, current);
   }
   return [...map.values()].sort((a, b) => b.count - a.count);
-}
-
-function executionDistribution(evaluations: LandscapeEvaluation[]): Distribution {
-  return evaluations.reduce((distribution, evaluation) => addStance(distribution, evaluation.execution), emptyDistribution());
 }
 
 export function buildLandscape(evaluations: LandscapeEvaluation[]): ReviewLandscape {
@@ -273,18 +267,6 @@ export function buildLandscape(evaluations: LandscapeEvaluation[]): ReviewLandsc
       }
     }
 
-    const absolute = evaluations.filter((evaluation) => evaluation.standard === "ABSOLUTE");
-    const contextual = evaluations.filter((evaluation) => evaluation.standard === "CONTEXTUAL");
-    if (absolute.length >= 2 && contextual.length >= 2) {
-      const absolutePositive = shareOf(executionDistribution(absolute), "positive");
-      const contextualPositive = shareOf(executionDistribution(contextual), "positive");
-      if (Math.abs(absolutePositive - contextualPositive) >= 0.34) {
-        disagreement.push(
-          "Reviewers who adjusted their expectations and reviewers who did not describe execution differently.",
-        );
-      }
-    }
-
     const early = evaluations.filter((evaluation) => EARLY.has(evaluation.completion));
     const completed = evaluations.filter((evaluation) => COMPLETED.has(evaluation.completion));
     if (early.length >= 2 && completed.length >= 2) {
@@ -309,38 +291,6 @@ export function buildLandscape(evaluations: LandscapeEvaluation[]): ReviewLandsc
     execution,
     dimensions,
     enjoymentDimensions,
-    lenses: countGroup(
-      evaluations.flatMap((evaluation) => {
-        if (!evaluation.lens) return [];
-        return [
-          {
-            key: evaluation.lens,
-            label:
-              evaluation.lens === "EXECUTION"
-                ? "Execution-focused"
-                : evaluation.lens === "EXPERIENCE"
-                  ? "Experience-focused"
-                  : "Mixed approach",
-          },
-        ];
-      }),
-    ),
-    standards: countGroup(
-      evaluations.flatMap((evaluation) => {
-        if (!evaluation.standard) return [];
-        return [
-          {
-            key: evaluation.standard,
-            label:
-              evaluation.standard === "ABSOLUTE"
-                ? "Absolute standards"
-                : evaluation.standard === "CONTEXTUAL"
-                  ? "Contextual standards"
-                  : "Mixed standards",
-          },
-        ];
-      }),
-    ),
     completions: countGroup(evaluations.map((evaluation) => ({ key: evaluation.completion, label: evaluation.completion }))),
     topics,
     agreement: unique(agreement).slice(0, 4),

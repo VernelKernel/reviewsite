@@ -18,8 +18,6 @@ import {
   completionLabel,
   criticsHref,
   evaluateHref,
-  lensLabel,
-  standardLabel,
   workTypeLabel,
 } from "@/lib/domain/labels";
 import { filterEvaluations } from "@/lib/works/filter-evaluations";
@@ -33,8 +31,6 @@ import {
   workArt,
 } from "@/lib/works/present";
 
-const lenses = ["EXECUTION", "EXPERIENCE", "MIXED"] as const;
-const standards = ["ABSOLUTE", "CONTEXTUAL", "MIXED"] as const;
 const completions = ["JUST_STARTED", "EARLY", "SUBSTANTIAL", "COMPLETED", "ENDGAME", "POST_GAME", "ABANDONED"] as const;
 function one(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -52,14 +48,12 @@ export async function WorkPage({
   const work = await getWork(workType, slug);
   if (!work || work.status !== "PUBLISHED") notFound();
 
-  const lens = lenses.find((item) => item === one(searchParams.lens));
-  const standard = standards.find((item) => item === one(searchParams.standard));
   const completion = completions.find((item) => item === one(searchParams.completion));
   const platformOptions = [...work.platforms]
     .map((item) => item.platform)
     .sort((left, right) => left.name.localeCompare(right.name));
   const platform = platformOptions.find((item) => item.slug === one(searchParams.platform))?.slug;
-  const filtered = filterEvaluations(work.evaluations, { lens, standard, completion, platform });
+  const filtered = filterEvaluations(work.evaluations, { completion, platform });
   const landscape = splitLandscapes(filtered.map(toLandscapeInput));
   const art = workArt(work.media);
   const year = releaseYear(work.releases);
@@ -73,27 +67,12 @@ export async function WorkPage({
       : `Showing ${filtered.length} of ${work.evaluations.length} published evaluations. These figures describe the filtered set.`;
 
   const shareParams = new URLSearchParams();
-  if (lens) shareParams.set("lens", lens);
-  if (standard) shareParams.set("standard", standard);
   if (completion) shareParams.set("completion", completion);
   if (platform) shareParams.set("platform", platform);
   const shareQuery = shareParams.toString();
   const platformName = platformOptions.find((item) => item.slug === platform)?.name;
-  const activeFilters = [
-    lens ? lensLabel[lens] : null,
-    standard ? standardLabel[standard] : null,
-    completion ? completionLabel[completion] : null,
-    platformName ?? null,
-  ].filter((item): item is string => Boolean(item));
+  const activeFilters = [completion ? completionLabel[completion] : null, platformName ?? null].filter((item): item is string => Boolean(item));
   const filterGroups: FilterGroup[] = [
-    { name: "lens", label: "Approach", anyLabel: "Any approach", value: lens, options: lenses.map((value) => ({ value, label: lensLabel[value] })) },
-    {
-      name: "standard",
-      label: "Standard",
-      anyLabel: "Any standard",
-      value: standard,
-      options: standards.map((value) => ({ value, label: standardLabel[value] })),
-    },
     {
       name: "completion",
       label: "Experience",
@@ -287,8 +266,6 @@ function toPlacement(evaluation: FullWork["evaluations"][number]): PlacementEval
     reviewerId: evaluation.reviewer.id,
     enjoyment: evaluation.enjoyment,
     execution: evaluation.execution,
-    lens: evaluation.lens,
-    standard: evaluation.standard,
     judgments: [...evaluation.judgments]
       .sort((left, right) => left.dimension.sortOrder - right.dimension.sortOrder)
       .map((judgment) => ({

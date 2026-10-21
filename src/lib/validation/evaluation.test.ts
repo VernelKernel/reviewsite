@@ -11,8 +11,6 @@ function form(values: Record<string, string>, extras?: (data: FormData) => void)
 const base = {
   email: "ada@example.com",
   displayName: "Ada",
-  lens: "EXECUTION",
-  standard: "ABSOLUTE",
   enjoyment: "POSITIVE",
   execution: "NEGATIVE",
   completion: "COMPLETED",
@@ -73,18 +71,10 @@ describe("evaluation validation", () => {
     expect(result.ok).toBe(false);
   });
 
-  it("requires a lens and a standard to publish", () => {
-    const result = parseEvaluationForm(form({ ...base, lens: "", standard: "" }));
-    expect(result.ok).toBe(false);
-  });
-
-  it("accepts a draft that has not chosen a lens yet", () => {
-    const result = parseEvaluationForm(form({ ...base, lens: "", standard: "", intent: "draft" }));
+  it("accepts a draft", () => {
+    const result = parseEvaluationForm(form({ ...base, intent: "draft" }));
     expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.intent).toBe("draft");
-      expect(result.data.lens).toBeUndefined();
-    }
+    if (result.ok) expect(result.intent).toBe("draft");
   });
 
   it("builds the review from dimension sections and drops empty blocks", () => {
@@ -162,7 +152,7 @@ describe("evaluation validation", () => {
 
   it("still checks an observation that is present on a draft", () => {
     const result = parseEvaluationForm(
-      form({ ...base, lens: "", standard: "", intent: "draft" }, (data) => {
+      form({ ...base, intent: "draft" }, (data) => {
         data.append("observationTopic", "topic-1");
         data.append("observationPolarity", "PRAISE");
         data.append("observationContent", "Nope");

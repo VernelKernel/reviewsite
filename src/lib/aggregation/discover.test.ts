@@ -4,8 +4,6 @@ import { evidenceShelves, type DiscoverWork } from "./discover";
 
 function evaluation(overrides: Partial<LandscapeEvaluation> = {}): LandscapeEvaluation {
   return {
-    lens: "MIXED",
-    standard: "ABSOLUTE",
     enjoyment: "POSITIVE",
     execution: "POSITIVE",
     completion: "COMPLETED",
@@ -55,19 +53,5 @@ describe("evidence shelves", () => {
     expect(apart?.works.map((item) => item.title)).toEqual(["Wider", "Wide"]);
     expect(apart?.works[0]?.note).toMatch(/Enjoyment runs/);
     expect(apart?.works[0]?.note).toMatch(/Based on 4 evals/);
-  });
-
-  it("keeps a standards split on its own shelf", () => {
-    const standards = evidenceShelves([
-      work("Context", [
-        evaluation({ standard: "ABSOLUTE", execution: "POSITIVE" }),
-        evaluation({ standard: "ABSOLUTE", execution: "POSITIVE" }),
-        evaluation({ standard: "CONTEXTUAL", execution: "NEGATIVE" }),
-        evaluation({ standard: "CONTEXTUAL", execution: "NEGATIVE" }),
-      ]),
-    ]).find((shelf) => shelf.id === "standards");
-
-    expect(standards?.works.map((item) => item.title)).toEqual(["Context"]);
-    expect(standards?.works[0]?.note).toMatch(/adjusted their expectations/);
   });
 });

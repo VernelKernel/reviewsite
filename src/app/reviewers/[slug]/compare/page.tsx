@@ -4,13 +4,9 @@ import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { compareReviewers, type OverlapEvaluation } from "@/lib/comparison/overlap";
 import { prisma } from "@/lib/db/client";
-import { lensLabel, reviewHref, reviewerHref, standardLabel, workHref } from "@/lib/domain/labels";
-
-const lenses = ["EXECUTION", "EXPERIENCE", "MIXED"] as const;
-const standards = ["ABSOLUTE", "CONTEXTUAL", "MIXED"] as const;
+import { reviewHref, reviewerHref, workHref } from "@/lib/domain/labels";
 
 type Params = { slug: string };
-type Search = Record<string, string | string[] | undefined>;
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { slug } = await params;
@@ -22,13 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   };
 }
 
-export default async function CompareReviewerPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<Params>;
-  searchParams: Promise<Search>;
-}) {
+export default async function CompareReviewerPage({ params }: { params: Promise<Params> }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   const { slug } = await params;
@@ -36,15 +26,11 @@ export default async function CompareReviewerPage({
   if (!reviewer) notFound();
   if (user.profile?.id === reviewer.id) redirect(reviewerHref(reviewer.slug));
 
-  const query = await searchParams;
-  const lens = lenses.find((item) => item === one(query.lens));
-  const standard = standards.find((item) => item === one(query.standard));
   const [yours, theirs] = await Promise.all([
     user.profile ? loadEvaluations(user.profile.id) : Promise.resolve([]),
     loadEvaluations(reviewer.id),
   ]);
-  const overlap = compareReviewers(yours, theirs, { lens, standard });
-  const base = `/reviewers/${reviewer.slug}/compare`;
+  const overlap = compareReviewers(yours, theirs);
 
   return (
     <main className="page shell">
@@ -56,27 +42,7 @@ export default async function CompareReviewerPage({
       <p className="meta">
         <a href={reviewerHref(reviewer.slug)}>{reviewer.displayName}</a>
       </p>
-      <div className="filters" aria-label="Filter shared evaluations">
-        <a className="chip" href={href(base, { lens, standard }, "lens")} aria-current={!lens ? "true" : undefined}>
-          Any approach
-        </a>
-        {lenses.map((value) => (
-          <a key={value} className="chip" href={href(base, { lens, standard }, "lens", value)} aria-current={lens === value ? "true" : undefined}>
-            {lensLabel[value]}
-          </a>
-        ))}
-        {standards.map((value) => (
-          <a
-            key={value}
-            className="chip"
-            href={href(base, { lens, standard }, "standard", value)}
-            aria-current={standard === value ? "true" : undefined}
-          >
-            {standardLabel[value]}
-          </a>
-        ))}
-      </div>
-      <Shelf title="Works you have both evaluated" empty="No published evaluations in common for this filter." count={overlap.shared.length}>
+      <Shelf title="Works you have both evaluated" empty="No published evaluations in common." count={overlap.shared.length}>
         {overlap.shared.map((row) => (
           <article className="review-card" key={row.workId}>
             <header>
@@ -98,7 +64,7 @@ export default async function CompareReviewerPage({
           </article>
         ))}
       </Shelf>
-      <Shelf title="Works only you have evaluated" empty="None for this filter." count={overlap.onlyYou.length}>
+      <Shelf title="Works only you have evaluated" empty="None." count={overlap.onlyYou.length}>
         {overlap.onlyYou.map((row) => (
           <article className="review-card" key={row.workId}>
             <header>
@@ -112,7 +78,7 @@ export default async function CompareReviewerPage({
           </article>
         ))}
       </Shelf>
-      <Shelf title={`Works only ${reviewer.displayName} has evaluated`} empty="None for this filter." count={overlap.onlyThem.length}>
+      <Shelf title={`Works only ${reviewer.displayName} has evaluated`} empty="None." count={overlap.onlyThem.length}>
         {overlap.onlyThem.map((row) => (
           <article className="review-card" key={row.workId}>
             <header>
@@ -157,8 +123,6 @@ async function loadEvaluations(reviewerId: string): Promise<OverlapEvaluation[]>
     reviewerSlug: row.reviewer.slug,
     enjoyment: row.enjoyment,
     execution: row.execution,
-    lens: row.lens,
-    standard: row.standard,
     judgments: [...row.judgments]
       .sort((left, right) => left.dimension.sortOrder - right.dimension.sortOrder)
       .map((judgment) => ({
@@ -169,16 +133,3 @@ async function loadEvaluations(reviewerId: string): Promise<OverlapEvaluation[]>
   }));
 }
 
-function one(value: string | string[] | undefined): string | undefined {
-  return Array.isArray(value) ? value[0] : value;
-}
-
-function href(base: string, current: { lens?: string; standard?: string }, key: string, value?: string) {
-  const params = new URLSearchParams();
-  for (const [name, existing] of Object.entries(current)) {
-    if (existing && name !== key) params.set(name, existing);
-  }
-  if (value) params.set(key, value);
-  const query = params.toString();
-  return query ? `${base}?${query}` : base;
-}
