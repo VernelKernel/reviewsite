@@ -1,3 +1,4 @@
+import { DimensionReading } from "@/components/evaluations/dimension-reading";
 import { EvaluationGraph } from "@/components/evaluations/evaluation-graph";
 import { EvaluationNav } from "@/components/evaluations/evaluation-nav";
 import { EvaluationShare } from "@/components/evaluations/evaluation-share";
@@ -8,8 +9,6 @@ import {
   playtimeLabel,
   reviewHref,
   reviewerHref,
-  stanceClass,
-  stanceLabel,
   workHref,
   workTypeLabel,
 } from "@/lib/domain/labels";
@@ -40,10 +39,10 @@ export function EvaluationRecord({
     .sort((left, right) => left.dimension.sortOrder - right.dimension.sortOrder || left.dimension.name.localeCompare(right.dimension.name));
   const axes: RadarAxis[] = judged
     .filter((judgment) => judgment.dimension.family !== "ENJOYMENT")
-    .map((judgment) => ({ name: judgment.dimension.name, stance: judgment.stance as StanceName }));
+    .map((judgment) => ({ name: judgment.dimension.name, stance: judgment.stance as StanceName, mattered: judgment.mattered }));
   const enjoymentAxes: RadarAxis[] = judged
     .filter((judgment) => judgment.dimension.family === "ENJOYMENT")
-    .map((judgment) => ({ name: judgment.dimension.name, stance: judgment.stance as StanceName }));
+    .map((judgment) => ({ name: judgment.dimension.name, stance: judgment.stance as StanceName, mattered: judgment.mattered }));
   const strengths = evaluation.observations.filter((item) => item.polarity === "PRAISE").map((item) => item.content);
   const weaknesses = evaluation.observations.filter((item) => item.polarity === "CRITICISM").map((item) => item.content);
   const genres = [...work.genres].sort((left, right) => Number(right.isPrimary) - Number(left.isPrimary));
@@ -213,9 +212,7 @@ function DimensionBreakdown({ id, title, axes }: { id: string; title: string; ax
         <ul className="dimension-breakdown">
           {axes.map((axis) => (
             <li key={axis.name}>
-              <i className={`dimension-dot dimension-dot-${axis.stance.toLowerCase()}`} aria-hidden="true" />
-              <span>{axis.name}</span>
-              <span className={stanceClass(axis.stance)}>{stanceLabel[axis.stance]}</span>
+              <DimensionReading name={axis.name} stance={axis.stance} mattered={axis.mattered} />
             </li>
           ))}
         </ul>

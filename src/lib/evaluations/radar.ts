@@ -1,10 +1,13 @@
 import { STANCE_RADIUS } from "@/lib/intake/judgments";
+import { MATTERED_RADIUS, type MatteredName } from "@/lib/evaluations/mattered";
 
 export type StanceName = keyof typeof STANCE_RADIUS;
 
 export type RadarAxis = {
   name: string;
   stance: StanceName;
+  /** Set on a single review. Community shapes do not use this. */
+  mattered?: MatteredName | null;
 };
 
 export const STANCE_RINGS: { stance: StanceName; label: string }[] = [
@@ -24,4 +27,9 @@ export function radarPoint(cx: number, cy: number, radius: number, index: number
 
 export function stanceDistance(stance: StanceName): number {
   return STANCE_RADIUS[stance];
+}
+
+/** Single-review radius. Mattered wins when the reviewer set it. Older judgments keep the stance radius. */
+export function axisDistance(axis: { stance: StanceName; mattered?: MatteredName | null }): number {
+  return axis.mattered ? MATTERED_RADIUS[axis.mattered] : stanceDistance(axis.stance);
 }

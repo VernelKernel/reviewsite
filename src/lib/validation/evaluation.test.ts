@@ -29,10 +29,30 @@ describe("evaluation validation", () => {
     }
   });
 
+  it("requires how much a judged dimension mattered", () => {
+    const missing = parseEvaluationForm(
+      form(base, (data) => {
+        data.append("judgment:dim-1", "POSITIVE");
+      }),
+    );
+    expect(missing.ok).toBe(false);
+    if (!missing.ok) expect(missing.message).toBe("Say how much each judged dimension mattered.");
+
+    const kept = parseEvaluationForm(
+      form(base, (data) => {
+        data.append("judgment:dim-1", "NEGATIVE");
+        data.append("mattered:dim-1", "MATTERS_A_LOT");
+      }),
+    );
+    expect(kept.ok).toBe(true);
+    if (kept.ok) expect(kept.data.judgments).toEqual([{ dimensionId: "dim-1", stance: "NEGATIVE", mattered: "MATTERS_A_LOT" }]);
+  });
+
   it("rejects two judgments of the same dimension", () => {
     const result = parseEvaluationForm(
       form(base, (data) => {
         data.append("judgment:dim-1", "POSITIVE");
+        data.append("mattered:dim-1", "A_LITTLE");
         data.append("judgment:dim-1", "NEGATIVE");
       }),
     );

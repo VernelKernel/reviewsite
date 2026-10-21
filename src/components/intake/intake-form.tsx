@@ -4,14 +4,16 @@ import { useActionState, useEffect, useMemo, useState, type Dispatch, type FormE
 import { useFormStatus } from "react-dom";
 import type { WorkType } from "@/generated/prisma/client";
 import { DimensionChoices, type DimensionOption } from "@/components/evaluations/dimension-fields";
+import { DimensionReading } from "@/components/evaluations/dimension-reading";
 import { EvaluationGraph } from "@/components/evaluations/evaluation-graph";
 import { StancePills } from "@/components/evaluations/stance-pills";
 import { ReviewComposer } from "@/components/evaluations/review-composer";
 import type { PersonalAxis } from "@/components/intake/personal-shape";
 import { SearchableSelect, type CatalogOption } from "@/components/intake/searchable-select";
+import { stanceClass, stanceLabel } from "@/lib/domain/labels";
+import { isMattered } from "@/lib/evaluations/mattered";
 import { createIntake, type IntakeActionState } from "@/lib/intake/actions";
 import { judgedDimensions, rememberJudgment } from "@/lib/reviews/sections";
-import { stanceClass, stanceLabel } from "@/lib/domain/labels";
 
 const steps = [
   { id: "basics", anchor: "basics", label: "Media" },
@@ -40,6 +42,7 @@ export function IntakeForm({
   const [enjoyment, setEnjoyment] = useState("");
   const [execution, setExecution] = useState("");
   const [judgments, setJudgments] = useState<Record<string, string>>({});
+  const [mattered, setMattered] = useState<Record<string, string>>({});
   const [judgedOrder, setJudgedOrder] = useState<string[]>([]);
   const [chartFeedback, setChartFeedback] = useState<string | null>(null);
   const otherHref = workType === "MOVIE" ? "/review/new?type=game" : "/review/new?type=movie";
@@ -82,8 +85,11 @@ export function IntakeForm({
   const judged = useMemo(() => judgedDimensions(dimensions, judgments, judgedOrder), [dimensions, judgments, judgedOrder]);
   const enjoymentDimensions = dimensions.filter((dimension) => dimension.family === "ENJOYMENT");
   const workDimensions = dimensions.filter((dimension) => dimension.family !== "ENJOYMENT");
-  const workAxes = axesFor(workDimensions, judgments);
-  const enjoymentAxes = axesFor(enjoymentDimensions, judgments);
+  const workAxes = axesFor(workDimensions, judgments, mattered);
+  const enjoymentAxes = axesFor(enjoymentDimensions, judgments, mattered);
+  const matteredGap = [enjoymentDimensions, workDimensions].some((group) =>
+    group.some((dimension) => isStance(judgments[dimension.id] ?? "") && !isMattered(mattered[dimension.id] ?? "")),
+  );
   const current = steps.find((step) => step.id === active) ?? steps[0];
   const currentIndex = steps.findIndex((step) => step.id === current.id) + 1;
   const byline = [platform.trim(), ...genresChosen].filter(Boolean);
@@ -97,6 +103,7 @@ export function IntakeForm({
     genreMissing,
     enjoyment,
     execution,
+    matteredGap,
     judgedEnjoyment: enjoymentAxes.length,
     judgedExecution: workAxes.length,
   });
@@ -230,9 +237,12 @@ export function IntakeForm({
               <div className="dimension-group">
                 <DimensionChoices
                   legend="Enjoyment, if you want to be more specific"
+                  note="Skip a row that did not matter."
                   dimensions={enjoymentDimensions}
                   values={judgments}
-                  onStance={(dimensionId, stance) => recordStance(setJudgments, setJudgedOrder, dimensionId, stance)}
+                  mattered={mattered}
+                  onStance={(dimensionId, stance) => recordStance(setJudgments, setMattered, setJudgedOrder, dimensionId, stance)}
+                  onMattered={(dimensionId, next) => setMattered((current) => ({ ...current, [dimensionId]: next }))}
                   split
                 />
               </div>
@@ -255,10 +265,12 @@ export function IntakeForm({
               <div className="dimension-group">
                 <DimensionChoices
                   legend="Execution, if you want to be more specific"
-                  note="Leave a row as “Skip” when you don’t have a view."
+                  note="Leave a row as “Skip” when it did not matter or you don’t have a view."
                   dimensions={workDimensions}
                   values={judgments}
-                  onStance={(dimensionId, stance) => recordStance(setJudgments, setJudgedOrder, dimensionId, stance)}
+                  mattered={mattered}
+                  onStance={(dimensionId, stance) => recordStance(setJudgments, setMattered, setJudgedOrder, dimensionId, stance)}
+                  onMattered={(dimensionId, next) => setMattered((current) => ({ ...current, [dimensionId]: next }))}
                   split
                 />
               </div>
@@ -352,18 +364,21 @@ export function IntakeForm({
 
 function recordStance(
   setJudgments: Dispatch<SetStateAction<Record<string, string>>>,
+  setMattered: Dispatch<SetStateAction<Record<string, string>>>,
   setOrder: Dispatch<SetStateAction<string[]>>,
   dimensionId: string,
   stance: string,
 ) {
   setJudgments((current) => ({ ...current, [dimensionId]: stance }));
+  if (!stance) setMattered((current) => ({ ...current, [dimensionId]: "" }));
   setOrder((order) => rememberJudgment(order, dimensionId, stance));
 }
 
-function axesFor(dimensions: DimensionOption[], judgments: Record<string, string>): PersonalAxis[] {
+function axesFor(dimensions: DimensionOption[], judgments: Record<string, string>, mattered: Record<string, string>): PersonalAxis[] {
   return dimensions.flatMap((dimension) => {
     const stance = judgments[dimension.id];
-    return isStance(stance) ? [{ name: dimension.name, stance }] : [];
+    const weight = mattered[dimension.id] ?? "";
+    return isStance(stance) && isMattered(weight) ? [{ name: dimension.name, stance, mattered: weight }] : [];
   });
 }
 
@@ -377,6 +392,7 @@ function chartRequirementMessage({
   genreMissing,
   enjoyment,
   execution,
+  matteredGap,
   judgedEnjoyment,
   judgedExecution,
 }: {
@@ -385,6 +401,7 @@ function chartRequirementMessage({
   genreMissing: boolean;
   enjoyment: string;
   execution: string;
+  matteredGap: boolean;
   judgedEnjoyment: number;
   judgedExecution: number;
 }): string | null {
@@ -395,6 +412,7 @@ function chartRequirementMessage({
   if (fields.length === 1) missing.push(`${fields[0]} is required.`);
   if (fields.length > 1) missing.push(`${fields.slice(0, -1).join(", ")} and ${fields[fields.length - 1]} are required.`);
   if (!isStance(enjoyment) || !isStance(execution)) missing.push("Answer enjoyment and execution.");
+  if (matteredGap) missing.push("Say how much each judged dimension mattered.");
   if (judgedEnjoyment < 3 || judgedExecution < 3) missing.push("At least three dimensions are required.");
   return missing.length > 0 ? missing.join(" ") : null;
 }
@@ -408,9 +426,7 @@ function scrollToStep(id: string) {
 function BreakdownRow({ axis }: { axis: PersonalAxis }) {
   return (
     <li>
-      <i className={`dimension-dot dimension-dot-${axis.stance.toLowerCase()}`} aria-hidden="true" />
-      <span>{axis.name}</span>
-      <span className={stanceClass(axis.stance)}>{stanceLabel[axis.stance]}</span>
+      <DimensionReading name={axis.name} stance={axis.stance} mattered={axis.mattered} />
     </li>
   );
 }

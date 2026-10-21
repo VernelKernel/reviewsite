@@ -81,6 +81,13 @@ enum Stance {
   NEGATIVE
 }
 
+/// How much a judged dimension mattered to one reviewer. There is no zero: skipping the dimension is that choice.
+enum Mattered {
+  A_LITTLE
+  QUITE_A_BIT
+  MATTERS_A_LOT
+}
+
 enum DimensionFamily {
   WORK
   ENJOYMENT
@@ -524,10 +531,11 @@ model Dimension {
 }
 
 model EvaluationJudgment {
-  id           String @id @default(cuid())
+  id           String    @id @default(cuid())
   evaluationId String
   dimensionId  String
   stance       Stance
+  mattered     Mattered?
 
   evaluation Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   dimension  Dimension  @relation(fields: [dimensionId], references: [id], onDelete: Restrict)

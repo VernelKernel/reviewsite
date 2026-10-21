@@ -51,6 +51,8 @@ Do not silently invent confidence or intensity values.
 
 If magnitude is unavailable, either retain the existing documented radial behavior or use a consistent fixed radial position for categorical stances, while preserving the stance through color and labels.
 
+On a single review, each judged dimension can carry Mattered. The three guide rings are that magnitude: inner "A little bit", middle "Quite a bit", outer "Matters a lot". Stance stays in the color of the point. A judgment saved before Mattered existed keeps the older stance radius. Community shapes still place a point by the leading share of stances, and they do not read Mattered.
+
 ## 1. Geometry Layer
 
 Preserve a recognizable Kiviat/radar graph.

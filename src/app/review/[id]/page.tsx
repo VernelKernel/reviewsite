@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { DimensionReading } from "@/components/evaluations/dimension-reading";
 import { IdentityGate } from "@/components/intake/identity-gate";
 import { PersonalDownload } from "@/components/intake/personal-download";
 import { PersonalShape } from "@/components/intake/personal-shape";
@@ -24,10 +25,10 @@ export default async function ReviewChartPage({ params }: { params: Promise<{ id
         orderBy: { sortOrder: "asc" },
       })
     : [];
-  const stanceById = new Map(stored.map((judgment) => [judgment.dimensionId, judgment.stance]));
+  const byId = new Map(stored.map((judgment) => [judgment.dimensionId, judgment]));
   const readings = dimensions.flatMap((dimension) => {
-    const stance = stanceById.get(dimension.id);
-    return stance ? [{ name: dimension.name, stance, family: dimension.family }] : [];
+    const judgment = byId.get(dimension.id);
+    return judgment ? [{ name: dimension.name, stance: judgment.stance, mattered: judgment.mattered, family: dimension.family }] : [];
   });
   const axes = readings.filter((reading) => reading.family !== "ENJOYMENT");
   const enjoymentAxes = readings.filter((reading) => reading.family === "ENJOYMENT");
@@ -52,9 +53,7 @@ export default async function ReviewChartPage({ params }: { params: Promise<{ id
               <ul className="dimension-breakdown" aria-label="Enjoyment dimensions">
                 {enjoymentAxes.map((axis) => (
                   <li key={axis.name}>
-                    <i className={`dimension-dot dimension-dot-${axis.stance.toLowerCase()}`} aria-hidden="true" />
-                    <span>{axis.name}</span>
-                    <span className={stanceClass(axis.stance)}>{stanceLabel[axis.stance]}</span>
+                    <DimensionReading name={axis.name} stance={axis.stance} mattered={axis.mattered} />
                   </li>
                 ))}
               </ul>

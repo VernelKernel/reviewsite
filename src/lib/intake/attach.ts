@@ -138,6 +138,7 @@ export async function attachIntakeToWork(intake: AttachIntake, workId: string, r
             evaluationId: saved.id,
             dimensionId: judgment.dimensionId,
             stance: judgment.stance,
+            mattered: judgment.mattered,
           })),
         });
       }

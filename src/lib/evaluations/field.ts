@@ -1,4 +1,5 @@
-import { radarPoint, stanceDistance, type StanceName } from "./radar";
+import type { MatteredName } from "./mattered";
+import { axisDistance, radarPoint, type StanceName } from "./radar";
 
 export const STANCE_T: Record<StanceName, number> = {
   NEGATIVE: 0,
@@ -67,14 +68,14 @@ export function parseColor(input: string): RGB {
 }
 
 export function fieldModel(
-  axes: { stance: StanceName }[],
+  axes: { stance: StanceName; mattered?: MatteredName | null }[],
   cx: number,
   cy: number,
   radius: number,
   palette: FieldPalette,
 ): FieldModel | null {
   return fieldModelFrom(
-    axes.map((axis) => ({ distance: stanceDistance(axis.stance), t: STANCE_T[axis.stance] })),
+    axes.map((axis) => ({ distance: axisDistance(axis), t: STANCE_T[axis.stance] })),
     cx,
     cy,
     radius,

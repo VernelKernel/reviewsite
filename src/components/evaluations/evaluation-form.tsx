@@ -9,12 +9,13 @@ import { ReviewComposer } from "@/components/evaluations/review-composer";
 import { ArtImage } from "@/components/works/work-art";
 import { saveEvaluation, type ActionState } from "@/lib/evaluation/actions";
 import { completionLabel, ownershipLabel, playtimeLabel, stanceLabel } from "@/lib/domain/labels";
+import { isMattered } from "@/lib/evaluations/mattered";
 import type { RadarAxis } from "@/lib/evaluations/radar";
 import { judgedDimensions, rememberJudgment, type StoredSection } from "@/lib/reviews/sections";
 import type { WorkArt } from "@/lib/works/present";
 
 type Option = { id: string; name: string };
-type Judgment = { dimensionId: string; stance: string };
+type Judgment = { dimensionId: string; stance: string; mattered?: string | null };
 type Observation = { topicId: string; polarity: string; content: string };
 type Genre = { name: string; slug: string };
 
@@ -94,6 +95,13 @@ export function EvaluationForm({
     for (const judgment of defaults?.judgments ?? []) next[judgment.dimensionId] = judgment.stance;
     return next;
   });
+  const [mattered, setMattered] = useState<Record<string, string>>(() => {
+    const next: Record<string, string> = {};
+    for (const judgment of defaults?.judgments ?? []) {
+      if (judgment.mattered) next[judgment.dimensionId] = judgment.mattered;
+    }
+    return next;
+  });
   const [judgedOrder, setJudgedOrder] = useState<string[]>(() => initialJudgedOrder(defaults));
   const [observations, setObservations] = useState<Observation[]>(
     defaults?.observations.length
@@ -138,8 +146,8 @@ export function EvaluationForm({
   const judged = useMemo(() => judgedDimensions(dimensions, judgments, judgedOrder), [dimensions, judgments, judgedOrder]);
   const enjoymentDimensions = dimensions.filter((dimension) => dimension.family === "ENJOYMENT");
   const workDimensions = dimensions.filter((dimension) => dimension.family !== "ENJOYMENT");
-  const workAxes = axesFor(workDimensions, judgments);
-  const enjoymentAxes = axesFor(enjoymentDimensions, judgments);
+  const workAxes = axesFor(workDimensions, judgments, mattered);
+  const enjoymentAxes = axesFor(enjoymentDimensions, judgments, mattered);
   const platformName = platforms.find((platform) => platform.id === platformId)?.name ?? "";
   const current = steps.find((step) => step.id === active) ?? steps[0];
   const currentIndex = steps.findIndex((step) => step.id === current.id) + 1;
@@ -319,10 +327,12 @@ export function EvaluationForm({
           </fieldset>
           <DimensionChoices
             legend="Enjoyment, if you want to be more specific"
-            note="Leave a row as “Skip” when you don’t have a view. These are optional, and they stay separate from the headline."
+            note="Leave a row as “Skip” when it did not matter or you don’t have a view. These are optional, and they stay separate from the headline."
             dimensions={enjoymentDimensions}
             values={judgments}
-            onStance={(dimensionId, stance) => recordStance(setJudgments, setJudgedOrder, dimensionId, stance)}
+            mattered={mattered}
+            onStance={(dimensionId, stance) => recordStance(setJudgments, setMattered, setJudgedOrder, dimensionId, stance)}
+            onMattered={(dimensionId, next) => setMattered((current) => ({ ...current, [dimensionId]: next }))}
             split
           />
         </section>
@@ -343,10 +353,12 @@ export function EvaluationForm({
           </fieldset>
           <DimensionChoices
             legend="Execution, if you want to be more specific"
-            note="Leave a row as “Skip” when you don’t have a view. Three or more judged dimensions draw the radar."
+            note="Leave a row as “Skip” when it did not matter or you don’t have a view. Three or more judged dimensions draw the radar."
             dimensions={workDimensions}
             values={judgments}
-            onStance={(dimensionId, stance) => recordStance(setJudgments, setJudgedOrder, dimensionId, stance)}
+            mattered={mattered}
+            onStance={(dimensionId, stance) => recordStance(setJudgments, setMattered, setJudgedOrder, dimensionId, stance)}
+            onMattered={(dimensionId, next) => setMattered((current) => ({ ...current, [dimensionId]: next }))}
             split
           />
         </section>
@@ -509,18 +521,21 @@ function initialJudgedOrder(
 
 function recordStance(
   setJudgments: Dispatch<SetStateAction<Record<string, string>>>,
+  setMattered: Dispatch<SetStateAction<Record<string, string>>>,
   setOrder: Dispatch<SetStateAction<string[]>>,
   dimensionId: string,
   stance: string,
 ) {
   setJudgments((current) => ({ ...current, [dimensionId]: stance }));
+  if (!stance) setMattered((current) => ({ ...current, [dimensionId]: "" }));
   setOrder((order) => rememberJudgment(order, dimensionId, stance));
 }
 
-function axesFor(dimensions: DimensionOption[], judgments: Record<string, string>): RadarAxis[] {
+function axesFor(dimensions: DimensionOption[], judgments: Record<string, string>, mattered: Record<string, string>): RadarAxis[] {
   return dimensions.flatMap((dimension) => {
     const stance = judgments[dimension.id];
-    return isStance(stance) ? [{ name: dimension.name, stance }] : [];
+    const weight = mattered[dimension.id] ?? "";
+    return isStance(stance) && isMattered(weight) ? [{ name: dimension.name, stance, mattered: weight }] : [];
   });
 }
 

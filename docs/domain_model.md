@@ -145,6 +145,8 @@ The initial vocabulary is:
 * Mixed
 * Negative
 
+A dimension judgment can also say how much that dimension mattered to this reviewer. The vocabulary is "A little bit", "Quite a bit", and "Matters a lot". There is no zero. Skipping the dimension is how the reviewer leaves it out. Mattered places that one reviewer's point on the single-review chart. It is not a score, it is not shown as a percentage, and community shapes do not use it. Those still tally stance.
+
 ---
 
 ## Topic

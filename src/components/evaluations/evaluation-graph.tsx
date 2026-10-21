@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { MatteredLegend } from "@/components/evaluations/dimension-reading";
 import { stanceLabel } from "@/lib/domain/labels";
+import { MATTERED_LABEL } from "@/lib/evaluations/mattered";
 import { fieldModel, guideRings, paintField, type FieldPalette } from "@/lib/evaluations/field";
-import { radarPoint, stanceDistance, type RadarAxis, type StanceName } from "@/lib/evaluations/radar";
+import { axisDistance, radarPoint, type RadarAxis, type StanceName } from "@/lib/evaluations/radar";
 
 const WIDTH = 560;
 const HEIGHT = 460;
@@ -19,6 +21,8 @@ export type EvaluationField = {
 
 export function EvaluationGraph({ fields }: { fields: EvaluationField[] }) {
   const [active, setActive] = useState<{ field: number; index: number } | null>(null);
+  const plotted = fields.flatMap((field) => field.axes);
+  const showMattered = plotted.length > 0 && plotted.every((axis) => axis.mattered);
 
   return (
     <figure className="evaluation-stage" id="graph">
@@ -32,6 +36,7 @@ export function EvaluationGraph({ fields }: { fields: EvaluationField[] }) {
           />
         ))}
       </div>
+      {showMattered ? <MatteredLegend /> : null}
     </figure>
   );
 }
@@ -53,7 +58,7 @@ function RadarField({
   const summary = [
     title,
     axes.length > 0
-      ? axes.map((axis) => `${axis.name} ${stanceLabel[axis.stance]}`).join(", ")
+      ? axes.map((axis) => `${axis.name} ${stanceLabel[axis.stance]}${axis.mattered ? `, ${MATTERED_LABEL[axis.mattered]}` : ""}`).join(", ")
       : "No dimensions judged",
   ].join(". ");
 
@@ -99,15 +104,17 @@ function RadarField({
                 className="radar-outline"
                 points={axes
                   .map((axis, index) => {
-                    const point = radarPoint(CX, CY, RADIUS, index, axes.length, stanceDistance(axis.stance));
+                    const point = radarPoint(CX, CY, RADIUS, index, axes.length, axisDistance(axis));
                     return `${point.x},${point.y}`;
                   })
                   .join(" ")}
               />
             ) : null}
             {axes.map((axis, index) => {
-              const point = radarPoint(CX, CY, RADIUS, index, axes.length, stanceDistance(axis.stance));
+              const point = radarPoint(CX, CY, RADIUS, index, axes.length, axisDistance(axis));
               const label = stanceLabel[axis.stance] ?? axis.stance;
+              const weight = axis.mattered ? MATTERED_LABEL[axis.mattered] : "";
+              const reading = weight ? `${label}. ${weight}` : label;
               const selected = activeIndex === index;
               return (
                 <g key={`${axis.name}-dot`}>
@@ -118,7 +125,7 @@ function RadarField({
                     r={selected ? 8 : 6}
                     tabIndex={0}
                     role="button"
-                    aria-label={`${field.label}, ${axis.name}: ${label}`}
+                    aria-label={`${field.label}, ${axis.name}: ${reading}`}
                     aria-pressed={selected}
                     onMouseEnter={() => onActive(index)}
                     onMouseLeave={() => onActive(null)}
@@ -129,7 +136,7 @@ function RadarField({
                       if (event.key === "Escape") onActive(null);
                     }}
                   >
-                    <title>{`${axis.name}: ${label}`}</title>
+                    <title>{`${axis.name}: ${reading}`}</title>
                   </circle>
                 </g>
               );

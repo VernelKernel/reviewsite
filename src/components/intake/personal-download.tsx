@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { MATTERED_RADIUS, usesMattered } from "@/lib/evaluations/mattered";
+import { axisDistance } from "@/lib/evaluations/radar";
 import { STANCE_RADIUS, personalHeadline } from "@/lib/intake/judgments";
 import type { PersonalAxis } from "./personal-shape";
 
@@ -127,7 +129,10 @@ function drawRadar(
   ctx.lineWidth = 1;
   ctx.font = `12px ${palette.body}`;
   ctx.fillStyle = palette.text;
-  for (const ring of [STANCE_RADIUS.NEGATIVE, STANCE_RADIUS.MIXED, STANCE_RADIUS.POSITIVE]) {
+  const rings = usesMattered(axes)
+    ? [MATTERED_RADIUS.A_LITTLE, MATTERED_RADIUS.QUITE_A_BIT, MATTERED_RADIUS.MATTERS_A_LOT]
+    : [STANCE_RADIUS.NEGATIVE, STANCE_RADIUS.MIXED, STANCE_RADIUS.POSITIVE];
+  for (const ring of rings) {
     ctx.beginPath();
     ctx.arc(cx, cy, radius * ring, 0, Math.PI * 2);
     ctx.stroke();
@@ -141,7 +146,7 @@ function drawRadar(
   }
   ctx.beginPath();
   axes.forEach((axis, index) => {
-    const next = point(cx, cy, radius, index, axes.length, STANCE_RADIUS[axis.stance]);
+    const next = point(cx, cy, radius, index, axes.length, axisDistance(axis));
     if (index === 0) ctx.moveTo(next.x, next.y);
     else ctx.lineTo(next.x, next.y);
   });
@@ -152,7 +157,7 @@ function drawRadar(
   ctx.fill();
   ctx.stroke();
   axes.forEach((axis, index) => {
-    const dot = point(cx, cy, radius, index, axes.length, STANCE_RADIUS[axis.stance]);
+    const dot = point(cx, cy, radius, index, axes.length, axisDistance(axis));
     ctx.beginPath();
     ctx.fillStyle = axis.stance === "POSITIVE" ? palette.positive : axis.stance === "NEGATIVE" ? palette.negative : palette.caution;
     ctx.arc(dot.x, dot.y, 5, 0, Math.PI * 2);

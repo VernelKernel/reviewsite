@@ -2,6 +2,7 @@ import { z } from "zod";
 import { flattenSections, readSectionFields, type StoredSection } from "../reviews/sections";
 
 export const stanceSchema = z.enum(["POSITIVE", "MIXED", "NEGATIVE"]);
+export const matteredSchema = z.enum(["A_LITTLE", "QUITE_A_BIT", "MATTERS_A_LOT"]);
 export const lensSchema = z.enum(["EXPERIENCE", "EXECUTION", "MIXED"]);
 export const standardSchema = z.enum(["ABSOLUTE", "CONTEXTUAL", "MIXED"]);
 export const completionSchema = z.enum([
@@ -56,7 +57,7 @@ const evaluationShape = {
   imported: z.boolean(),
   importSourceName: z.preprocess(emptyToUndefined, z.string().max(120).optional()),
   importSourceUrl: z.preprocess(emptyToUndefined, z.string().url("Enter a full source URL, including https://").optional()),
-  judgments: z.array(z.object({ dimensionId: z.string().min(1), stance: stanceSchema })).max(24),
+  judgments: z.array(z.object({ dimensionId: z.string().min(1), stance: stanceSchema, mattered: matteredSchema })).max(24),
   sections: z
     .array(
       z.object({
@@ -135,10 +136,17 @@ export type EvaluationIntent = "publish" | "draft";
 export function parseEvaluationForm(formData: FormData) {
   const judgments = [...formData.entries()]
     .filter(([key, value]) => key.startsWith("judgment:") && String(value))
-    .map(([key, value]) => ({
-      dimensionId: key.slice("judgment:".length),
-      stance: String(value),
-    }));
+    .map(([key, value]) => {
+      const dimensionId = key.slice("judgment:".length);
+      return {
+        dimensionId,
+        stance: String(value),
+        mattered: String(formData.get(`mattered:${dimensionId}`) ?? ""),
+      };
+    });
+  if (judgments.some((judgment) => !matteredSchema.safeParse(judgment.mattered).success)) {
+    return { ok: false as const, message: "Say how much each judged dimension mattered." };
+  }
 
   const topicIds = formData.getAll("observationTopic").map(String);
   const polarities = formData.getAll("observationPolarity").map(String);

@@ -2488,6 +2488,86 @@ fieldset {
   outline-offset: 2px;
 }
 
+.dimension-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dimension-row .mattered-select select {
+  min-width: 9.75rem;
+  color: var(--color-text-muted);
+}
+
+.dimension-row .mattered-select-set select {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.dimension-reading {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 0.35rem 0.45rem;
+}
+
+.mattered-reading {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+.mattered-legend {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-micro);
+}
+
+.mattered-legend p {
+  margin: 0;
+}
+
+.mattered-legend ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mattered-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mattered-ring {
+  width: 0.55rem;
+  height: 0.55rem;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+  flex: none;
+}
+
+.mattered-ring-middle {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.mattered-ring-outer {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.evaluation-stage .mattered-legend {
+  color: var(--color-chart-label);
+}
+
 .insight-list {
   display: grid;
   gap: var(--space-4);
@@ -4891,6 +4971,16 @@ body:has(.mockup-sheet) .page {
 @media (min-width: 1280px) {
   .builder-dimensions {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .builder-dimensions .dimension-row {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-2);
+  }
+
+  .builder-dimensions .dimension-controls {
+    justify-content: flex-start;
   }
 }
 

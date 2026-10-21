@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { canCloseField, centerStance, fieldModel, fieldModelFrom, illuminatedFieldColor, sampleFieldColor, type RGB } from "./field";
 import type { StanceName } from "./radar";
+import { MATTERED_RADIUS } from "./mattered";
 
 const palette = {
   positive: "#1F7A4D",
@@ -160,6 +161,28 @@ describe("evaluation field", () => {
     expect(amber(spreadCenter)).toBe(true);
     expect(spreadCenter.r - spreadCenter.g).toBeLessThan(negativeCenter.r - negativeCenter.g);
     expect(green(positiveRim)).toBe(true);
+  });
+
+  it("places a single-review point on the mattered ring and keeps stance in the color", () => {
+    const reading = fieldModel(
+      [
+        { stance: "NEGATIVE", mattered: "MATTERS_A_LOT" },
+        { stance: "NEGATIVE", mattered: "QUITE_A_BIT" },
+        { stance: "NEGATIVE", mattered: "A_LITTLE" },
+      ],
+      layout.cx,
+      layout.cy,
+      layout.radius,
+      palette,
+    );
+    if (!reading) throw new Error("expected a closed field");
+    const distance = (index: number) => Math.hypot(reading.vertices[index].x - layout.cx, reading.vertices[index].y - layout.cy);
+    expect(distance(0)).toBeCloseTo(layout.radius * MATTERED_RADIUS.MATTERS_A_LOT, 5);
+    expect(distance(1)).toBeCloseTo(layout.radius * MATTERED_RADIUS.QUITE_A_BIT, 5);
+    expect(distance(2)).toBeCloseTo(layout.radius * MATTERED_RADIUS.A_LITTLE, 5);
+    const outer = sampleFieldColor(reading, reading.vertices[0].x, reading.vertices[0].y);
+    if (!outer) throw new Error("expected color");
+    expect(red(outer)).toBe(true);
   });
 
   it("paints a tied vertex neutral instead of mixed", () => {

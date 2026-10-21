@@ -1,6 +1,6 @@
 import { stanceLabel } from "@/lib/domain/labels";
 import { fieldModel, guideRings, paintField } from "@/lib/evaluations/field";
-import { radarPoint, stanceDistance, type RadarAxis, type StanceName } from "@/lib/evaluations/radar";
+import { axisDistance, radarPoint, stanceDistance, type RadarAxis, type StanceName } from "@/lib/evaluations/radar";
 import { shareFileName } from "@/lib/share/targets";
 
 export type EvaluationCardInput = {
@@ -123,7 +123,7 @@ function drawGraph(ctx: CanvasRenderingContext2D, palette: Palette, input: Evalu
     });
     ctx.beginPath();
     input.axes.forEach((axis, index) => {
-      const next = radarPoint(cx, cy, radius, index, input.axes.length, stanceDistance(axis.stance));
+      const next = radarPoint(cx, cy, radius, index, input.axes.length, axisDistance(axis));
       if (index === 0) ctx.moveTo(next.x, next.y);
       else ctx.lineTo(next.x, next.y);
     });
@@ -132,7 +132,7 @@ function drawGraph(ctx: CanvasRenderingContext2D, palette: Palette, input: Evalu
     ctx.lineWidth = 2;
     ctx.stroke();
     input.axes.forEach((axis, index) => {
-      const dot = radarPoint(cx, cy, radius, index, input.axes.length, stanceDistance(axis.stance));
+      const dot = radarPoint(cx, cy, radius, index, input.axes.length, axisDistance(axis));
       ctx.beginPath();
       ctx.fillStyle = stanceColor(palette, axis.stance);
       ctx.arc(dot.x, dot.y, 7, 0, Math.PI * 2);
@@ -156,7 +156,7 @@ function drawGraph(ctx: CanvasRenderingContext2D, palette: Palette, input: Evalu
       ctx.moveTo(cx, cy);
       ctx.lineTo(end.x, end.y);
       ctx.stroke();
-      const dot = radarPoint(cx, cy, radius, index, Math.max(input.axes.length, 1), stanceDistance(axis.stance));
+      const dot = radarPoint(cx, cy, radius, index, Math.max(input.axes.length, 1), axisDistance(axis));
       ctx.beginPath();
       ctx.fillStyle = stanceColor(palette, axis.stance);
       ctx.arc(dot.x, dot.y, 6, 0, Math.PI * 2);

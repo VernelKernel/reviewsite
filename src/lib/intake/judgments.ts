@@ -1,6 +1,9 @@
+import { isMattered, type MatteredName } from "@/lib/evaluations/mattered";
+
 export type StoredJudgment = {
   dimensionId: string;
   stance: "POSITIVE" | "MIXED" | "NEGATIVE";
+  mattered: MatteredName | null;
 };
 
 const STANCES = new Set(["POSITIVE", "MIXED", "NEGATIVE"]);
@@ -11,12 +14,13 @@ export function readJudgments(value: unknown): StoredJudgment[] {
   const judgments: StoredJudgment[] = [];
   for (const item of value) {
     if (!item || typeof item !== "object") continue;
-    const record = item as { dimensionId?: unknown; stance?: unknown };
+    const record = item as { dimensionId?: unknown; stance?: unknown; mattered?: unknown };
     const dimensionId = typeof record.dimensionId === "string" ? record.dimensionId : "";
     const stance = typeof record.stance === "string" ? record.stance : "";
+    const mattered = typeof record.mattered === "string" && isMattered(record.mattered) ? record.mattered : null;
     if (!dimensionId || !STANCES.has(stance) || seen.has(dimensionId)) continue;
     seen.add(dimensionId);
-    judgments.push({ dimensionId, stance: stance as StoredJudgment["stance"] });
+    judgments.push({ dimensionId, stance: stance as StoredJudgment["stance"], mattered });
   }
   return judgments;
 }

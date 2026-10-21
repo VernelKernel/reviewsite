@@ -102,6 +102,7 @@ export async function saveEvaluation(
             evaluationId: saved.id,
             dimensionId: judgment.dimensionId,
             stance: judgment.stance,
+            mattered: judgment.mattered,
           })),
         });
       }

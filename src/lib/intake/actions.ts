@@ -12,6 +12,7 @@ import { sendVerificationEmail, verificationUrl } from "../mail/send";
 import { loadOwnedIntake } from "./access";
 import { writeIntakeSecret } from "./cookie";
 import { normalizeTitle } from "./normalize";
+import { isMattered, type MatteredName } from "../evaluations/mattered";
 import { flattenSections, readSectionFields, readStoredSections } from "../reviews/sections";
 import { resolveIntake } from "./resolve";
 
@@ -72,10 +73,14 @@ export async function createIntake(_previous: IntakeActionState, formData: FormD
   if (reviewSections.some((section) => section.dimensionId && !allowedDimensions.has(section.dimensionId))) {
     return { error: "One of those dimensions does not apply to this work." };
   }
-  const judgments = dimensions.flatMap((dimension) => {
+  const judgments: { dimensionId: string; stance: "POSITIVE" | "MIXED" | "NEGATIVE"; mattered: MatteredName }[] = [];
+  for (const dimension of dimensions) {
     const stance = stanceOf(formData.get(`judgment:${dimension.id}`));
-    return stance ? [{ dimensionId: dimension.id, stance }] : [];
-  });
+    if (!stance) continue;
+    const mattered = matteredOf(formData.get(`mattered:${dimension.id}`));
+    if (!mattered) return { error: "Say how much each judged dimension mattered." };
+    judgments.push({ dimensionId: dimension.id, stance, mattered });
+  }
   const enjoymentIds = new Set(dimensions.filter((dimension) => dimension.family === "ENJOYMENT").map((dimension) => dimension.id));
   const workIds = new Set(dimensions.filter((dimension) => dimension.family === "WORK").map((dimension) => dimension.id));
   const judgedEnjoyment = judgments.filter((judgment) => enjoymentIds.has(judgment.dimensionId)).length;
@@ -246,6 +251,11 @@ async function issueToken(userId: string, intakeId: string): Promise<string> {
 function stanceOf(value: FormDataEntryValue | null): "POSITIVE" | "MIXED" | "NEGATIVE" | null {
   const stance = String(value ?? "");
   return STANCES.has(stance) ? (stance as "POSITIVE" | "MIXED" | "NEGATIVE") : null;
+}
+
+function matteredOf(value: FormDataEntryValue | null): MatteredName | null {
+  const mattered = String(value ?? "");
+  return isMattered(mattered) ? mattered : null;
 }
 
 function optionalText(value: FormDataEntryValue | null, max: number): string | null | undefined {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
+import { DimensionReading } from "@/components/evaluations/dimension-reading";
 import { EvaluationGraph } from "@/components/evaluations/evaluation-graph";
 import { ArtImage } from "@/components/works/work-art";
 import {
@@ -8,8 +9,6 @@ import {
   lensLabel,
   ownershipLabel,
   playtimeLabel,
-  stanceClass,
-  stanceLabel,
 } from "@/lib/domain/labels";
 import { personalHeadline } from "@/lib/intake/judgments";
 import type { RadarAxis, StanceName } from "@/lib/evaluations/radar";
@@ -136,9 +135,7 @@ export function EvaluationPreview({
 function BreakdownRow({ axis }: { axis: RadarAxis }) {
   return (
     <li>
-      <i className={`dimension-dot dimension-dot-${axis.stance.toLowerCase()}`} aria-hidden="true" />
-      <span>{axis.name}</span>
-      <span className={stanceClass(axis.stance)}>{stanceLabel[axis.stance]}</span>
+      <DimensionReading name={axis.name} stance={axis.stance} mattered={axis.mattered} />
     </li>
   );
 }

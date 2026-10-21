@@ -77,7 +77,12 @@ export async function EvaluateScreen({
                 imported: existing?.review?.source === "IMPORTED",
                 importSourceName: existing?.review?.importSourceName ?? "",
                 importSourceUrl: existing?.review?.importSourceUrl ?? "",
-                judgments: existing?.judgments.map((judgment) => ({ dimensionId: judgment.dimensionId, stance: judgment.stance })) ?? [],
+                judgments:
+                  existing?.judgments.map((judgment) => ({
+                    dimensionId: judgment.dimensionId,
+                    stance: judgment.stance,
+                    mattered: judgment.mattered,
+                  })) ?? [],
                 observations:
                   existing?.observations.map((observation) => ({
                     topicId: observation.topicId,

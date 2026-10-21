@@ -1,15 +1,16 @@
+import { MatteredLegend } from "@/components/evaluations/dimension-reading";
+import { MATTERED_RADIUS, usesMattered, type MatteredName } from "@/lib/evaluations/mattered";
+import { axisDistance } from "@/lib/evaluations/radar";
 import { STANCE_RADIUS } from "@/lib/intake/judgments";
 
 export type PersonalAxis = {
   name: string;
   stance: "POSITIVE" | "MIXED" | "NEGATIVE";
+  mattered?: MatteredName | null;
 };
 
-const RINGS = [
-  { radius: STANCE_RADIUS.NEGATIVE, label: "Negative" },
-  { radius: STANCE_RADIUS.MIXED, label: "Mixed" },
-  { radius: STANCE_RADIUS.POSITIVE, label: "Positive" },
-] as const;
+const STANCE_RINGS = [STANCE_RADIUS.NEGATIVE, STANCE_RADIUS.MIXED, STANCE_RADIUS.POSITIVE];
+const MATTERED_RINGS = [MATTERED_RADIUS.A_LITTLE, MATTERED_RADIUS.QUITE_A_BIT, MATTERED_RADIUS.MATTERS_A_LOT];
 
 export function PersonalShape({ axes, labelledBy }: { axes: PersonalAxis[]; labelledBy: string }) {
   if (axes.length < 3) {
@@ -21,12 +22,15 @@ export function PersonalShape({ axes, labelledBy }: { axes: PersonalAxis[]; labe
   const cx = 360;
   const cy = 312;
   const radius = 176;
-  const points = axes.map((axis, index) => polar(cx, cy, radius, index, axes.length, STANCE_RADIUS[axis.stance]));
+  const mattered = usesMattered(axes);
+  const rings = mattered ? MATTERED_RINGS : STANCE_RINGS;
+  const points = axes.map((axis, index) => polar(cx, cy, radius, index, axes.length, axisDistance(axis)));
 
   return (
-    <svg className="radar-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby={labelledBy}>
-      {RINGS.map((ring) => (
-        <circle key={ring.label} className="radar-ring" cx={cx} cy={cy} r={radius * ring.radius} />
+    <div className="personal-shape">
+      <svg className="radar-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby={labelledBy}>
+      {rings.map((ring) => (
+        <circle key={ring} className="radar-ring" cx={cx} cy={cy} r={radius * ring} />
       ))}
       {axes.map((axis, index) => {
         const end = polar(cx, cy, radius, index, axes.length, 1);
@@ -47,7 +51,9 @@ export function PersonalShape({ axes, labelledBy }: { axes: PersonalAxis[]; labe
           </text>
         );
       })}
-    </svg>
+      </svg>
+      {mattered ? <MatteredLegend /> : null}
+    </div>
   );
 }
 
