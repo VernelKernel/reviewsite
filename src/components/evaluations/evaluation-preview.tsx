@@ -5,7 +5,6 @@ import { DimensionReading } from "@/components/evaluations/dimension-reading";
 import { EvaluationGraph } from "@/components/evaluations/evaluation-graph";
 import { ArtImage } from "@/components/works/work-art";
 import { completionLabel, ownershipLabel, playtimeLabel, stanceClass, stanceLabel } from "@/lib/domain/labels";
-import { personalHeadline } from "@/lib/intake/judgments";
 import type { RadarAxis, StanceName } from "@/lib/evaluations/radar";
 import type { WorkArt } from "@/lib/works/present";
 
@@ -24,6 +23,7 @@ export function EvaluationPreview({
   workAxes,
   enjoymentAxes,
   publishLabel,
+  canDraft = false,
 }: {
   title: string;
   art: WorkArt;
@@ -37,8 +37,8 @@ export function EvaluationPreview({
   workAxes: RadarAxis[];
   enjoymentAxes: RadarAxis[];
   publishLabel: string;
+  canDraft?: boolean;
 }) {
-  const headline = isStance(enjoyment) && isStance(execution) ? personalHeadline(enjoyment, execution) : null;
   const byline = [
     platformName,
     ...genres.slice(0, 2).map((genre) => genre.name),
@@ -53,7 +53,6 @@ export function EvaluationPreview({
           <ArtImage art={art} shape="tall" className="builder-poster" decorative />
           <div>
             <p className="builder-work-title">{title}</p>
-            {headline ? <p className="lede">{headline}</p> : null}
             {byline.length > 0 ? (
               <p className="evaluation-byline">
                 {byline.map((item) => (
@@ -73,22 +72,32 @@ export function EvaluationPreview({
           <h2 id="builder-key-impressions">Key impressions</h2>
           <div className="preview-group">
             {isStance(enjoyment) ? <StanceMeter label="Enjoyment" stance={enjoyment} /> : <p className="meta">Enjoyment not selected</p>}
-            {enjoymentAxes.length > 0 ? (
-              <ul className="dimension-breakdown">
-                {enjoymentAxes.map((axis) => (
-                  <BreakdownRow key={axis.name} axis={axis} />
-                ))}
-              </ul>
+            {isStance(enjoyment) && enjoymentAxes.length > 0 ? (
+              <div className="preview-breakdown">
+                <h2 className="preview-dimension-label" id="preview-enjoyment-dimension">
+                  Dimension
+                </h2>
+                <ul className="dimension-breakdown" aria-label="Enjoyment dimensions">
+                  {enjoymentAxes.map((axis) => (
+                    <BreakdownRow key={axis.name} axis={axis} />
+                  ))}
+                </ul>
+              </div>
             ) : null}
           </div>
           <div className="preview-group">
             {isStance(execution) ? <StanceMeter label="Execution" stance={execution} /> : <p className="meta">Execution not selected</p>}
-            {workAxes.length > 0 ? (
-              <ul className="dimension-breakdown">
-                {workAxes.map((axis) => (
-                  <BreakdownRow key={axis.name} axis={axis} />
-                ))}
-              </ul>
+            {isStance(execution) && workAxes.length > 0 ? (
+              <div className="preview-breakdown">
+                <h2 className="preview-dimension-label" id="preview-execution-dimension">
+                  Dimension
+                </h2>
+                <ul className="dimension-breakdown">
+                  {workAxes.map((axis) => (
+                    <BreakdownRow key={axis.name} axis={axis} />
+                  ))}
+                </ul>
+              </div>
             ) : null}
           </div>
         </section>
@@ -107,6 +116,7 @@ export function EvaluationPreview({
           </section>
         ) : null}
         <div className="builder-publish">
+          {canDraft ? <IntentButton intent="draft">Save draft</IntentButton> : null}
           <IntentButton intent="publish">{publishLabel}</IntentButton>
         </div>
       </div>

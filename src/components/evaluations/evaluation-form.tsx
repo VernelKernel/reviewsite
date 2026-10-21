@@ -4,7 +4,7 @@ import { useActionState, useEffect, useMemo, useState, type Dispatch, type SetSt
 import type { WorkType } from "@/generated/prisma/client";
 import { DimensionChoices, type DimensionOption } from "@/components/evaluations/dimension-fields";
 import { StancePills } from "@/components/evaluations/stance-pills";
-import { EvaluationPreview, IntentButton, isStance } from "@/components/evaluations/evaluation-preview";
+import { EvaluationPreview, isStance } from "@/components/evaluations/evaluation-preview";
 import { ReviewComposer } from "@/components/evaluations/review-composer";
 import { ArtImage } from "@/components/works/work-art";
 import { saveEvaluation, type ActionState } from "@/lib/evaluation/actions";
@@ -352,11 +352,6 @@ export function EvaluationForm({
             initialSections={defaults?.reviewSections ?? []}
           />
         </section>
-        {canDraft ? (
-          <div className="builder-actions">
-            <IntentButton intent="draft">Save draft</IntentButton>
-          </div>
-        ) : null}
       </div>
 
       <EvaluationPreview
@@ -372,6 +367,7 @@ export function EvaluationForm({
         workAxes={workAxes}
         enjoymentAxes={enjoymentAxes}
         publishLabel={hasEvaluation && !canDraft ? "Update review" : "Publish Review"}
+        canDraft={canDraft}
       />
       </div>
     </form>

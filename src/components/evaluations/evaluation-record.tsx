@@ -13,7 +13,6 @@ import {
 } from "@/lib/domain/labels";
 import type { EvaluationCardInput } from "@/components/evaluations/evaluation-card";
 import type { RadarAxis, StanceName } from "@/lib/evaluations/radar";
-import { personalHeadline } from "@/lib/intake/judgments";
 import { ReviewProse } from "@/components/reviews/review-prose";
 import { HeroArt } from "@/components/works/work-art";
 import { formatDate, workArt, type FullWork } from "@/lib/works/present";
@@ -151,7 +150,6 @@ export function EvaluationRecord({
                 {related.map((item) => (
                   <li key={item.id}>
                     <a href={reviewHref(work.workType, work.slug, item.reviewer.slug)}>{item.reviewer.displayName}</a>
-                    <span>{personalHeadline(item.enjoyment, item.execution)}</span>
                   </li>
                 ))}
               </ul>

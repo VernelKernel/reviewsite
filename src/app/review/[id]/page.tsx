@@ -8,7 +8,7 @@ import { PersonalDownload } from "@/components/intake/personal-download";
 import { PersonalShape } from "@/components/intake/personal-shape";
 import { stanceClass, stanceLabel, workHref } from "@/lib/domain/labels";
 import { loadOwnedIntake } from "@/lib/intake/access";
-import { personalHeadline, readJudgments } from "@/lib/intake/judgments";
+import { readJudgments } from "@/lib/intake/judgments";
 import { readStoredSections } from "@/lib/reviews/sections";
 import { ReviewProse } from "@/components/reviews/review-prose";
 import { prisma } from "@/lib/db/client";
@@ -34,8 +34,6 @@ export default async function ReviewChartPage({ params }: { params: Promise<{ id
   });
   const axes = readings.filter((reading) => reading.family !== "ENJOYMENT");
   const enjoymentAxes = readings.filter((reading) => reading.family === "ENJOYMENT");
-  const headline =
-    intake.enjoyment && intake.execution ? personalHeadline(intake.enjoyment, intake.execution) : "Saved as a draft.";
   const verified = Boolean(intake.user?.emailVerified);
   const devVerify = process.env.NODE_ENV === "production" ? null : (await cookies()).get("frame_dev_verify")?.value ?? null;
   const headingId = "personal-chart-title";
@@ -46,7 +44,7 @@ export default async function ReviewChartPage({ params }: { params: Promise<{ id
       <section className="personal-chart" aria-labelledby={headingId}>
         <p className="kicker">Your evaluation</p>
         <h1 id={headingId}>{intake.rawTitle}</h1>
-        <p className="lede">{headline}</p>
+        {intake.draft ? <p className="lede">Saved as a draft.</p> : null}
         <div className="personal-layout">
           <div>
             <PersonalShape axes={axes} labelledBy={headingId} />
@@ -90,7 +88,6 @@ export default async function ReviewChartPage({ params }: { params: Promise<{ id
         {intake.enjoyment && intake.execution ? (
           <PersonalDownload
             title={intake.rawTitle}
-            headline={headline}
             enjoyment={intake.enjoyment}
             execution={intake.execution}
             axes={axes}

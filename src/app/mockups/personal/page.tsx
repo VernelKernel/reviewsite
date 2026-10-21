@@ -32,7 +32,6 @@ export default async function PersonalMockupPage({
           <div>
             <p className="kicker">Your evaluation</p>
             <h1 id="mockup-chart-title">ACE COMBAT 8: WINGS OF THEVE</h1>
-            <p className="lede">Mixed on enjoyment. Mixed execution.</p>
           </div>
           <div className="personal-layout">
             <PersonalShape axes={axes} labelledBy="mockup-chart-title" />

@@ -25,20 +25,6 @@ export function readJudgments(value: unknown): StoredJudgment[] {
   return judgments;
 }
 
-export function personalHeadline(enjoyment: string, execution: string): string {
-  const enjoy: Record<string, string> = {
-    POSITIVE: "Loved it",
-    MIXED: "Mixed on enjoyment",
-    NEGATIVE: "Didn't enjoy it",
-  };
-  const craft: Record<string, string> = {
-    POSITIVE: "Well executed",
-    MIXED: "Mixed execution",
-    NEGATIVE: "Poorly executed",
-  };
-  return `${enjoy[enjoyment] ?? "Enjoyment recorded"}. ${craft[execution] ?? "Execution recorded"}.`;
-}
-
 export const STANCE_RADIUS = {
   POSITIVE: 1,
   MIXED: 0.62,

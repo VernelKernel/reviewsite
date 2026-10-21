@@ -3,21 +3,19 @@
 import { useState } from "react";
 import { MATTERED_RADIUS, usesMattered } from "@/lib/evaluations/mattered";
 import { axisDistance } from "@/lib/evaluations/radar";
-import { STANCE_RADIUS, personalHeadline } from "@/lib/intake/judgments";
+import { STANCE_RADIUS } from "@/lib/intake/judgments";
 import type { PersonalAxis } from "./personal-shape";
 
 const STANCE_LABEL = { POSITIVE: "Positive", MIXED: "Mixed", NEGATIVE: "Negative" };
 
 export function PersonalDownload({
   title,
-  headline,
   enjoyment,
   execution,
   axes,
   enabled,
 }: {
   title: string;
-  headline: string;
   enjoyment: "POSITIVE" | "MIXED" | "NEGATIVE";
   execution: "POSITIVE" | "MIXED" | "NEGATIVE";
   axes: PersonalAxis[];
@@ -30,7 +28,7 @@ export function PersonalDownload({
     setPending(true);
     setStatus("");
     try {
-      const file = await renderPersonalCard({ title, headline, enjoyment, execution, axes });
+      const file = await renderPersonalCard({ title, enjoyment, execution, axes });
       const url = URL.createObjectURL(file);
       const link = document.createElement("a");
       link.href = url;
@@ -58,7 +56,6 @@ export function PersonalDownload({
 
 async function renderPersonalCard(input: {
   title: string;
-  headline: string;
   enjoyment: "POSITIVE" | "MIXED" | "NEGATIVE";
   execution: "POSITIVE" | "MIXED" | "NEGATIVE";
   axes: PersonalAxis[];
@@ -78,7 +75,6 @@ async function renderPersonalCard(input: {
   const palette = {
     canvas: read("--color-canvas", "#f6f4ef"),
     text: read("--color-text-primary", "#17191c"),
-    muted: read("--color-text-muted", "#667085"),
     border: read("--color-border", "#d8d5ce"),
     accent: read("--color-accent", "#3157D5"),
     positive: read("--color-positive", "#1F7A4D"),
@@ -91,9 +87,6 @@ async function renderPersonalCard(input: {
   ctx.fillStyle = palette.text;
   ctx.font = `700 42px ${palette.body}`;
   ctx.fillText(input.title.slice(0, 48), 64, 88);
-  ctx.font = `400 22px ${palette.body}`;
-  ctx.fillStyle = palette.muted;
-  ctx.fillText(input.headline || personalHeadline(input.enjoyment, input.execution), 64, 128);
 
   if (input.axes.length >= 3) drawRadar(ctx, palette, input.axes, 80, 180, 680, 520);
   drawStance(ctx, palette, "Enjoyment", input.enjoyment, 820, 240);

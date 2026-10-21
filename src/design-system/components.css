@@ -4872,9 +4872,22 @@ body:has(.mockup-sheet) .page {
   margin-bottom: var(--space-4);
 }
 
+.builder-preview .glance-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-4);
+}
+
 .builder-preview .glance-list strong,
 .builder-preview .glance-list span {
   font-size: var(--text-meta);
+}
+
+.builder-preview .glance-list strong {
+  font-weight: 650;
+}
+
+.builder-preview .glance-list span {
   font-weight: 400;
 }
 
