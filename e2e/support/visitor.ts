@@ -1,5 +1,4 @@
 import { expect, type Page } from "@playwright/test";
-import { latestLoginCode } from "./db";
 
 const ENJOYMENT = ["Engagement", "Fun", "Immersion"] as const;
 const EXECUTION = [
@@ -12,6 +11,11 @@ const readyPages = new WeakSet<Page>();
 
 export function visitorEmail(label: string): string {
   return `e2e.${label}.${Date.now()}@example.com`;
+}
+
+export function visitorUsername(label: string): string {
+  const stem = label.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 8) || "user";
+  return `${stem}${Date.now().toString(36)}`.slice(0, 24);
 }
 
 export async function waitForBuilder(page: Page) {
@@ -62,37 +66,43 @@ export async function fillCatalogReview(page: Page, title: string) {
   await judgeDimensions(page, EXECUTION);
 }
 
-export async function createAccount(page: Page, email: string, displayName: string) {
-  await page.getByRole("link", { name: "Create an account" }).click();
-  await page.getByRole("textbox", { name: "Display name" }).fill(displayName);
+export const visitorPassword = "e2e-password";
+
+export async function signUp(page: Page, email: string, username: string) {
+  if (!new URL(page.url()).pathname.startsWith("/signup")) {
+    await page.getByRole("link", { name: "Create an account" }).click();
+  }
+  await expect(page).toHaveURL(/\/signup/);
+  await page.getByRole("textbox", { name: "Username" }).fill(username);
   await page.getByRole("textbox", { name: "Email" }).fill(email);
-  await page.getByRole("button", { name: "Email me a code" }).click();
-  await expect(page.getByRole("heading", { name: "Enter the code" })).toBeVisible();
-  const code = await latestLoginCode(email);
-  await page.getByRole("textbox", { name: "6-digit code" }).fill(code);
-  await page.getByRole("button", { name: "Confirm code" }).click();
+  await page.getByLabel("Password", { exact: true }).fill(visitorPassword);
+  await page.getByLabel("Confirm password").fill(visitorPassword);
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
+  const link = page.getByRole("link", { name: /\/verify\?token=/ });
+  await expect(link).toBeVisible();
+  await link.click();
+  await page.getByRole("button", { name: "Confirm email" }).click();
   await page.waitForURL((url) => url.pathname !== "/verify");
 }
 
-export async function verifyIntakeEmail(page: Page, email: string, displayName: string) {
-  await page.getByRole("textbox", { name: "Display name" }).fill(displayName);
-  await page.getByRole("textbox", { name: "Email" }).fill(email);
-  await page.getByRole("button", { name: "Email me a verification link" }).click();
-  const link = page.getByRole("link", { name: /\/review\/verify\?token=/ });
-  let href = "";
-  await expect.poll(async () => {
-    if (await link.count()) href = (await link.first().getAttribute("href")) ?? "";
-    if (!href) {
-      const stored = (await page.context().cookies()).find((cookie) => cookie.name === "frame_dev_verify")?.value;
-      href = stored ? decodeURIComponent(stored) : "";
-    }
-    return href;
-  }).toMatch(/\/review\/verify\?token=/);
-  if (await link.count()) await link.first().click();
-  else await page.goto(href);
-  await page.getByRole("button", { name: "Confirm email" }).click();
-  await page.waitForURL((url) => !url.pathname.startsWith("/review/verify"));
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+export async function createAccount(page: Page, email: string, username: string) {
+  await signUp(page, email, username);
+}
+
+export async function signIn(page: Page, identifier: string) {
+  await expect(page).toHaveURL(/\/login/);
+  await expect(page.getByRole("heading", { name: "Check your email" })).toHaveCount(0);
+  await page.getByRole("textbox", { name: "Username or email" }).fill(identifier);
+  await page.getByLabel("Password", { exact: true }).fill(visitorPassword);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.waitForURL((url) => url.pathname !== "/login");
+}
+
+export async function logOut(page: Page) {
+  await page.getByRole("button", { name: "Menu" }).click();
+  await page.getByRole("button", { name: "Log out" }).click();
+  await page.waitForURL((url) => url.pathname === "/");
 }
 
 export function accountReview(page: Page, title: string) {

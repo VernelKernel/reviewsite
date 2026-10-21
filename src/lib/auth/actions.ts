@@ -2,83 +2,93 @@
 
 import { redirect } from "next/navigation";
 import { DomainError } from "../domain/relations";
-import { isValidEmail, normalizeEmail } from "./email";
-import { beginLogin, beginSignup, confirmLoginCode, resendLoginCode } from "./login-code";
+import {
+  confirmAccountEmail,
+  loginWithPassword,
+  registerAccount,
+  resendAccountVerification,
+  resendAccountVerificationFromToken,
+} from "./account";
 import { safeReturnPath } from "./return-path";
 import { closeSession } from "./session";
 
-export type AuthActionState = { error?: string; unknownEmail?: boolean };
+export type AuthActionState = { error?: string; sent?: boolean; devLink?: string };
 
-function failure(error: unknown): AuthActionState {
+function failure(error: unknown, fallback: string): AuthActionState {
   if (error instanceof DomainError) return { error: error.message };
-  console.error(`Sign-in failed: ${error instanceof Error ? error.message : "unknown error"}`);
-  return { error: "We could not send the code. Try again." };
+  console.error(`${fallback} ${error instanceof Error ? error.message : "unknown error"}`);
+  return { error: fallback };
 }
 
 export async function requestSignup(_previous: AuthActionState, formData: FormData): Promise<AuthActionState> {
-  const email = normalizeEmail(String(formData.get("email") ?? ""));
-  const displayName = String(formData.get("displayName") ?? "").trim();
-  if (displayName.length < 2 || displayName.length > 48) return { error: "Enter a display name." };
-  if (!isValidEmail(email)) return { error: "Enter a valid email." };
-
   try {
-    const result = await beginSignup(email, displayName);
-    redirect(verifyPath(result.existing ? "existing" : null, String(formData.get("next") ?? "")));
+    const result = await registerAccount({
+      username: String(formData.get("username") ?? ""),
+      email: String(formData.get("email") ?? ""),
+      password: String(formData.get("password") ?? ""),
+      confirmPassword: String(formData.get("confirmPassword") ?? ""),
+      returnPath: safeReturnPath(String(formData.get("next") ?? "")),
+    });
+    redirect(result.sent ? "/verify" : "/verify?notice=unsent");
   } catch (error) {
     if (isRedirect(error)) throw error;
-    return failure(error);
+    return failure(error, "The account could not be created. Try again.");
   }
 }
 
 export async function requestLogin(_previous: AuthActionState, formData: FormData): Promise<AuthActionState> {
-  const email = normalizeEmail(String(formData.get("email") ?? ""));
-  if (!isValidEmail(email)) return { error: "Enter a valid email." };
-
+  const next = safeReturnPath(String(formData.get("next") ?? ""));
   try {
-    const result = await beginLogin(email);
-    if (result === "missing") {
-      return { error: "No account for that email.", unknownEmail: true };
-    }
-    redirect(verifyPath(null, String(formData.get("next") ?? "")));
+    const result = await loginWithPassword({
+      identifier: String(formData.get("identifier") ?? ""),
+      password: String(formData.get("password") ?? ""),
+      returnPath: next,
+    });
+    if (result === "unverified") redirect("/verify?notice=unverified");
+    redirect(next ?? "/dashboard");
   } catch (error) {
     if (isRedirect(error)) throw error;
-    return failure(error);
+    return failure(error, "Sign-in failed. Try again.");
   }
 }
 
-export async function submitLoginCode(_previous: AuthActionState, formData: FormData): Promise<AuthActionState> {
+export async function confirmAccountEmailAction(_previous: AuthActionState, formData: FormData): Promise<AuthActionState> {
   try {
-    await confirmLoginCode(String(formData.get("code") ?? ""));
-    redirect(safeReturnPath(String(formData.get("next") ?? "")) ?? "/dashboard");
+    const next = await confirmAccountEmail(String(formData.get("token") ?? ""));
+    redirect(next);
   } catch (error) {
     if (isRedirect(error)) throw error;
-    if (error instanceof DomainError) return { error: error.message };
-    console.error(`Code confirmation failed: ${error instanceof Error ? error.message : "unknown error"}`);
-    return { error: "That code could not be confirmed. Try again." };
+    return failure(error, "That link could not be confirmed. Try again.");
   }
 }
 
-export async function resendLoginCodeAction(_previous: AuthActionState, _formData: FormData): Promise<AuthActionState> {
+export async function resendAccountVerificationAction(_previous: AuthActionState, _formData: FormData): Promise<AuthActionState> {
   try {
-    await resendLoginCode();
-    return {};
+    const result = await resendAccountVerification();
+    if (result.alreadyVerified) redirect("/login");
+    if (!result.sent) return { error: "We could not send the email. Try again." };
+    return { sent: true, devLink: result.devLink };
   } catch (error) {
-    return failure(error);
+    if (isRedirect(error)) throw error;
+    return failure(error, "We could not send the email. Try again.");
+  }
+}
+
+export async function resendAccountVerificationFromTokenAction(_previous: AuthActionState, formData: FormData): Promise<AuthActionState> {
+  try {
+    const result = await resendAccountVerificationFromToken(String(formData.get("token") ?? ""));
+    if (result.alreadyVerified) redirect("/login");
+    if (!result.sent) return { error: "We could not send the email. Try again." };
+    return { sent: true, devLink: result.devLink };
+  } catch (error) {
+    if (isRedirect(error)) throw error;
+    return failure(error, "We could not send the email. Try again.");
   }
 }
 
 export async function logout() {
   await closeSession();
   redirect("/");
-}
-
-function verifyPath(notice: string | null, nextValue: string): string {
-  const params = new URLSearchParams();
-  if (notice) params.set("notice", notice);
-  const next = safeReturnPath(nextValue);
-  if (next) params.set("next", next);
-  const query = params.toString();
-  return query ? `/verify?${query}` : "/verify";
 }
 
 function isRedirect(error: unknown): boolean {

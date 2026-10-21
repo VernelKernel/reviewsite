@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { publishedGame, removeVisitor } from "./support/db";
-import { accountReview, chooseStance, createAccount, fillCatalogReview, verifyIntakeEmail, visitorEmail, waitForBuilder } from "./support/visitor";
+import { accountReview, chooseStance, createAccount, fillCatalogReview, visitorEmail, visitorUsername, waitForBuilder } from "./support/visitor";
 
 const created: string[] = [];
 
@@ -30,7 +30,9 @@ test.describe("a visitor with no account", () => {
       await waitForBuilder(page);
       await page.getByRole("textbox", { name: "Title" }).fill(title);
       await page.getByRole("button", { name: "Save draft" }).click();
-      await verifyIntakeEmail(page, email, "Funnel Draft");
+      await expect(page).toHaveURL(/\/login\?next=/);
+      await createAccount(page, email, visitorUsername("funneld"));
+      await expect(page).toHaveURL(/\/review\//);
 
       await page.goto("/dashboard");
       await expect(accountReview(page, title)).toContainText("Draft");
@@ -44,7 +46,9 @@ test.describe("a visitor with no account", () => {
       await page.goto("/review/new?type=game");
       await fillCatalogReview(page, game.title);
       await page.getByRole("button", { name: "Save draft" }).click();
-      await verifyIntakeEmail(page, email, "Funnel Convert");
+      await expect(page).toHaveURL(/\/login\?next=/);
+      await createAccount(page, email, visitorUsername("funnelc"));
+      await expect(page).toHaveURL(/\/review\//);
 
       await page.goto("/dashboard");
       await expect(accountReview(page, game.title)).toContainText("Draft");
@@ -64,7 +68,9 @@ test.describe("a visitor with no account", () => {
       await page.goto("/review/new?type=game");
       await fillCatalogReview(page, game.title);
       await page.getByRole("button", { name: "Publish Review" }).click();
-      await verifyIntakeEmail(page, email, "Funnel Publish");
+      await expect(page).toHaveURL(/\/login\?next=/);
+      await createAccount(page, email, visitorUsername("funnelp"));
+      await expect(page).toHaveURL(/\/review\//);
 
       await page.goto("/dashboard");
       await expect(accountReview(page, game.title)).toContainText("Published");
@@ -75,7 +81,7 @@ test.describe("a visitor with no account", () => {
   test.describe("an existing game", () => {
     test("saves a draft and leaves it off the work page", async ({ page }) => {
       const email = visitorEmail("game-draft");
-      const name = "Game Draft";
+      const name = visitorUsername("gamedraft");
       created.push(email);
 
       await page.goto(`/games/${game.slug}/evaluate`);
@@ -99,7 +105,7 @@ test.describe("a visitor with no account", () => {
 
     test("publishes a saved draft from the account", async ({ page }) => {
       const email = visitorEmail("game-convert");
-      const name = "Game Convert";
+      const name = visitorUsername("gameconv");
       created.push(email);
 
       await page.goto(`/games/${game.slug}/evaluate`);
@@ -128,7 +134,7 @@ test.describe("a visitor with no account", () => {
 
     test("publishes the review immediately", async ({ page }) => {
       const email = visitorEmail("game-publish");
-      const name = "Game Publish";
+      const name = visitorUsername("gamepub");
       created.push(email);
 
       await page.goto(`/games/${game.slug}/evaluate`);

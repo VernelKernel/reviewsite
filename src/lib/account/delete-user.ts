@@ -12,7 +12,7 @@ export async function deleteUserAccount(input: {
     });
     await tx.session.deleteMany({ where: { userId: input.userId } });
     await tx.followedReviewer.deleteMany({ where: { userId: input.userId } });
-    await tx.emailLoginCode.deleteMany({ where: { userId: input.userId } });
+    await tx.emailVerification.deleteMany({ where: { userId: input.userId } });
     await tx.verificationToken.deleteMany({ where: { userId: input.userId } });
     await tx.userPreference.deleteMany({ where: { userId: input.userId } });
     await tx.authenticationIdentity.deleteMany({ where: { userId: input.userId } });
@@ -29,6 +29,7 @@ export async function deleteUserAccount(input: {
       where: { id: input.userId },
       data: {
         email: `retired-${input.userId}@retired.invalid`,
+        username: null,
         emailVerified: null,
       },
     });

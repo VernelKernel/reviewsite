@@ -9,15 +9,24 @@ export async function readIntakeSecret(): Promise<string | null> {
   return store.get(INTAKE_COOKIE)?.value ?? null;
 }
 
-export async function writeIntakeSecret(secret: string) {
-  const store = await cookies();
-  store.set(INTAKE_COOKIE, secret, {
+function intakeCookieOptions(maxAge: number) {
+  return {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "lax" as const,
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: THIRTY_DAYS_S,
-  });
+    maxAge,
+  };
+}
+
+export async function writeIntakeSecret(secret: string) {
+  const store = await cookies();
+  store.set(INTAKE_COOKIE, secret, intakeCookieOptions(THIRTY_DAYS_S));
+}
+
+export async function clearIntakeSecret() {
+  const store = await cookies();
+  store.set(INTAKE_COOKIE, "", intakeCookieOptions(0));
 }
 
 export function secretMatches(secret: string | null, secretHash: string): boolean {

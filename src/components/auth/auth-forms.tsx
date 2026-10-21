@@ -2,7 +2,14 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { requestLogin, requestSignup, resendLoginCodeAction, submitLoginCode, type AuthActionState } from "@/lib/auth/actions";
+import {
+  confirmAccountEmailAction,
+  requestLogin,
+  requestSignup,
+  resendAccountVerificationAction,
+  resendAccountVerificationFromTokenAction,
+  type AuthActionState,
+} from "@/lib/auth/actions";
 
 function SubmitButton({ idle, pending }: { idle: string; pending: string }) {
   const status = useFormStatus();
@@ -24,14 +31,44 @@ export function SignupForm({ next }: { next?: string | null }) {
         </p>
       ) : null}
       <label className="field">
-        <span>Display name</span>
-        <input name="displayName" required minLength={2} maxLength={48} autoComplete="nickname" />
+        <span>Username</span>
+        <input
+          name="username"
+          required
+          minLength={3}
+          maxLength={24}
+          autoComplete="username"
+          spellCheck={false}
+          aria-describedby="username-help"
+        />
       </label>
+      <p id="username-help" className="meta">
+        3–24 characters. A letter first, then letters, numbers, or underscores. This is the public handle.
+      </p>
       <label className="field">
         <span>Email</span>
         <input name="email" type="email" required autoComplete="email" maxLength={180} />
       </label>
-      <SubmitButton idle="Email me a code" pending="Sending code…" />
+      <label className="field">
+        <span>Password</span>
+        <input
+          name="password"
+          type="password"
+          required
+          minLength={8}
+          maxLength={128}
+          autoComplete="new-password"
+          aria-describedby="password-help"
+        />
+      </label>
+      <p id="password-help" className="meta">
+        At least 8 characters.
+      </p>
+      <label className="field">
+        <span>Confirm password</span>
+        <input name="confirmPassword" type="password" required minLength={8} maxLength={128} autoComplete="new-password" />
+      </label>
+      <SubmitButton idle="Create account" pending="Creating account…" />
     </form>
   );
 }
@@ -43,54 +80,58 @@ export function LoginForm({ next }: { next?: string | null }) {
       {next ? <input type="hidden" name="next" value={next} /> : null}
       {state.error ? (
         <p className="form-error" role="alert">
-          {state.error} {state.unknownEmail ? <a href="/signup">Create an account</a> : null}
+          {state.error}
         </p>
       ) : null}
       <label className="field">
-        <span>Email</span>
-        <input name="email" type="email" required autoComplete="email" maxLength={180} />
+        <span>Username or email</span>
+        <input name="identifier" required autoComplete="username" maxLength={180} />
       </label>
-      <SubmitButton idle="Email me a code" pending="Sending code…" />
+      <label className="field">
+        <span>Password</span>
+        <input name="password" type="password" required autoComplete="current-password" maxLength={128} />
+      </label>
+      <SubmitButton idle="Sign in" pending="Signing in…" />
     </form>
   );
 }
 
-export function VerifyCodeForm({ email, next }: { email: string; next?: string | null }) {
-  const [state, action] = useActionState(submitLoginCode, {} as AuthActionState);
-  const [resend, resendAction] = useActionState(resendLoginCodeAction, {} as AuthActionState);
-  const notice = state.error ?? resend.error;
-
+export function AccountConfirmForm({ token }: { token: string }) {
+  const [state, action] = useActionState(confirmAccountEmailAction, {} as AuthActionState);
   return (
-    <div className="account-form">
-      {notice ? (
+    <form action={action}>
+      <input type="hidden" name="token" value={token} />
+      {state.error ? (
         <p className="form-error" role="alert">
-          {notice}
+          {state.error}
         </p>
       ) : null}
-      <form className="form-layout" action={action}>
-        {next ? <input type="hidden" name="next" value={next} /> : null}
-        <label className="field">
-          <span>6-digit code</span>
-          <input
-            name="code"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            required
-            minLength={6}
-            maxLength={7}
-            autoFocus
-            aria-describedby="code-help"
-          />
-        </label>
-        <p id="code-help" className="meta">
-          Sent to {email}. It expires in 10 minutes.
+      <SubmitButton idle="Confirm email" pending="Confirming…" />
+    </form>
+  );
+}
+
+export function AccountResendForm({ devLink, token }: { devLink?: string | null; token?: string | null }) {
+  const action = token ? resendAccountVerificationFromTokenAction : resendAccountVerificationAction;
+  const [state, formAction] = useActionState(action, {} as AuthActionState);
+  const link = state.devLink ?? devLink;
+
+  return (
+    <form action={formAction}>
+      {token ? <input type="hidden" name="token" value={token} /> : null}
+      {state.error ? (
+        <p className="form-error" role="alert">
+          {state.error}
         </p>
-        <SubmitButton idle="Confirm code" pending="Checking code…" />
-      </form>
-      <form action={resendAction}>
-        <ResendButton />
-      </form>
-    </div>
+      ) : null}
+      {state.sent ? <p className="meta">Check your email for the new link.</p> : null}
+      {link ? (
+        <p className="meta">
+          Development link: <a href={link}>{link}</a>
+        </p>
+      ) : null}
+      <ResendButton />
+    </form>
   );
 }
 
@@ -98,7 +139,7 @@ function ResendButton() {
   const { pending } = useFormStatus();
   return (
     <button className="btn btn-secondary" type="submit" disabled={pending} aria-busy={pending}>
-      {pending ? "Sending code…" : "Resend code"}
+      {pending ? "Sending link…" : "Send a new link"}
     </button>
   );
 }

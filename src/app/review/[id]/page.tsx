@@ -1,13 +1,13 @@
-import { cookies } from "next/headers";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { DimensionReading } from "@/components/evaluations/dimension-reading";
-import { IdentityGate } from "@/components/intake/identity-gate";
 import { PublishDraft } from "@/components/intake/publish-draft";
 import { PersonalDownload } from "@/components/intake/personal-download";
 import { PersonalShape } from "@/components/intake/personal-shape";
+import { getCurrentUser } from "@/lib/auth/session";
 import { stanceClass, stanceLabel, workHref } from "@/lib/domain/labels";
 import { loadOwnedIntake } from "@/lib/intake/access";
+import { claimPendingIntake } from "@/lib/intake/claim";
 import { readJudgments } from "@/lib/intake/judgments";
 import { readStoredSections } from "@/lib/reviews/sections";
 import { ReviewProse } from "@/components/reviews/review-prose";
@@ -17,8 +17,11 @@ export const metadata: Metadata = { title: "Your review" };
 
 export default async function ReviewChartPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const user = await getCurrentUser();
+  if (!user) redirect(`/login?next=${encodeURIComponent(`/review/${id}`)}`);
+  await claimPendingIntake(user.id);
   const intake = await loadOwnedIntake(id);
-  if (!intake) notFound();
+  if (!intake || intake.userId !== user.id) notFound();
 
   const stored = readJudgments(intake.judgments);
   const dimensions = stored.length
@@ -34,8 +37,6 @@ export default async function ReviewChartPage({ params }: { params: Promise<{ id
   });
   const axes = readings.filter((reading) => reading.family !== "ENJOYMENT");
   const enjoymentAxes = readings.filter((reading) => reading.family === "ENJOYMENT");
-  const verified = Boolean(intake.user?.emailVerified);
-  const devVerify = process.env.NODE_ENV === "production" ? null : (await cookies()).get("frame_dev_verify")?.value ?? null;
   const headingId = "personal-chart-title";
   const noteSections = await intakeSections(intake.reviewSections);
 
@@ -83,7 +84,6 @@ export default async function ReviewChartPage({ params }: { params: Promise<{ id
           note={intake.matchNote}
           draft={intake.draft}
           work={intake.work ? { title: intake.work.title, href: intake.work.status === "PUBLISHED" ? workHref(intake.work.workType, intake.work.slug) : null } : null}
-          verified={verified}
         />
         {intake.enjoyment && intake.execution ? (
           <PersonalDownload
@@ -91,12 +91,11 @@ export default async function ReviewChartPage({ params }: { params: Promise<{ id
             enjoyment={intake.enjoyment}
             execution={intake.execution}
             axes={axes}
-            enabled={verified}
+            enabled
           />
         ) : null}
-        {intake.draft && verified ? <PublishDraft intakeId={intake.id} /> : null}
+        {intake.draft ? <PublishDraft intakeId={intake.id} /> : null}
       </section>
-      {verified ? null : <IdentityGate intakeId={intake.id} emailPending={Boolean(intake.userId)} devLink={devVerify} />}
     </main>
   );
 }
@@ -137,18 +136,13 @@ function MatchNote({
   note,
   draft,
   work,
-  verified,
 }: {
   status: string;
   note: string | null;
   draft: boolean;
   work: { title: string; href: string | null } | null;
-  verified: boolean;
 }) {
   if (draft) return <p className="meta">This draft is on your account. Publish it when the review is ready.</p>;
-  if (!verified) {
-    return <p className="meta">Matching this title to a work waits until your email is verified.</p>;
-  }
   if (status === "MATCHED" && work) {
     return (
       <p className="meta">
