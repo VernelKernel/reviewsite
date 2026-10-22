@@ -391,7 +391,7 @@ function drawGap(
   ctx.fillStyle = palette.muted;
   ctx.font = `600 14px ${palette.body}`;
   ctx.textAlign = "left";
-  ctx.fillText(NAMES[population].toUpperCase(), x + 24, y + 36);
+  ctx.fillText(`${NAMES[population].toUpperCase()} OVERALL`, x + 24, y + 36);
   const top = y + 58;
   const band = (height - (top - y) - 16) / 2;
   drawReading(ctx, palette, "Enjoyment", landscape.enjoyment, unit, x + 24, top, inner, band);

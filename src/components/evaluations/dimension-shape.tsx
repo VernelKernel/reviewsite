@@ -330,7 +330,7 @@ function GapPanel({ population, landscape }: { population: Focus; landscape: Rev
   const headingId = `${population}-reading`;
   return (
     <section className="panel shape-gap" aria-labelledby={headingId}>
-      <h3 id={headingId}>{NAMES[population]}</h3>
+      <h3 id={headingId}>{`${NAMES[population].toUpperCase()} OVERALL`}</h3>
       <DistributionBar label="Enjoyment" distribution={landscape.enjoyment} unit={unit} layout="under" />
       {enjoymentDimensions.length > 0 ? (
         <DimensionBreakdown dimensions={enjoymentDimensions} />
