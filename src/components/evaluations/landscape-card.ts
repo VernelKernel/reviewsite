@@ -15,7 +15,6 @@ import {
 import { completionLabel } from "@/lib/domain/labels";
 import { distributionStops } from "@/components/evaluations/distribution-bar";
 import { nestExportLayout, paintNest, readNestPalette } from "@/components/evaluations/nest-paint";
-import { diamondGeometry } from "@/components/evaluations/shape-mark";
 import { loadCoverArt } from "@/components/works/emblem-export";
 import { fieldModelFrom, guideRings, paintField } from "@/lib/evaluations/field";
 import { radarPoint } from "@/lib/evaluations/radar";
@@ -385,70 +384,53 @@ function drawGap(
   width: number,
   height: number,
 ) {
-  const inner = width - 48;
+  const pad = 24;
+  const inner = width - pad * 2;
   const unit = population === "critics" ? "outlet" : "judgment";
   card(ctx, palette, x, y, width, height);
+
+  const nest = Math.min(168, inner * 0.72);
+  const nestTop = y + 18;
+  paintGapNest(ctx, landscape.execution, landscape.enjoyment, x + width / 2, nestTop + nest / 2, nest);
+
   ctx.fillStyle = palette.muted;
   ctx.font = `600 14px ${palette.body}`;
   ctx.textAlign = "left";
-  ctx.fillText(`${NAMES[population].toUpperCase()} OVERALL`, x + 24, y + 36);
-  const top = y + 58;
-  const band = (height - (top - y) - 16) / 2;
-  drawReading(ctx, palette, "Enjoyment", landscape.enjoyment, unit, x + 24, top, inner, band);
-  drawReading(ctx, palette, "Execution", landscape.execution, unit, x + 24, top + band, inner, band);
+  ctx.textBaseline = "alphabetic";
+  const labelY = nestTop + nest + 28;
+  ctx.fillText(`${NAMES[population].toUpperCase()} OVERALL`, x + pad, labelY);
+
+  const enjoymentEnd = drawBar(ctx, palette, "Enjoyment", landscape.enjoyment, unit, x + pad, labelY + 22, inner);
+  drawBar(ctx, palette, "Execution", landscape.execution, unit, x + pad, enjoymentEnd + 28, inner);
+
+  const noteY = y + height - 22;
+  ctx.fillStyle = palette.muted;
+  ctx.font = `400 12px ${palette.body}`;
+  ctx.textAlign = "left";
+  ctx.fillText("Inner diamond: Enjoyment", x + pad, noteY);
+  ctx.textAlign = "right";
+  ctx.fillText("Outer diamond: Execution", x + width - pad, noteY);
+  ctx.textAlign = "left";
 }
 
-function drawReading(
+/** Execution is the outer diamond. Enjoyment sits inside it, as on the game list. */
+function paintGapNest(
   ctx: CanvasRenderingContext2D,
-  palette: Palette,
-  label: string,
-  distribution: Distribution,
-  unit: "outlet" | "judgment",
-  x: number,
-  y: number,
-  width: number,
-  band: number,
-) {
-  drawBar(ctx, palette, label, distribution, unit, x, y, width);
-  const captionBottom = y + 62;
-  const room = y + band - captionBottom;
-  const size = Math.min(width * 0.46, Math.max(0, room - 8));
-  if (size < 56) return;
-  const radius = size * 0.44;
-  paintDiamond(ctx, palette, distribution, x + width / 2, captionBottom + room / 2, radius);
-}
-
-function paintDiamond(
-  ctx: CanvasRenderingContext2D,
-  palette: Palette,
-  distribution: Distribution,
+  execution: Distribution,
+  enjoyment: Distribution,
   cx: number,
   cy: number,
-  radius: number,
+  logical: number,
 ) {
-  if (!distribution.count) {
-    traceDiamond(ctx, cx, cy, radius);
-    ctx.fillStyle = palette.border;
-    ctx.fill();
-    return;
-  }
-  const model = fieldModelFrom(diamondGeometry(distribution), cx, cy, radius, {
-    positive: palette.positive,
-    mixed: palette.caution,
-    negative: palette.negative,
-  });
-  if (!model) return;
-  paintField(ctx, model, { scale: 2, edge: false });
-}
-
-function traceDiamond(ctx: CanvasRenderingContext2D, cx: number, cy: number, radius: number) {
-  ctx.beginPath();
-  for (let index = 0; index < 4; index += 1) {
-    const point = radarPoint(cx, cy, radius, index, 4, 1);
-    if (index === 0) ctx.moveTo(point.x, point.y);
-    else ctx.lineTo(point.x, point.y);
-  }
-  ctx.closePath();
+  const scale = (logical * 2) / nestExportLayout(1).size;
+  const { size, frame } = nestExportLayout(scale);
+  const emblem = document.createElement("canvas");
+  emblem.width = size;
+  emblem.height = size;
+  const off = emblem.getContext("2d");
+  if (!off) return;
+  paintNest(off, frame, execution, enjoyment, readNestPalette(), false);
+  ctx.drawImage(emblem, cx - logical / 2, cy - logical / 2, logical, logical);
 }
 
 function drawBar(
