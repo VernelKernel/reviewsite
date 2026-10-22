@@ -19,6 +19,7 @@ function colorVars(colors: ColorTokens): string {
     `--color-positive: ${colors.positive}`,
     `--color-caution: ${colors.caution}`,
     `--color-negative: ${colors.negative}`,
+    `--color-divided: ${colors.divided}`,
     `--color-positive-soft: ${colors.positiveSoft}`,
     `--color-caution-soft: ${colors.cautionSoft}`,
     `--color-negative-soft: ${colors.negativeSoft}`,

@@ -26,6 +26,8 @@ export type ColorTokens = {
   positive: string;
   caution: string;
   negative: string;
+  /** Fill for a reading with no majority. Same yellow in every mood. */
+  divided: string;
   positiveSoft: string;
   cautionSoft: string;
   negativeSoft: string;

@@ -108,7 +108,7 @@ export function fieldModelFrom(
     negative: anchor(parseColor(palette.negative)),
     mixed: anchor(parseColor(palette.mixed)),
     positive: anchor(parseColor(palette.positive)),
-    divided: anchor(parseColor(palette.divided ?? "#D5DEE6")),
+    divided: rgbToOklab(parseColor(palette.divided ?? "#FFF200")),
   };
 }
 
@@ -290,7 +290,14 @@ function blendDivided(
 
 function glow(lab: Lab, distance: number, radius: number): Lab {
   const falloff = 1 - Math.min(1, distance / Math.max(radius, 1));
-  return [Math.min(0.9, lab[0] + 0.07 * falloff), lab[1], lab[2]];
+  return [clampLightness(lab[0] + 0.07 * falloff, lab[0]), lab[1], lab[2]];
+}
+
+/** Keep a bright divided yellow at its own lightness. Other stance colors stay under 0.9. */
+function clampLightness(value: number, source: number): number {
+  const ceiling = Math.max(0.9, source);
+  const floor = source > 0.92 ? source - 0.03 : 0.16;
+  return Math.min(ceiling, Math.max(floor, value));
 }
 
 function spreadMixed(weight: number, t: number): number {
@@ -313,7 +320,7 @@ function vary(lab: Lab, x: number, y: number, model: FieldModel): Lab {
   const detail = fbm(nx * 1.9 + 8.1, ny * 1.9 + 3.7);
   const n = broad * 0.84 + detail * 0.16;
   const body = interiorLight(model, x, y);
-  const lightness = Math.min(0.9, Math.max(0.16, lab[0] + n * 0.145 + body * 0.08));
+  const lightness = clampLightness(lab[0] + n * 0.145 + body * 0.08, lab[0]);
   const chroma = 1 + broad * 0.12;
   return [lightness, lab[1] * chroma, lab[2] * chroma];
 }

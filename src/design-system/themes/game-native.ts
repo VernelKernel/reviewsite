@@ -29,6 +29,7 @@ export const gameNativeTheme: Theme = {
       chartStageEnd: "#0E1C34",
       chartGrid: "#D3DCE6",
       chartLabel: "#F4F6F8",
+      divided: "#FFF200",
     },
     dark: {
       canvas: "#101318",
@@ -54,6 +55,7 @@ export const gameNativeTheme: Theme = {
       chartStageEnd: "#0E1C34",
       chartGrid: "#D3DCE6",
       chartLabel: "#F4F6F8",
+      divided: "#FFF200",
     },
   },
   typography: {

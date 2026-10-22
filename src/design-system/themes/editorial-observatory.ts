@@ -29,6 +29,7 @@ export const editorialObservatoryTheme: Theme = {
       chartStageEnd: "#121E38",
       chartGrid: "#D7DEE8",
       chartLabel: "#F4F1E8",
+      divided: "#FFF200",
     },
     dark: {
       canvas: "#1A1714",
@@ -54,6 +55,7 @@ export const editorialObservatoryTheme: Theme = {
       chartStageEnd: "#121E38",
       chartGrid: "#D7DEE8",
       chartLabel: "#F4F1E8",
+      divided: "#FFF200",
     },
   },
   typography: {

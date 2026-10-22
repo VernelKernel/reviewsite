@@ -42,6 +42,10 @@ function red(color: RGB) {
   return color.r > color.g + 12 && color.r > color.b + 8;
 }
 
+function yellow(color: RGB) {
+  return color.r > 230 && color.g > 210 && color.b < 80;
+}
+
 function amber(color: RGB) {
   return color.r > 150 && color.g > 110 && color.b < color.g - 15 && color.r + 20 > color.g;
 }
@@ -185,7 +189,7 @@ describe("evaluation field", () => {
     expect(red(outer)).toBe(true);
   });
 
-  it("paints a tied vertex neutral instead of mixed", () => {
+  it("paints a tied vertex yellow instead of mixed", () => {
     const tied = fieldModelFrom(
       [
         { distance: 0.5, t: 0.5, divided: true },
@@ -195,14 +199,17 @@ describe("evaluation field", () => {
       layout.cx,
       layout.cy,
       layout.radius,
-      { ...palette, divided: "#D5DEE6" },
+      { ...palette, divided: "#FFF200" },
     );
     if (!tied) throw new Error("expected a closed field");
     const split = sampleFieldColor(tied, layout.cx, layout.cy - 46);
     const mixedRim = sampleFieldColor(tied, layout.cx + Math.cos(Math.PI / 6) * 90, layout.cy + Math.sin(Math.PI / 6) * 90);
     if (!split || !mixedRim) throw new Error("expected color");
-    expect(amber(split)).toBe(false);
-    expect(red(split)).toBe(false);
+    const painted = illuminatedFieldColor(tied, layout.cx, layout.cy - 46);
+    if (!painted) throw new Error("expected a painted color");
+    expect(yellow(split)).toBe(true);
+    expect(yellow(painted)).toBe(true);
+    expect(yellow(mixedRim)).toBe(false);
     expect(amber(mixedRim)).toBe(true);
   });
 });

@@ -1278,7 +1278,7 @@ p {
 }
 
 .population-stage .radar-dot-divided {
-  fill: var(--color-chart-grid);
+  fill: var(--color-divided);
 }
 
 .radar-label-hit {
@@ -1608,8 +1608,8 @@ button.population-chip[aria-pressed="true"] {
 }
 
 .radar-dot-divided {
-  fill: var(--color-border-strong);
-  stroke: var(--color-border-strong);
+  fill: var(--color-divided);
+  stroke: var(--color-divided);
 }
 
 .shape-legend {

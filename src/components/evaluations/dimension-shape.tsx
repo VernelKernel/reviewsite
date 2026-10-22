@@ -203,7 +203,6 @@ function ShapeChart({ points, label }: { points: ShapePoint[]; label: string }) 
           />
         ) : null}
         {points.map((point, index) => {
-          if (point.tone === "divided") return null;
           const at = radarPoint(CX, CY, RADIUS, index, points.length, point.distance);
           return (
             <circle key={`${point.slug}-dot`} className={`radar-dot radar-dot-${point.tone}`} cx={at.x} cy={at.y} r={6}>
@@ -385,6 +384,6 @@ function readPalette(): FieldPalette {
     positive: read("--color-positive", "#1F7A4D"),
     mixed: read("--color-caution", "#E7B008"),
     negative: read("--color-negative", "#E15A4A"),
-    divided: read("--color-chart-grid", "#D5DEE6"),
+    divided: read("--color-divided", "#FFF200"),
   };
 }

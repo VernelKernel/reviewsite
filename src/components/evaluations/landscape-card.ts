@@ -53,6 +53,7 @@ type Palette = {
   stage: string;
   stageEnd: string;
   grid: string;
+  divided: string;
   label: string;
   body: string;
   display: string;
@@ -272,7 +273,7 @@ function drawStage(
       positive: palette.positive,
       mixed: palette.caution,
       negative: palette.negative,
-      divided: palette.grid,
+      divided: palette.divided,
     });
     if (model) paintField(ctx, model);
     ctx.strokeStyle = palette.grid;
@@ -300,7 +301,6 @@ function drawStage(
     ctx.lineWidth = 2;
     ctx.stroke();
     points.forEach((point, index) => {
-      if (point.tone === "divided") return;
       const at = radarPoint(cx, cy, radius, index, points.length, point.distance);
       ctx.beginPath();
       ctx.arc(at.x, at.y, 7, 0, Math.PI * 2);
@@ -592,7 +592,7 @@ function toneColor(tone: ShapeTone, palette: Palette): string {
   if (tone === "positive") return palette.positive;
   if (tone === "mixed") return palette.caution;
   if (tone === "negative") return palette.negative;
-  return palette.grid;
+  return palette.divided;
 }
 
 function card(ctx: CanvasRenderingContext2D, palette: Palette, x: number, y: number, width: number, height: number) {
@@ -621,6 +621,7 @@ function readPalette(): Palette {
     stage: read("--color-chart-stage", "#1B3A5C"),
     stageEnd: read("--color-chart-stage-end", "#10243C"),
     grid: read("--color-chart-grid", "#D5DEE6"),
+    divided: read("--color-divided", "#FFF200"),
     label: read("--color-chart-label", "#F2F6FA"),
     body: getComputedStyle(document.body).fontFamily || "sans-serif",
     display: heading ? getComputedStyle(heading).fontFamily : getComputedStyle(document.body).fontFamily,

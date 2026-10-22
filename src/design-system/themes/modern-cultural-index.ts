@@ -29,6 +29,7 @@ export const modernCulturalIndexTheme: Theme = {
       chartStageEnd: "#16122E",
       chartGrid: "#D8D6E8",
       chartLabel: "#F4F5F8",
+      divided: "#FFF200",
     },
     dark: {
       canvas: "#101216",
@@ -54,6 +55,7 @@ export const modernCulturalIndexTheme: Theme = {
       chartStageEnd: "#16122E",
       chartGrid: "#D8D6E8",
       chartLabel: "#F4F5F8",
+      divided: "#FFF200",
     },
   },
   typography: {

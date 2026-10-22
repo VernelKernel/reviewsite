@@ -29,6 +29,7 @@ export const cinematicArchiveTheme: Theme = {
       chartStageEnd: "#101828",
       chartGrid: "#D4D8E0",
       chartLabel: "#F3F0E8",
+      divided: "#FFF200",
     },
     dark: {
       canvas: "#0C0D10",
@@ -54,6 +55,7 @@ export const cinematicArchiveTheme: Theme = {
       chartStageEnd: "#101828",
       chartGrid: "#D4D8E0",
       chartLabel: "#F3F0E8",
+      divided: "#FFF200",
     },
   },
   typography: {
