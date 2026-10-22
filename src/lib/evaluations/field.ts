@@ -17,7 +17,7 @@ export type FieldPalette = {
   divided?: string;
 };
 
-type Lab = [number, number, number];
+export type Lab = [number, number, number];
 
 type Vertex = { x: number; y: number; t: number; divided: boolean };
 
@@ -323,6 +323,12 @@ function vary(lab: Lab, x: number, y: number, model: FieldModel): Lab {
   const lightness = clampLightness(lab[0] + n * 0.145 + body * 0.08, lab[0]);
   const chroma = 1 + broad * 0.12;
   return [lightness, lab[1] * chroma, lab[2] * chroma];
+}
+
+/** Glow and luminance after a color is chosen. Hue stays with the calibrated mix. */
+export function shadeField(model: FieldModel, lab: Lab, x: number, y: number): RGB {
+  const distance = Math.hypot(x - model.cx, y - model.cy);
+  return labToRgb(vary(glow(lab, distance, model.radius), x, y, model));
 }
 
 function interiorLight(model: FieldModel, x: number, y: number): number {

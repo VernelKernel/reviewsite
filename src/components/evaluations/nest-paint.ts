@@ -1,7 +1,7 @@
-import { diamondGeometry } from "@/components/evaluations/shape-mark";
 import type { Distribution } from "@/lib/aggregation/landscape";
+import { influenceSpinSource, paintInfluenceDiamond, shareOf, type InfluenceChannel } from "@/lib/evaluations/influence-field";
 import { clusterOuterRadius, nestGeometry } from "@/lib/evaluations/nest-geometry";
-import { fieldModelFrom, paintField, paintSpinSource, type FieldPalette, type SpinSource } from "@/lib/evaluations/field";
+import type { FieldPalette, SpinSource } from "@/lib/evaluations/field";
 import { radarPoint } from "@/lib/evaluations/radar";
 
 export type NestPalette = { field: FieldPalette; empty: string };
@@ -50,11 +50,10 @@ export function nestSpinSource(
   cx: number,
   cy: number,
   radius: number,
+  hole = 0,
 ): SpinSource | null {
   if (!distribution.count || radius < 2) return null;
-  const model = fieldModelFrom(diamondGeometry(distribution), cx, cy, radius, palette);
-  if (!model) return null;
-  return paintSpinSource(model);
+  return influenceSpinSource(cx, cy, radius, shareOf(distribution), palette, hole);
 }
 
 export function paintNest(
@@ -64,11 +63,13 @@ export function paintNest(
   enjoyment: Distribution,
   palette: NestPalette,
   edge = false,
+  channel: InfluenceChannel = "color",
 ) {
+  void edge;
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  fillDiamond(ctx, execution, palette, frame.cx, frame.cy, frame.outerRadius, edge);
-  punchDiamond(ctx, frame.cx, frame.cy, frame.holeRadius);
-  fillDiamond(ctx, enjoyment, palette, frame.cx, frame.cy, frame.innerRadius, edge);
+  const hole = frame.outerRadius > 0 ? frame.holeRadius / frame.outerRadius : 0;
+  fillDiamond(ctx, execution, palette, frame.cx, frame.cy, frame.outerRadius, hole, channel);
+  fillDiamond(ctx, enjoyment, palette, frame.cx, frame.cy, frame.innerRadius, 0, channel);
 }
 
 export function paintNestSpin(
@@ -99,29 +100,24 @@ function fillDiamond(
   cx: number,
   cy: number,
   radius: number,
-  edge: boolean,
+  hole: number,
+  channel: InfluenceChannel,
 ) {
   if (radius < 2) return;
   if (!distribution.count) {
-    traceDiamond(ctx, cx, cy, radius);
     ctx.fillStyle = palette.empty;
+    if (hole > 0) {
+      ctx.beginPath();
+      addDiamond(ctx, cx, cy, radius);
+      addDiamond(ctx, cx, cy, radius * hole);
+      ctx.fill("evenodd");
+      return;
+    }
+    traceDiamond(ctx, cx, cy, radius);
     ctx.fill();
     return;
   }
-  const model = fieldModelFrom(diamondGeometry(distribution), cx, cy, radius, palette.field);
-  if (!model) return;
-  const small = radius < 400;
-  paintField(ctx, model, { scale: small ? 2 : 1, edge: edge && !small });
-}
-
-function punchDiamond(ctx: CanvasRenderingContext2D, cx: number, cy: number, radius: number) {
-  if (radius < 2) return;
-  ctx.save();
-  ctx.globalCompositeOperation = "destination-out";
-  ctx.fillStyle = "#000";
-  traceDiamond(ctx, cx, cy, radius);
-  ctx.fill();
-  ctx.restore();
+  paintInfluenceDiamond(ctx, cx, cy, radius, shareOf(distribution), palette.field, hole, channel);
 }
 
 function drawRotated(ctx: CanvasRenderingContext2D, source: SpinSource, angle: number, scale: number, clip: () => void) {

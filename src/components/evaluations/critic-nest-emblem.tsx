@@ -78,7 +78,14 @@ export function CriticNestEmblem({
       }
       const palette = readNestPalette();
       empty = palette.empty;
-      executionSource = nestSpinSource(execution, palette.field, frame.cx, frame.cy, frame.outerRadius);
+      executionSource = nestSpinSource(
+        execution,
+        palette.field,
+        frame.cx,
+        frame.cy,
+        frame.outerRadius,
+        frame.outerRadius > 0 ? frame.holeRadius / frame.outerRadius : 0,
+      );
       enjoymentSource = nestSpinSource(enjoyment, palette.field, frame.cx, frame.cy, frame.innerRadius);
     };
 
