@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import type { Focus } from "@/components/evaluations/dimension-shape";
+import { hiddenVertexPoints, type Focus, type VertexPointSettings } from "@/components/evaluations/dimension-shape";
 import { renderLandscapeCard, scopeLabel } from "@/components/evaluations/landscape-card";
 import { ReviewLandscapeView } from "@/components/evaluations/review-landscape";
 import type { ReviewCardModel } from "@/components/reviews/review-card";
@@ -40,6 +40,7 @@ export function WorkReading({
 }) {
   const [requestedMode, setMode] = useState<ShapeMode>("both");
   const [requestedFocus, setFocus] = useState<Focus | null>(null);
+  const [vertexPoints, setVertexPoints] = useState<VertexPointSettings>(hiddenVertexPoints);
   const mode: ShapeMode =
     (requestedMode === "critics" && critics.sampleSize === 0) || (requestedMode === "audience" && audience.sampleSize === 0)
       ? "both"
@@ -66,6 +67,8 @@ export function WorkReading({
         filteredNote={filteredNote}
         toolbar={toolbar}
         share={share}
+        vertexPoints={vertexPoints}
+        onVertexPoints={setVertexPoints}
       />
       {hasEvaluations ? (
         <ShareBanner
@@ -88,6 +91,10 @@ export function WorkReading({
               period: card.period,
               filters: card.filters,
               coverSrc: card.coverSrc,
+              showPoints: {
+                critics: vertexPoints.critics.execution,
+                audience: vertexPoints.audience.execution,
+              },
             })
           }
         />

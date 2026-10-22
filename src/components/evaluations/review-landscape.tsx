@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { type ReviewLandscape, type ShapeMode } from "@/lib/aggregation/landscape";
 import { completionLabel } from "@/lib/domain/labels";
-import { DimensionShape, type Focus } from "./dimension-shape";
+import { DimensionShape, type Focus, type VertexPointSettings } from "./dimension-shape";
 import { PopulationSegment } from "./population-segment";
 
 export function ReviewLandscapeView({
@@ -18,6 +18,8 @@ export function ReviewLandscapeView({
   filteredNote,
   toolbar,
   share,
+  vertexPoints,
+  onVertexPoints,
 }: {
   critics: ReviewLandscape;
   audience: ReviewLandscape;
@@ -31,6 +33,8 @@ export function ReviewLandscapeView({
   filteredNote?: string;
   toolbar?: ReactNode;
   share?: { title: string; path: string };
+  vertexPoints: VertexPointSettings;
+  onVertexPoints: (next: VertexPointSettings) => void;
 }) {
   const showCritics = mode !== "audience";
   const showAudience = mode !== "critics";
@@ -71,7 +75,16 @@ export function ReviewLandscapeView({
         </div>
       ) : (
         <div className="landscape">
-          <DimensionShape critics={critics} audience={audience} rows={rows} focus={focus} onFocus={onFocus} share={share} />
+          <DimensionShape
+            critics={critics}
+            audience={audience}
+            rows={rows}
+            focus={focus}
+            onFocus={onFocus}
+            share={share}
+            vertexPoints={vertexPoints}
+            onVertexPoints={onVertexPoints}
+          />
           {showAudience && audience.sampleSize > 0 ? (
             <ExperienceList
               title={critics.sampleSize > 0 ? "How much the audience experienced" : "How much they experienced"}

@@ -38,6 +38,8 @@ export type LandscapeCardInput = {
   filters: string[];
   /** Tall cover, when the work has one. The header paints it with the critic emblem. */
   coverSrc?: string | null;
+  /** Impression-radar vertex dots, matching each population's Execution graph. Hidden when omitted. */
+  showPoints?: Partial<Record<Population, boolean>>;
 };
 
 type Palette = {
@@ -85,7 +87,17 @@ export async function renderLandscapeCard(input: LandscapeCardInput): Promise<Fi
   y = (await drawHeader(ctx, palette, input, y)) + 20;
   for (const population of rows) {
     const landscape = population === "critics" ? input.critics : input.audience;
-    y = drawRow(ctx, palette, input.host, population, landscape, shapePoints(dimensions, population), y) + 20;
+    y =
+      drawRow(
+        ctx,
+        palette,
+        input.host,
+        population,
+        landscape,
+        shapePoints(dimensions, population),
+        input.showPoints?.[population] === true,
+        y,
+      ) + 20;
   }
   y = drawGlance(ctx, palette, input, rows, y) + 20;
   y = drawSummary(ctx, palette, input, rows, y) + 28;
@@ -226,12 +238,13 @@ function drawRow(
   population: Population,
   landscape: ReviewLandscape,
   points: ShapePoint[],
+  showPoints: boolean,
   y: number,
 ): number {
   const stageWidth = 600;
   const height = 480;
   const gap = 16;
-  drawStage(ctx, palette, host, population, landscape, points, PAD, y, stageWidth, height);
+  drawStage(ctx, palette, host, population, landscape, points, showPoints, PAD, y, stageWidth, height);
   drawGap(ctx, palette, population, landscape, PAD + stageWidth + gap, y, INNER - stageWidth - gap, height);
   return y + height;
 }
@@ -243,6 +256,7 @@ function drawStage(
   population: Population,
   landscape: ReviewLandscape,
   points: ShapePoint[],
+  showPoints: boolean,
   x: number,
   y: number,
   width: number,
@@ -300,16 +314,18 @@ function drawStage(
     ctx.strokeStyle = palette.label;
     ctx.lineWidth = 2;
     ctx.stroke();
-    points.forEach((point, index) => {
-      const at = radarPoint(cx, cy, radius, index, points.length, point.distance);
-      ctx.beginPath();
-      ctx.arc(at.x, at.y, 7, 0, Math.PI * 2);
-      ctx.fillStyle = toneColor(point.tone, palette);
-      ctx.fill();
-      ctx.strokeStyle = palette.label;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    });
+    if (showPoints) {
+      points.forEach((point, index) => {
+        const at = radarPoint(cx, cy, radius, index, points.length, point.distance);
+        ctx.beginPath();
+        ctx.arc(at.x, at.y, 7, 0, Math.PI * 2);
+        ctx.fillStyle = toneColor(point.tone, palette);
+        ctx.fill();
+        ctx.strokeStyle = palette.label;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      });
+    }
     ctx.fillStyle = palette.label;
     ctx.font = `600 16px ${palette.body}`;
     ctx.textBaseline = "middle";

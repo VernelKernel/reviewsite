@@ -21,6 +21,16 @@ import { radarPoint } from "@/lib/evaluations/radar";
 
 export type Focus = "critics" | "audience";
 
+export type VertexFamily = "execution" | "enjoyment";
+
+/** Per-graph vertex dots. Hidden until the reader turns a graph on. */
+export type VertexPointSettings = Record<Focus, Record<VertexFamily, boolean>>;
+
+export const hiddenVertexPoints: VertexPointSettings = {
+  critics: { execution: false, enjoyment: false },
+  audience: { execution: false, enjoyment: false },
+};
+
 const WIDTH = 560;
 const HEIGHT = 460;
 const CX = 280;
@@ -36,6 +46,8 @@ export function DimensionShape({
   focus,
   onFocus,
   share,
+  vertexPoints,
+  onVertexPoints,
 }: {
   critics: ReviewLandscape;
   audience: ReviewLandscape;
@@ -43,6 +55,8 @@ export function DimensionShape({
   focus: Focus | null;
   onFocus: (population: Focus) => void;
   share?: { title: string; path: string };
+  vertexPoints: VertexPointSettings;
+  onVertexPoints: (next: VertexPointSettings) => void;
 }) {
   const points = useMemo(() => {
     const work = pairedDimensions(critics, audience);
@@ -68,6 +82,13 @@ export function DimensionShape({
               selectable={selectable}
               focused={focus === population}
               onToggle={() => onFocus(population)}
+              vertexPoints={vertexPoints[population]}
+              onVertexFamily={(family, shown) =>
+                onVertexPoints({
+                  ...vertexPoints,
+                  [population]: { ...vertexPoints[population], [family]: shown },
+                })
+              }
             />
             <GapPanel population={population} landscape={landscape} />
           </div>
@@ -87,6 +108,8 @@ function PopulationStage({
   selectable,
   focused,
   onToggle,
+  vertexPoints,
+  onVertexFamily,
 }: {
   population: Focus;
   landscape: ReviewLandscape;
@@ -95,6 +118,8 @@ function PopulationStage({
   selectable: boolean;
   focused: boolean;
   onToggle: () => void;
+  vertexPoints: Record<VertexFamily, boolean>;
+  onVertexFamily: (family: VertexFamily, shown: boolean) => void;
 }) {
   const name = NAMES[population];
   const sample =
@@ -110,8 +135,18 @@ function PopulationStage({
       onClick={selectable ? onToggle : undefined}
     >
       <div className="shape-charts">
-        <FamilyChart title={familyTitle("Execution", landscape.execution)} points={execution} />
-        <FamilyChart title={familyTitle("Enjoyment", landscape.enjoyment)} points={enjoyment} />
+        <FamilyChart
+          title={familyTitle("Execution", landscape.execution)}
+          points={execution}
+          showPoints={vertexPoints.execution}
+          onShowPoints={(shown) => onVertexFamily("execution", shown)}
+        />
+        <FamilyChart
+          title={familyTitle("Enjoyment", landscape.enjoyment)}
+          points={enjoyment}
+          showPoints={vertexPoints.enjoyment}
+          onShowPoints={(shown) => onVertexFamily("enjoyment", shown)}
+        />
       </div>
       <div className="population-stage-foot">
         {selectable ? (
@@ -136,15 +171,40 @@ function PopulationStage({
   );
 }
 
-function FamilyChart({ title, points }: { title: string; points: ShapePoint[] }) {
+function FamilyChart({
+  title,
+  points,
+  showPoints,
+  onShowPoints,
+}: {
+  title: string;
+  points: ShapePoint[];
+  showPoints: boolean;
+  onShowPoints: (shown: boolean) => void;
+}) {
   const labelId = useId();
   return (
     <div className="shape-chart" role="group" aria-labelledby={labelId}>
-      <p className="shape-chart-title" id={labelId}>
-        {title}
-      </p>
+      <div className="shape-chart-head">
+        <p className="shape-chart-title" id={labelId}>
+          {title}
+        </p>
+        {points.length > 0 ? (
+          <button
+            type="button"
+            className="vertex-toggle"
+            aria-pressed={showPoints}
+            onClick={(event) => {
+              event.stopPropagation();
+              onShowPoints(!showPoints);
+            }}
+          >
+            {showPoints ? "Hide points" : "Show points"}
+          </button>
+        ) : null}
+      </div>
       {points.length > 0 ? (
-        <ShapeChart points={points} label={title} />
+        <ShapeChart points={points} label={title} showPoints={showPoints} />
       ) : (
         <p className="population-stage-empty">No dimensions judged.</p>
       )}
@@ -152,7 +212,7 @@ function FamilyChart({ title, points }: { title: string; points: ShapePoint[] })
   );
 }
 
-function ShapeChart({ points, label }: { points: ShapePoint[]; label: string }) {
+function ShapeChart({ points, label, showPoints }: { points: ShapePoint[]; label: string; showPoints: boolean }) {
   const closed = points.length >= 3;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [active, setActive] = useState<number | null>(null);
@@ -202,14 +262,16 @@ function ShapeChart({ points, label }: { points: ShapePoint[]; label: string }) 
               .join(" ")}
           />
         ) : null}
-        {points.map((point, index) => {
-          const at = radarPoint(CX, CY, RADIUS, index, points.length, point.distance);
-          return (
-            <circle key={`${point.slug}-dot`} className={`radar-dot radar-dot-${point.tone}`} cx={at.x} cy={at.y} r={6}>
-              <title>{`${point.name}: ${distributionLabel(point.distribution)}`}</title>
-            </circle>
-          );
-        })}
+        {showPoints
+          ? points.map((point, index) => {
+              const at = radarPoint(CX, CY, RADIUS, index, points.length, point.distance);
+              return (
+                <circle key={`${point.slug}-dot`} className={`radar-dot radar-dot-${point.tone}`} cx={at.x} cy={at.y} r={6}>
+                  <title>{`${point.name}: ${distributionLabel(point.distribution)}`}</title>
+                </circle>
+              );
+            })
+          : null}
         {points.map((point, index) => {
           const at = radarPoint(CX, CY, RADIUS + 34, index, points.length, 1);
           const cos = Math.cos(at.angle);
