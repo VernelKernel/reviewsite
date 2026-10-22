@@ -4156,10 +4156,6 @@ body:has(.mockup-sheet) .page {
   border-top: var(--border-width) solid var(--color-border);
 }
 
-.share-card-post .meta {
-  margin: 0;
-}
-
 @media (max-width: 860px) {
   .work-frame,
   .split,

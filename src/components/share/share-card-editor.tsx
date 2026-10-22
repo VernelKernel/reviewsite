@@ -106,7 +106,6 @@ export function ShareCardEditor({
         ) : null}
       </div>
       <div className="share-card-post">
-        <p className="meta">These sites cannot take an image from a link. Each button downloads the card, then opens a post with the page link.</p>
         <div className="share-actions" role="group" aria-label="Post with the image">
           {targets.map((target) => (
             <button
