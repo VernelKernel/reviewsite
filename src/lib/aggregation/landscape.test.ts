@@ -153,19 +153,17 @@ describe("review landscape", () => {
       "Critics are mostly positive on execution. Audience evaluations are mostly mixed.",
     );
     expect(populationShapeNote(paired.critics, buildLandscape([]))).toBeNull();
-    expect(criticCoverage(0)).toBe("0 of 10 outlets");
+    expect(criticCoverage(0)).toBe("0 outlets");
     const withOutlets = splitLandscapes([
       { ...critic({ enjoyment: "POSITIVE", execution: "POSITIVE" }), outletName: "IGN" },
       { ...critic({ enjoyment: "POSITIVE", execution: "NEGATIVE" }), outletName: "Edge" },
       { ...critic({ enjoyment: "MIXED", execution: "MIXED" }), outletName: "Polygon" },
     ]);
     expect(withOutlets.critics.sampleSize).toBe(3);
-    expect(withOutlets.critics.coverageCount).toBe(2);
-    expect(criticCoverage(withOutlets.critics.coverageCount)).toBe("2 of 10 outlets");
-    expect(cardCountLine(4, 8)).toBe("Critics 4 of 10 outlets · Audience 8 evals");
-    expect(pairedSampleNote(paired.critics, paired.audience)).toBe(
-      "Critics 4 of 10 outlets. Audience based on 4 evals.",
-    );
+    expect(withOutlets.critics.coverageCount).toBe(3);
+    expect(criticCoverage(withOutlets.critics.coverageCount)).toBe("3 outlets");
+    expect(cardCountLine(4, 8)).toBe("Critics 4 outlets · Audience 8 evals");
+    expect(pairedSampleNote(paired.critics, paired.audience)).toBe("Audience based on 4 evals.");
   });
 
   it("reports a dimension split only when both populations have a reading", () => {

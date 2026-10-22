@@ -212,7 +212,7 @@ function higherResSrc(src: string): string | null {
   return null;
 }
 
-async function loadCover(src: string): Promise<HTMLImageElement> {
+export async function loadCoverArt(src: string): Promise<HTMLImageElement> {
   const higher = higherResSrc(src);
   if (higher) {
     try {
@@ -247,7 +247,7 @@ export async function downloadEmblem(input: EmblemReading, slug: string, mark: E
 }
 
 export async function downloadCover(input: EmblemReading, slug: string, artSrc: string, mark: EmblemMark = "cluster") {
-  const image = await loadCover(artSrc);
+  const image = await loadCoverArt(artSrc);
   const width = image.naturalWidth;
   const height = image.naturalHeight;
   if (width < 2 || height < 2) throw new Error("Could not read the cover.");

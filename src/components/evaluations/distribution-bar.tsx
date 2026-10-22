@@ -1,4 +1,6 @@
-import type { CSSProperties } from "react";
+"use client";
+
+import { useId, type CSSProperties } from "react";
 import { distributionLabel, percentages, type Distribution } from "@/lib/aggregation/landscape";
 import { ShapeMark } from "@/components/evaluations/shape-mark";
 
@@ -6,18 +8,23 @@ const BLEND = 5;
 
 type Share = { positive: number; mixed: number; negative: number };
 
-/** Soft join only where two stance colors actually meet, so a single reading stays flat. */
-export function distributionGradient(share: Share): string {
-  const segments = [
-    { width: share.positive, color: "var(--color-positive)" },
-    { width: share.mixed, color: "var(--color-caution)" },
-    { width: share.negative, color: "var(--color-negative)" },
+type StanceKey = "positive" | "mixed" | "negative";
+
+/** Stop positions for the blended distribution bar. A single reading is two stops of one color. */
+export function distributionStops(share: Share): { at: number; key: StanceKey }[] {
+  const segments: { width: number; key: StanceKey }[] = [
+    { width: share.positive, key: "positive" },
+    { width: share.mixed, key: "mixed" },
+    { width: share.negative, key: "negative" },
   ].filter((segment) => segment.width > 0);
 
-  if (segments.length === 0) return "transparent";
-  if (segments.length === 1) return segments[0].color;
+  if (segments.length === 0) return [];
+  if (segments.length === 1) return [
+    { at: 0, key: segments[0].key },
+    { at: 100, key: segments[0].key },
+  ];
 
-  const stops: string[] = [];
+  const stops: { at: number; key: StanceKey }[] = [];
   let cursor = 0;
   for (let index = 0; index < segments.length; index += 1) {
     const segment = segments[index];
@@ -27,22 +34,34 @@ export function distributionGradient(share: Share): string {
     const blendAfter = index === segments.length - 1 ? 0 : blendWidth(segment.width, segments[index + 1].width);
     const solidStart = start + blendBefore;
     const solidEnd = end - blendAfter;
-    if (index === 0) stops.push(`${segment.color} 0%`);
-    else stops.push(`${segment.color} ${formatStop(solidStart)}%`);
-    if (index === segments.length - 1) stops.push(`${segment.color} 100%`);
-    else if (solidEnd > solidStart + 0.05) stops.push(`${segment.color} ${formatStop(solidEnd)}%`);
+    if (index === 0) stops.push({ at: 0, key: segment.key });
+    else stops.push({ at: formatStop(solidStart), key: segment.key });
+    if (index === segments.length - 1) stops.push({ at: 100, key: segment.key });
+    else if (solidEnd > solidStart + 0.05) stops.push({ at: formatStop(solidEnd), key: segment.key });
     cursor = end;
   }
+  return stops;
+}
 
-  return `linear-gradient(in oklab to right, ${stops.join(", ")})`;
+/** Soft join only where two stance colors actually meet, so a single reading stays flat. */
+export function distributionGradient(share: Share): string {
+  const stops = distributionStops(share);
+  if (stops.length === 0) return "transparent";
+  const color: Record<StanceKey, string> = {
+    positive: "var(--color-positive)",
+    mixed: "var(--color-caution)",
+    negative: "var(--color-negative)",
+  };
+  if (stops.every((stop) => stop.key === stops[0].key)) return color[stops[0].key];
+  return `linear-gradient(in oklab to right, ${stops.map((stop) => `${color[stop.key]} ${stop.at}%`).join(", ")})`;
 }
 
 function blendWidth(left: number, right: number): number {
   return Math.min(BLEND, left * 0.4, right * 0.4);
 }
 
-function formatStop(value: number): string {
-  return (Math.round(value * 10) / 10).toString();
+function formatStop(value: number): number {
+  return Math.round(value * 10) / 10;
 }
 
 export function DistributionFill({ share }: { share: Share }) {
@@ -51,18 +70,24 @@ export function DistributionFill({ share }: { share: Share }) {
 }
 
 function countLabel(count: number, unit: "judgment" | "outlet"): string {
-  if (count === 0) return unit === "outlet" ? "0 outlets" : "0 judgments";
-  if (count === 1) return unit === "outlet" ? "1 outlet" : "1 judgment";
-  return unit === "outlet" ? `${count} outlets` : `${count} judgments`;
+  if (unit === "judgment") return reviewerLabel(count);
+  if (count === 0) return "No outlets yet";
+  if (count === 1) return "1 outlet";
+  return `${count} outlets`;
 }
 
 function emptyCaption(unit: "judgment" | "outlet"): string {
-  return unit === "outlet" ? "No outlets yet" : "No judgments yet";
+  return unit === "outlet" ? "No outlets yet" : "No reviewers yet";
 }
 
-function participantLabel(count: number): string {
-  if (count === 1) return "1 Participant";
-  return `${count} Participants`;
+function reviewerLabel(count: number): string {
+  if (count === 0) return "No reviewers yet";
+  if (count === 1) return "1 reviewer";
+  return `${count} reviewers`;
+}
+
+function reviewerCount(unit: "judgment" | "outlet", countAs: "unit" | "participant"): boolean {
+  return countAs === "participant" || unit === "judgment";
 }
 
 export function DistributionBar({
@@ -87,7 +112,8 @@ export function DistributionBar({
       : `Positive ${pct.positive}% · Mixed ${pct.mixed}% · Negative ${pct.negative}%`;
 
   const icon = label === "Enjoyment" ? "heart" : label === "Execution" ? "gear" : null;
-  const count = countAs === "participant" ? participantLabel(distribution.count) : countLabel(distribution.count, unit);
+  const reviewers = reviewerCount(unit, countAs);
+  const count = reviewers ? reviewerLabel(distribution.count) : countLabel(distribution.count, unit);
   const layoutClass = layout === "stack" ? "dist" : `dist dist-${layout}`;
 
   const bar = (
@@ -103,11 +129,7 @@ export function DistributionBar({
   return (
     <div className={layoutClass}>
       <div className="dist-head">
-        <strong>
-          {icon ? <i className="flair-icon" data-icon={icon} aria-hidden="true" /> : null}
-          {label}
-        </strong>
-        {layout === "under" ? null : <span className="meta">{count}</span>}
+        <ReadingLabel label={label} icon={icon} tip={count} />
       </div>
       {layout === "beside" ? (
         <div className="dist-readout">
@@ -119,7 +141,6 @@ export function DistributionBar({
           {bar}
           <div className="dist-foot">
             <p className="dist-caption">{caption}</p>
-            <span className="meta">{count}</span>
           </div>
         </>
       ) : (
@@ -154,7 +175,7 @@ export function DistributionTrack({
     return (
       <div className="paired-track paired-track-dense">
         <ShapeMark distribution={distribution} />
-        <span className="track-label">{name}</span>
+        <ReadingLabel label={name} icon={null} className="track-label" tip={countLabel(distribution.count, unit)} />
         <span className="track-verdict">{verdict}</span>
       </div>
     );
@@ -162,7 +183,7 @@ export function DistributionTrack({
 
   return (
     <div className="paired-track">
-      <span className="track-label">{name}</span>
+      <ReadingLabel label={name} icon={null} className="track-label" tip={countLabel(distribution.count, unit)} />
       <div className="paired-track-body">
         <div
           className="dist-bar"
@@ -173,10 +194,75 @@ export function DistributionTrack({
         </div>
         <div className="dist-head">
           <p className="dist-caption">{caption}</p>
-          <span className="meta">{countLabel(distribution.count, unit)}</span>
         </div>
       </div>
     </div>
+  );
+}
+
+export function CountTip({
+  label,
+  tip,
+  href,
+  current = false,
+}: {
+  label: string;
+  tip: string;
+  href?: string;
+  current?: boolean;
+}) {
+  const tipId = useId();
+  const bubble = (
+    <span id={tipId} className="dist-tip" role="tooltip">
+      {tip}
+    </span>
+  );
+  if (href) {
+    return (
+      <a className="dist-tip-wrap" href={href} aria-describedby={tipId} aria-current={current ? "page" : undefined}>
+        {label}
+        {bubble}
+      </a>
+    );
+  }
+  return (
+    <span className="dist-tip-wrap">
+      <button type="button" className="dist-tip-hit" aria-describedby={tipId}>
+        {label}
+      </button>
+      {bubble}
+    </span>
+  );
+}
+
+function ReadingLabel({
+  label,
+  icon,
+  tip,
+  className,
+}: {
+  label: string;
+  icon: string | null;
+  tip: string | null;
+  className?: string;
+}) {
+  const tipId = useId();
+  const text = (
+    <>
+      {icon ? <i className="flair-icon" data-icon={icon} aria-hidden="true" /> : null}
+      {label}
+    </>
+  );
+  if (!tip) return <strong className={className}>{text}</strong>;
+  return (
+    <strong className={className ? `dist-tip-wrap ${className}` : "dist-tip-wrap"}>
+      <button type="button" className="dist-tip-hit" aria-describedby={tipId}>
+        {text}
+      </button>
+      <span id={tipId} className="dist-tip" role="tooltip">
+        {tip}
+      </span>
+    </strong>
   );
 }
 

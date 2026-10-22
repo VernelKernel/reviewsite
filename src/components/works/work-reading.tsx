@@ -31,7 +31,7 @@ export function WorkReading({
   filteredNote?: string;
   toolbar?: ReactNode;
   share: { title: string; path: string };
-  card: { kind: string; period: string | null; filters: string[] };
+  card: { kind: string; period: string | null; filters: string[]; coverSrc: string | null };
   criticReviews: ReviewCardModel[];
   audienceReviews: ReviewCardModel[];
   criticHref: string;
@@ -87,6 +87,7 @@ export function WorkReading({
               audience,
               period: card.period,
               filters: card.filters,
+              coverSrc: card.coverSrc,
             })
           }
         />

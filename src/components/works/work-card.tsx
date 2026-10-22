@@ -25,7 +25,7 @@ export function WorkCard({ work }: { work: CardWork }) {
       <WorkCardCounts
         criticHref={criticsHref(work.workType, work.slug)}
         audienceHref={audienceHref(work.workType, work.slug)}
-        criticLabel={`Based on ${criticCoverage(landscapes.critics.coverageCount)}`}
+        criticTip={criticCoverage(landscapes.critics.coverageCount)}
         audienceLabel={landscapes.audience.sampleNote.replace(/\.$/, "")}
       />
       <div className="work-card-actions">

@@ -44,7 +44,6 @@ export const workInclude = {
     include: { platform: true, region: true },
     orderBy: { releasedOn: "asc" as const },
   },
-  steamReception: true,
   relationsFrom: {
     include: { to: { select: { title: true, slug: true, workType: true, status: true } } },
   },

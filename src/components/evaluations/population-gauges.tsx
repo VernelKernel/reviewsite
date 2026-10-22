@@ -1,5 +1,5 @@
 import { GapCallouts } from "@/components/comparison/gap-callouts";
-import { DistributionBar } from "@/components/evaluations/distribution-bar";
+import { CountTip, DistributionBar } from "@/components/evaluations/distribution-bar";
 import { criticCoverage, populationShapeNote, type ReviewLandscape } from "@/lib/aggregation/landscape";
 
 export function PopulationGauges({
@@ -24,8 +24,9 @@ export function PopulationGauges({
     <div className="population-groups">
       <section className="population-group" aria-label="Critics">
         <div className="population-head">
-          <Title className="population-title">Critics</Title>
-          <SampleLink href={criticHref}>{`Based on ${criticCoverage(critics.coverageCount)}`}</SampleLink>
+          <Title className="population-title">
+            <CountTip label="Critics" tip={criticCoverage(critics.coverageCount)} href={criticHref} />
+          </Title>
         </div>
         <DistributionBar label="Enjoyment" distribution={critics.enjoyment} unit="outlet" />
         <DistributionBar label="Execution" distribution={critics.execution} unit="outlet" />

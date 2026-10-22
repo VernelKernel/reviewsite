@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { pairedSampleNote, type ReviewLandscape, type ShapeMode } from "@/lib/aggregation/landscape";
+import { type ReviewLandscape, type ShapeMode } from "@/lib/aggregation/landscape";
 import { completionLabel } from "@/lib/domain/labels";
 import { DimensionShape, type Focus } from "./dimension-shape";
 import { PopulationSegment } from "./population-segment";
@@ -37,7 +37,6 @@ export function ReviewLandscapeView({
   const rows: Focus[] = [];
   if (showCritics && critics.sampleSize > 0) rows.push("critics");
   if (showAudience && audience.sampleSize > 0) rows.push("audience");
-  const note = filteredNote ?? pairedSampleNote(critics, audience);
   const empty = critics.sampleSize === 0 && audience.sampleSize === 0;
 
   return (
@@ -56,7 +55,7 @@ export function ReviewLandscapeView({
           {toolbar}
         </div>
       ) : null}
-      {totalEvaluations > 0 && note ? <p className="landscape-note">{note}</p> : null}
+      {filteredNote ? <p className="landscape-note">{filteredNote}</p> : null}
       {empty ? (
         <div className="landscape-empty">
           {totalEvaluations === 0 ? (

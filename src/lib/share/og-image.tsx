@@ -96,7 +96,7 @@ function Bar({ colors, label, distribution }: { colors: Colors; label: string; d
         ) : null}
       </div>
       <div style={{ display: "flex", fontSize: 20, color: colors.chartGrid }}>
-        {distribution.count > 0 ? `Positive ${pct.positive}% · Mixed ${pct.mixed}% · Negative ${pct.negative}%` : "No judgments yet"}
+        {distribution.count > 0 ? `Positive ${pct.positive}% · Mixed ${pct.mixed}% · Negative ${pct.negative}%` : "No reviewers yet"}
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { CountTip } from "@/components/evaluations/distribution-bar";
 import { ShapeMark } from "@/components/evaluations/shape-mark";
 import { distributionLabel, type Distribution } from "@/lib/aggregation/landscape";
 import { usePopulationMode } from "@/components/works/population-mode";
@@ -48,12 +49,12 @@ export function WorkCardGroups({
 export function WorkCardCounts({
   criticHref,
   audienceHref,
-  criticLabel,
+  criticTip,
   audienceLabel,
 }: {
   criticHref: string;
   audienceHref: string;
-  criticLabel: string;
+  criticTip: string;
   audienceLabel: string;
 }) {
   const mode = usePopulationMode();
@@ -62,7 +63,7 @@ export function WorkCardCounts({
 
   return (
     <p className="card-counts">
-      {showCritics ? <a href={criticHref}>{criticLabel}</a> : null}
+      {showCritics ? <CountTip label="Critics" tip={criticTip} href={criticHref} /> : null}
       {showAudience ? <a href={audienceHref}>{audienceLabel}</a> : null}
     </p>
   );

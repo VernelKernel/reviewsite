@@ -267,7 +267,7 @@ function unique(values: string[]): string[] {
   return [...new Set(values)];
 }
 
-/** Core outlets that form the coverage denominator. Specialists are extra rows, not empty slots. */
+/** Outlets tracked as the core press panel. A work's coverage counts every outlet with a reading. */
 export const CORE_OUTLET_NAMES = [
   "IGN",
   "GameSpot",
@@ -281,14 +281,15 @@ export const CORE_OUTLET_NAMES = [
   "Digital Trends",
 ] as const;
 
-export const CORE_OUTLET_COUNT = CORE_OUTLET_NAMES.length;
-
-const CORE_OUTLET_KEYS = new Set(CORE_OUTLET_NAMES.map((name) => name.toLowerCase()));
-
 function coverageCountFor(evaluations: LandscapeEvaluation[]): number {
-  const names = evaluations.map((evaluation) => evaluation.outletName?.trim()).filter((name): name is string => Boolean(name));
-  if (names.length === 0) return evaluations.length;
-  return new Set(names.map((name) => name.toLowerCase()).filter((name) => CORE_OUTLET_KEYS.has(name))).size;
+  const named = new Set<string>();
+  let unnamed = 0;
+  for (const evaluation of evaluations) {
+    const name = evaluation.outletName?.trim();
+    if (name) named.add(name.toLowerCase());
+    else unnamed += 1;
+  }
+  return named.size + unnamed;
 }
 
 export type Population = "CRITIC" | "AUDIENCE";
@@ -308,14 +309,16 @@ export function splitLandscapes(evaluations: PopulatedEvaluation[]): PairedLands
 }
 
 export function criticCoverage(count: number): string {
-  return `${count} of ${CORE_OUTLET_COUNT} outlets`;
+  if (count === 1) return "1 outlet";
+  return `${count} outlets`;
 }
 
 export function pairedSampleNote(critics: ReviewLandscape, audience: ReviewLandscape): string {
-  const coverage = `Critics ${criticCoverage(critics.coverageCount)}.`;
-  if (audience.sampleSize === 0) return `${coverage} No audience evaluations yet.`;
+  if (audience.sampleSize === 0) {
+    return critics.sampleSize === 0 ? "No published evaluations yet." : "No audience evaluations yet.";
+  }
   const audienceNote = audience.sampleNote.replace(/^Based on /, "based on ");
-  return `${coverage} Audience ${audienceNote}`;
+  return `Audience ${audienceNote}`;
 }
 
 export function cardCountLine(critics: number, audience: number): string {

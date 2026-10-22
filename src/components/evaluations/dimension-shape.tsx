@@ -98,7 +98,9 @@ function PopulationStage({
 }) {
   const name = NAMES[population];
   const sample =
-    population === "critics" ? `Based on ${criticCoverage(landscape.coverageCount)}` : landscape.sampleNote.replace(/\.$/, "");
+    population === "critics"
+      ? `Based on ${criticCoverage(landscape.coverageCount)}`
+      : `Based on ${landscape.sampleSize} ${landscape.sampleSize === 1 ? "review" : "reviews"}`;
 
   return (
     <figure
@@ -201,6 +203,7 @@ function ShapeChart({ points, label }: { points: ShapePoint[]; label: string }) 
           />
         ) : null}
         {points.map((point, index) => {
+          if (point.tone === "divided") return null;
           const at = radarPoint(CX, CY, RADIUS, index, points.length, point.distance);
           return (
             <circle key={`${point.slug}-dot`} className={`radar-dot radar-dot-${point.tone}`} cx={at.x} cy={at.y} r={6}>
@@ -341,10 +344,6 @@ function ShapeLegend() {
       <li>
         <i className="shape-swatch shape-swatch-negative" />
         Negative reading
-      </li>
-      <li>
-        <i className="shape-swatch shape-swatch-divided" />
-        Divided
       </li>
     </ul>
   );

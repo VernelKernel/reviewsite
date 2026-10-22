@@ -839,11 +839,6 @@ p {
   box-shadow: none;
 }
 
-.fact-card .steam-links {
-  margin-top: var(--space-2);
-  font-size: var(--text-meta);
-}
-
 .fact-card .fact-list div {
   grid-template-columns: 5.5rem minmax(0, 1fr);
   gap: var(--space-3);
@@ -1835,6 +1830,83 @@ button.population-chip[aria-pressed="true"] {
   align-items: baseline;
 }
 
+.dist-tip-wrap {
+  position: relative;
+  display: inline-flex;
+  max-width: 100%;
+}
+
+a.dist-tip-wrap {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+a.dist-tip-wrap:hover,
+a.dist-tip-wrap:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.landscape-note .dist-tip-hit {
+  color: var(--color-text-primary);
+  font-weight: 650;
+}
+
+.landscape-note .dist-tip {
+  bottom: auto;
+  top: calc(100% + 0.35rem);
+}
+
+.dist-tip-hit {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+.dist-tip-hit:hover,
+.dist-tip-hit:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.dist-tip-hit:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.dist-tip {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  bottom: calc(100% + 0.35rem);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-text-primary);
+  color: var(--color-surface);
+  font-size: var(--text-micro);
+  font-weight: 560;
+  line-height: 1.3;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dist-tip-wrap:hover .dist-tip,
+.dist-tip-wrap:focus-within .dist-tip {
+  opacity: 1;
+}
+
 .dist-head strong,
 .stance-meter-head strong,
 .personal-reading-head strong {
@@ -2230,17 +2302,6 @@ button.chip[aria-pressed="true"] {
 
 .review-platform {
   margin: 0 0 var(--space-3);
-}
-
-.steam-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-top: var(--space-2);
-}
-
-.steam-links a {
-  color: var(--color-accent);
 }
 
 .context-line {
@@ -3287,6 +3348,19 @@ body:has(.mockup-sheet) .page {
   gap: var(--space-8);
   justify-items: start;
   padding-block: 0;
+}
+
+.mockup-sheet .evaluation-builder.mockup-funnel {
+  width: min(100%, 28rem);
+}
+
+.mockup-sheet .mockup-funnel .builder-preview {
+  position: static;
+}
+
+.mockup-sheet .mockup-funnel .builder-preview-scroll {
+  max-height: none;
+  overflow: visible;
 }
 
 .emblem-sheet {

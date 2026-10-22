@@ -138,7 +138,7 @@ export async function WorkPage({
     datePublished: year ? String(year) : undefined,
   };
 
-  const hasFacts = Boolean(year || work.creators.length || work.genres.length || work.steamReception || work.platforms.length);
+  const hasFacts = Boolean(year || work.creators.length || work.genres.length || work.platforms.length);
   const personal = Boolean(audiencePlacement || criticMetrics.length > 0);
 
   return (
@@ -185,21 +185,6 @@ export async function WorkPage({
                       </dd>
                     </div>
                   ) : null}
-                  {work.steamReception ? (
-                    <div>
-                      <dt>On Steam</dt>
-                      <dd>
-                        {work.steamReception.label}
-                        {work.steamReception.totalCount > 0
-                          ? ` · ${work.steamReception.totalCount.toLocaleString("en-US")} reviews`
-                          : ""}
-                        <span className="steam-links">
-                          <a href={work.steamReception.storeUrl}>Store page</a>
-                          <a href={work.steamReception.reviewsUrl}>Read the reviews on Steam</a>
-                        </span>
-                      </dd>
-                    </div>
-                  ) : null}
                   {work.platforms.length > 0 ? (
                     <div>
                       <dt>Platforms</dt>
@@ -227,6 +212,7 @@ export async function WorkPage({
               kind: workTypeLabel[work.workType],
               period: snapshotPeriod(filtered.map((evaluation) => evaluation.reviewedOn ?? evaluation.createdAt)),
               filters: activeFilters,
+              coverSrc: art.tall?.src ?? art.wide?.src ?? null,
             }}
             criticReviews={reviews.filter((review) => review.population === "CRITIC")}
             audienceReviews={reviews.filter((review) => review.population !== "CRITIC")}

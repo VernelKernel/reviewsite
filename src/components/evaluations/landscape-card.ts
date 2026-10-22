@@ -1,11 +1,9 @@
 import {
   criticCoverage,
   distributionLabel,
-  gapSentence,
   pairedDimensions,
   percentages,
   shapePoints,
-  shapeTone,
   summaryLines,
   type CountShare,
   type Distribution,
@@ -15,6 +13,10 @@ import {
   type ShapeTone,
 } from "@/lib/aggregation/landscape";
 import { completionLabel } from "@/lib/domain/labels";
+import { distributionStops } from "@/components/evaluations/distribution-bar";
+import { nestExportLayout, paintNest, readNestPalette } from "@/components/evaluations/nest-paint";
+import { diamondGeometry } from "@/components/evaluations/shape-mark";
+import { loadCoverArt } from "@/components/works/emblem-export";
 import { fieldModelFrom, guideRings, paintField } from "@/lib/evaluations/field";
 import { radarPoint } from "@/lib/evaluations/radar";
 import { shareFileName, WATERMARK_LINE, WATERMARK_NAME } from "@/lib/share/targets";
@@ -34,6 +36,8 @@ export type LandscapeCardInput = {
   period: string | null;
   /** Active filter labels, so the card says which slice it describes. */
   filters: string[];
+  /** Tall cover, when the work has one. The header paints it with the critic emblem. */
+  coverSrc?: string | null;
 };
 
 type Palette = {
@@ -77,19 +81,12 @@ export async function renderLandscapeCard(input: LandscapeCardInput): Promise<Fi
   const dimensions = pairedDimensions(input.critics, input.audience);
 
   let y = PAD;
-  y = drawHeader(ctx, palette, input, rows, y) + 20;
+  y = (await drawHeader(ctx, palette, input, y)) + 20;
   for (const population of rows) {
     const landscape = population === "critics" ? input.critics : input.audience;
     y = drawRow(ctx, palette, input.host, population, landscape, shapePoints(dimensions, population), y) + 20;
   }
   y = drawGlance(ctx, palette, input, rows, y) + 20;
-  const breakdown = dimensions
-    .filter((dimension) => rows.some((population) => dimension[population].count > 0))
-    .sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name))
-    .slice(0, 10);
-  if (breakdown.length > 0) {
-    y = drawBreakdown(ctx, palette, rows, breakdown, y) + 20;
-  }
   y = drawSummary(ctx, palette, input, rows, y) + 28;
   y = drawFooter(ctx, palette, input.url, y);
 
@@ -118,59 +115,107 @@ function populationsFor(input: LandscapeCardInput): Population[] {
   return rows;
 }
 
-function countLine(input: LandscapeCardInput, rows: Population[]): string {
-  return rows
-    .map((population) =>
-      population === "critics"
-        ? `Critics: ${criticCoverage(input.critics.coverageCount)}`
-        : `Audience: ${input.audience.sampleSize} ${input.audience.sampleSize === 1 ? "evaluation" : "evaluations"}`,
-    )
-    .join(" · ");
-}
-
-function drawHeader(ctx: CanvasRenderingContext2D, palette: Palette, input: LandscapeCardInput, rows: Population[], y: number): number {
+async function drawHeader(ctx: CanvasRenderingContext2D, palette: Palette, input: LandscapeCardInput, y: number): Promise<number> {
   const x = PAD;
-  const textWidth = INNER - 56;
+  const cover = input.coverSrc ? await loadCoverArt(input.coverSrc).catch(() => null) : null;
+  const coverW = cover ? 112 : 0;
+  const coverH = cover ? 168 : 0;
+  const gutter = cover ? 20 : 0;
+  const textX = x + 28 + coverW + gutter;
+  const textWidth = Math.max(160, x + INNER - 40 - textX);
   const today = new Intl.DateTimeFormat("en", { day: "numeric", month: "long", year: "numeric" }).format(new Date());
-  const snapshot = [
-    `Snapshot ${today}`,
-    input.period ? `Evaluations from ${input.period}` : null,
-    input.filters.length > 0 ? `Filtered to ${input.filters.join(", ")}` : null,
-  ]
+  const snapshot = [`Snapshot ${today}`, input.filters.length > 0 ? `Filtered to ${input.filters.join(", ")}` : null]
     .filter(Boolean)
     .join(" · ");
-  ctx.font = `400 17px ${palette.body}`;
+  ctx.font = `400 16px ${palette.body}`;
   const snapshotLines = wrapLines(ctx, snapshot, textWidth).slice(0, 2);
-  const height = 196 + snapshotLines.length * 24;
+  const title = layoutTitle(ctx, input.title, textWidth, palette.display);
+  const textBottom = 28 + 32 + 22 + title.lines.length * title.line + 22 + snapshotLines.length * 22 + 16;
+  const height = Math.max(cover ? 28 + coverH + 28 : 148, textBottom);
   card(ctx, palette, x, y, INNER, height);
+
+  if (cover) paintCover(ctx, cover, input, x + 28, y + 28, coverW, coverH);
 
   ctx.font = `700 15px ${palette.body}`;
   const badge = scopeLabel(input.scope);
   const badgeWidth = ctx.measureText(badge).width + 28;
-  roundRect(ctx, x + 28, y + 26, badgeWidth, 32, 16);
+  const badgeY = y + 28;
+  roundRect(ctx, textX, badgeY, badgeWidth, 32, 16);
   ctx.fillStyle = palette.stage;
   ctx.fill();
   ctx.fillStyle = palette.label;
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
-  ctx.fillText(badge, x + 42, y + 43);
+  ctx.fillText(badge, textX + 14, badgeY + 16);
   ctx.fillStyle = palette.muted;
   ctx.font = `600 14px ${palette.body}`;
-  ctx.fillText(input.kind.toUpperCase(), x + 28 + badgeWidth + 14, y + 43);
+  ctx.fillText(input.kind.toUpperCase(), textX + badgeWidth + 14, badgeY + 16);
 
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = palette.text;
-  fitFont(ctx, input.title, textWidth, palette.display, 46, 26);
-  ctx.fillText(input.title, x + 28, y + 112, textWidth);
-
-  ctx.fillStyle = palette.secondary;
-  ctx.font = `600 19px ${palette.body}`;
-  ctx.fillText(fit(ctx, countLine(input, rows), textWidth), x + 28, y + 150);
+  ctx.font = `650 ${title.size}px ${palette.display}`;
+  title.lines.forEach((line, index) => ctx.fillText(line, textX, badgeY + 32 + 28 + index * title.line));
 
   ctx.fillStyle = palette.muted;
-  ctx.font = `400 17px ${palette.body}`;
-  snapshotLines.forEach((line, index) => ctx.fillText(line, x + 28, y + 182 + index * 24));
+  ctx.font = `400 16px ${palette.body}`;
+  const snapshotY = badgeY + 32 + 28 + title.lines.length * title.line + 8;
+  snapshotLines.forEach((line, index) => ctx.fillText(line, textX, snapshotY + index * 22));
   return y + height;
+}
+
+function paintCover(
+  ctx: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  input: LandscapeCardInput,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  if (image.naturalWidth < 2 || image.naturalHeight < 2) return;
+  ctx.save();
+  roundRect(ctx, x, y, width, height, 8);
+  ctx.clip();
+  const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+  const dw = image.naturalWidth * scale;
+  const dh = image.naturalHeight * scale;
+  ctx.drawImage(image, x + (width - dw) / 2, y + (height - dh) / 2, dw, dh);
+  ctx.restore();
+
+  const short = Math.min(width, height);
+  const pad = Math.max(2, short * 0.02);
+  const mark = short * 0.42 * 0.75 * 0.75;
+  const nestScale = mark / nestExportLayout(1).size;
+  const { size, frame } = nestExportLayout(nestScale);
+  const emblem = document.createElement("canvas");
+  emblem.width = size;
+  emblem.height = size;
+  const off = emblem.getContext("2d");
+  if (!off) return;
+  paintNest(off, frame, input.critics.execution, input.critics.enjoyment, readNestPalette(), false);
+  ctx.drawImage(emblem, x + width - pad - mark, y + height - pad - mark, mark, mark);
+}
+
+function layoutTitle(
+  ctx: CanvasRenderingContext2D,
+  title: string,
+  maxWidth: number,
+  family: string,
+): { size: number; line: number; lines: string[] } {
+  let size = 28;
+  const min = 18;
+  while (size >= min) {
+    ctx.font = `650 ${size}px ${family}`;
+    const lines = wrapLines(ctx, title, maxWidth);
+    const fits = lines.length <= 3 && lines.every((line) => ctx.measureText(line).width <= maxWidth + 1);
+    if (fits) return { size, line: Math.round(size * 1.2), lines };
+    size -= 1;
+  }
+  ctx.font = `650 ${min}px ${family}`;
+  const lines = wrapLines(ctx, title, maxWidth).slice(0, 3);
+  const last = lines[2];
+  if (last && ctx.measureText(last).width > maxWidth) lines[2] = fit(ctx, last, maxWidth);
+  return { size: min, line: Math.round(min * 1.2), lines };
 }
 
 function drawRow(
@@ -255,6 +300,7 @@ function drawStage(
     ctx.lineWidth = 2;
     ctx.stroke();
     points.forEach((point, index) => {
+      if (point.tone === "divided") return;
       const at = radarPoint(cx, cy, radius, index, points.length, point.distance);
       ctx.beginPath();
       ctx.arc(at.x, at.y, 7, 0, Math.PI * 2);
@@ -306,7 +352,9 @@ function drawStage(
   ctx.fillStyle = palette.grid;
   ctx.font = `400 15px ${palette.body}`;
   const sample =
-    population === "critics" ? `Based on ${criticCoverage(landscape.coverageCount)}` : landscape.sampleNote.replace(/\.$/, "");
+    population === "critics"
+      ? `Based on ${criticCoverage(landscape.coverageCount)}`
+      : `Based on ${landscape.sampleSize} ${landscape.sampleSize === 1 ? "review" : "reviews"}`;
   ctx.fillText(sample, x + 20 + chipWidth + 12, y + height - 36);
   ctx.textBaseline = "alphabetic";
 }
@@ -321,26 +369,70 @@ function drawGap(
   width: number,
   height: number,
 ) {
-  card(ctx, palette, x, y, width, height);
   const inner = width - 48;
+  const unit = population === "critics" ? "outlet" : "judgment";
+  card(ctx, palette, x, y, width, height);
   ctx.fillStyle = palette.muted;
   ctx.font = `600 14px ${palette.body}`;
   ctx.textAlign = "left";
-  ctx.fillText(`${NAMES[population].toUpperCase()} · ENJOYMENT AND EXECUTION`, x + 24, y + 36);
-  const unit = population === "critics" ? "outlet" : "judgment";
-  let cursor = y + 84;
-  for (const [label, distribution] of [
-    ["Enjoyment", landscape.enjoyment],
-    ["Execution", landscape.execution],
-  ] as const) {
-    cursor = drawBar(ctx, palette, label, distribution, unit, x + 24, cursor, inner) + 28;
+  ctx.fillText(NAMES[population].toUpperCase(), x + 24, y + 36);
+  const top = y + 58;
+  const band = (height - (top - y) - 16) / 2;
+  drawReading(ctx, palette, "Enjoyment", landscape.enjoyment, unit, x + 24, top, inner, band);
+  drawReading(ctx, palette, "Execution", landscape.execution, unit, x + 24, top + band, inner, band);
+}
+
+function drawReading(
+  ctx: CanvasRenderingContext2D,
+  palette: Palette,
+  label: string,
+  distribution: Distribution,
+  unit: "outlet" | "judgment",
+  x: number,
+  y: number,
+  width: number,
+  band: number,
+) {
+  drawBar(ctx, palette, label, distribution, unit, x, y, width);
+  const captionBottom = y + 62;
+  const room = y + band - captionBottom;
+  const size = Math.min(width * 0.46, Math.max(0, room - 8));
+  if (size < 56) return;
+  const radius = size * 0.44;
+  paintDiamond(ctx, palette, distribution, x + width / 2, captionBottom + room / 2, radius);
+}
+
+function paintDiamond(
+  ctx: CanvasRenderingContext2D,
+  palette: Palette,
+  distribution: Distribution,
+  cx: number,
+  cy: number,
+  radius: number,
+) {
+  if (!distribution.count) {
+    traceDiamond(ctx, cx, cy, radius);
+    ctx.fillStyle = palette.border;
+    ctx.fill();
+    return;
   }
-  ctx.fillStyle = palette.text;
-  ctx.font = `400 17px ${palette.body}`;
-  const sentence = gapSentence(landscape) ?? "Fewer than four evaluations, so the gap is not shown.";
-  wrapLines(ctx, sentence, inner)
-    .slice(0, 4)
-    .forEach((line, index) => ctx.fillText(line, x + 24, cursor + 8 + index * 24));
+  const model = fieldModelFrom(diamondGeometry(distribution), cx, cy, radius, {
+    positive: palette.positive,
+    mixed: palette.caution,
+    negative: palette.negative,
+  });
+  if (!model) return;
+  paintField(ctx, model, { scale: 2, edge: false });
+}
+
+function traceDiamond(ctx: CanvasRenderingContext2D, cx: number, cy: number, radius: number) {
+  ctx.beginPath();
+  for (let index = 0; index < 4; index += 1) {
+    const point = radarPoint(cx, cy, radius, index, 4, 1);
+    if (index === 0) ctx.moveTo(point.x, point.y);
+    else ctx.lineTo(point.x, point.y);
+  }
+  ctx.closePath();
 }
 
 function drawBar(
@@ -357,41 +449,17 @@ function drawBar(
   ctx.font = `650 21px ${palette.body}`;
   ctx.textAlign = "left";
   ctx.fillText(label, x, y);
-  ctx.fillStyle = palette.muted;
-  ctx.font = `400 15px ${palette.body}`;
-  ctx.textAlign = "right";
-  ctx.fillText(countLabel(distribution.count, unit), x + width, y);
-  ctx.textAlign = "left";
   const top = y + 14;
-  roundRect(ctx, x, top, width, 12, 6);
-  ctx.fillStyle = palette.border;
-  ctx.fill();
+  const barHeight = 8;
   const pct = percentages(distribution);
-  if (distribution.count > 0) {
-    ctx.save();
-    roundRect(ctx, x, top, width, 12, 6);
-    ctx.clip();
-    let cursor = x;
-    for (const segment of [
-      { share: pct.positive, color: palette.positive },
-      { share: pct.mixed, color: palette.caution },
-      { share: pct.negative, color: palette.negative },
-    ]) {
-      const segmentWidth = (segment.share / 100) * width;
-      if (segmentWidth <= 0) continue;
-      ctx.fillStyle = segment.color;
-      ctx.fillRect(cursor, top, segmentWidth + 0.5, 12);
-      cursor += segmentWidth;
-    }
-    ctx.restore();
-  }
+  paintDistribution(ctx, palette, pct, x, top, width, barHeight);
   ctx.fillStyle = palette.secondary;
   ctx.font = `400 15px ${palette.body}`;
   const caption =
     distribution.count === 0
       ? unit === "outlet"
         ? "No outlets yet"
-        : "No judgments yet"
+        : "No reviewers yet"
       : `Positive ${pct.positive}% · Mixed ${pct.mixed}% · Negative ${pct.negative}%`;
   ctx.fillText(fit(ctx, caption, width), x, top + 36);
   return top + 36;
@@ -422,57 +490,6 @@ function drawGlance(ctx: CanvasRenderingContext2D, palette: Palette, input: Land
     ctx.font = `400 14px ${palette.body}`;
     ctx.fillText(fit(ctx, item.label, column - 20), left, y + 92);
   });
-  return y + height;
-}
-
-function drawBreakdown(
-  ctx: CanvasRenderingContext2D,
-  palette: Palette,
-  rows: Population[],
-  dimensions: ReturnType<typeof pairedDimensions>,
-  y: number,
-): number {
-  const lineHeight = 38;
-  const height = 70 + (rows.length > 1 ? 26 : 0) + dimensions.length * lineHeight;
-  card(ctx, palette, PAD, y, INNER, height);
-  ctx.fillStyle = palette.muted;
-  ctx.font = `600 14px ${palette.body}`;
-  ctx.textAlign = "left";
-  ctx.fillText("DIMENSION BREAKDOWN", PAD + 24, y + 32);
-  const columnWidth = 260;
-  const columnRight = (index: number) => PAD + INNER - 24 - (rows.length - 1 - index) * columnWidth;
-  let top = y + 66;
-  if (rows.length > 1) {
-    ctx.textAlign = "right";
-    rows.forEach((population, index) => ctx.fillText(NAMES[population].toUpperCase(), columnRight(index), top));
-    ctx.textAlign = "left";
-    top += 26;
-  }
-  for (const dimension of dimensions) {
-    ctx.fillStyle = palette.text;
-    ctx.font = `600 18px ${palette.body}`;
-    ctx.textAlign = "left";
-    ctx.fillText(fit(ctx, dimension.name, INNER - 48 - rows.length * columnWidth), PAD + 24, top + 6);
-    rows.forEach((population, index) => {
-      const distribution = dimension[population];
-      const right = columnRight(index);
-      const text = distribution.count === 0 ? "Not judged" : distributionLabel(distribution);
-      const tone: ShapeTone = distribution.count === 0 ? "divided" : shapeTone(distribution);
-      ctx.font = `600 17px ${palette.body}`;
-      ctx.textAlign = "right";
-      ctx.fillStyle = tone === "divided" ? palette.muted : toneColor(tone, palette);
-      ctx.fillText(text, right, top + 6);
-      const textWidth = ctx.measureText(text).width;
-      if (distribution.count > 0) {
-        ctx.beginPath();
-        ctx.arc(right - textWidth - 14, top, 6, 0, Math.PI * 2);
-        ctx.fillStyle = toneColor(tone, palette);
-        ctx.fill();
-      }
-    });
-    top += lineHeight;
-  }
-  ctx.textAlign = "left";
   return y + height;
 }
 
@@ -571,11 +588,6 @@ function topShare(groups: CountShare[][]): string | null {
   return best;
 }
 
-function countLabel(count: number, unit: "judgment" | "outlet"): string {
-  if (count === 1) return unit === "outlet" ? "1 outlet" : "1 judgment";
-  return unit === "outlet" ? `${count} outlets` : `${count} judgments`;
-}
-
 function toneColor(tone: ShapeTone, palette: Palette): string {
   if (tone === "positive") return palette.positive;
   if (tone === "mixed") return palette.caution;
@@ -615,15 +627,6 @@ function readPalette(): Palette {
   };
 }
 
-function fitFont(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, family: string, size: number, min: number) {
-  let next = size;
-  ctx.font = `600 ${next}px ${family}`;
-  while (next > min && ctx.measureText(text).width > maxWidth) {
-    next -= 1;
-    ctx.font = `600 ${next}px ${family}`;
-  }
-}
-
 function fit(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
   if (ctx.measureText(text).width <= maxWidth) return text;
   let clipped = text;
@@ -646,6 +649,125 @@ function wrapLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number
   }
   if (line) lines.push(line);
   return lines;
+}
+
+function paintDistribution(
+  ctx: CanvasRenderingContext2D,
+  palette: Palette,
+  share: { positive: number; mixed: number; negative: number },
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  const colors = { positive: palette.positive, mixed: palette.caution, negative: palette.negative };
+  ctx.save();
+  roundRect(ctx, x, y, width, height, Math.min(4, height / 2));
+  ctx.clip();
+  ctx.fillStyle = palette.border;
+  ctx.fillRect(x, y, width, height);
+  const stops = distributionStops(share);
+  if (stops.length > 0) {
+    if (stops.every((stop) => stop.key === stops[0].key)) {
+      ctx.fillStyle = colors[stops[0].key];
+      ctx.fillRect(x, y, width, height);
+    } else {
+      const columns = Math.max(1, Math.ceil(width));
+      for (let column = 0; column < columns; column += 1) {
+        const rgb = sampleStop(stops, colors, (column / columns) * 100);
+        ctx.fillStyle = `rgb(${rgb.r} ${rgb.g} ${rgb.b})`;
+        ctx.fillRect(x + column, y, 1, height);
+      }
+    }
+    const sheen = ctx.createLinearGradient(x, y, x, y + height);
+    sheen.addColorStop(0, "rgba(255,255,255,0)");
+    sheen.addColorStop(0.32, "rgba(255,255,255,0.42)");
+    sheen.addColorStop(0.68, "rgba(255,255,255,0.42)");
+    sheen.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.globalCompositeOperation = "lighter";
+    ctx.fillStyle = sheen;
+    ctx.fillRect(x, y, width, height);
+  }
+  ctx.restore();
+}
+
+function sampleStop(
+  stops: { at: number; key: "positive" | "mixed" | "negative" }[],
+  colors: Record<"positive" | "mixed" | "negative", string>,
+  at: number,
+): Rgb {
+  let previous = stops[0];
+  let next = stops[stops.length - 1];
+  for (let index = 1; index < stops.length; index += 1) {
+    if (at <= stops[index].at) {
+      previous = stops[index - 1];
+      next = stops[index];
+      break;
+    }
+  }
+  const from = parseRgb(colors[previous.key]);
+  const to = parseRgb(colors[next.key]);
+  const span = next.at - previous.at;
+  const t = span <= 0 ? 0 : Math.min(1, Math.max(0, (at - previous.at) / span));
+  if (previous.key === next.key || t <= 0) return from;
+  if (t >= 1) return to;
+  return oklabToRgb(lerpLab(rgbToOklab(from), rgbToOklab(to), t));
+}
+
+type Rgb = { r: number; g: number; b: number };
+type Lab = { L: number; a: number; b: number };
+
+function parseRgb(input: string): Rgb {
+  const hex = input.trim().match(/^#([0-9a-fA-F]{6})$/);
+  if (hex) {
+    const value = hex[1];
+    return { r: Number.parseInt(value.slice(0, 2), 16), g: Number.parseInt(value.slice(2, 4), 16), b: Number.parseInt(value.slice(4, 6), 16) };
+  }
+  const channels = input.match(/rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/);
+  if (channels) return { r: Number(channels[1]), g: Number(channels[2]), b: Number(channels[3]) };
+  return { r: 31, g: 122, b: 77 };
+}
+
+function rgbToOklab({ r, g, b }: Rgb): Lab {
+  const lr = linearize(r);
+  const lg = linearize(g);
+  const lb = linearize(b);
+  const l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb);
+  const m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb);
+  const s = Math.cbrt(0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb);
+  return {
+    L: 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    a: 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    b: 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+  };
+}
+
+function oklabToRgb({ L, a, b }: Lab): Rgb {
+  const l = L + 0.3963377774 * a + 0.2158037573 * b;
+  const m = L - 0.1055613458 * a - 0.0638541728 * b;
+  const s = L - 0.0894841775 * a - 1.291485548 * b;
+  const l3 = l * l * l;
+  const m3 = m * m * m;
+  const s3 = s * s * s;
+  return {
+    r: delinear(4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699292 * s3),
+    g: delinear(-1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3),
+    b: delinear(-0.0041960863 * l3 - 0.7034186147 * m3 + 1.707614701 * s3),
+  };
+}
+
+function lerpLab(from: Lab, to: Lab, t: number): Lab {
+  return { L: from.L + (to.L - from.L) * t, a: from.a + (to.a - from.a) * t, b: from.b + (to.b - from.b) * t };
+}
+
+function linearize(channel: number): number {
+  const value = channel / 255;
+  return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+}
+
+function delinear(channel: number): number {
+  const value = channel <= 0.0031308 ? 12.92 * channel : 1.055 * channel ** (1 / 2.4) - 0.055;
+  return Math.round(Math.min(1, Math.max(0, value)) * 255);
 }
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {

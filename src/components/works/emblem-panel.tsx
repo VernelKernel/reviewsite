@@ -1,3 +1,4 @@
+import { CountTip } from "@/components/evaluations/distribution-bar";
 import { criticCoverage, distributionLabel, type Distribution } from "@/lib/aggregation/landscape";
 import { CompareButton } from "@/components/comparison/compare-controls";
 import { CriticNestEmblem } from "@/components/evaluations/critic-nest-emblem";
@@ -66,7 +67,7 @@ export function EmblemPanel({ work, mark = "cluster" }: { work: CardWork; mark?:
         </div>
       </a>
       <p className="card-counts">
-        <a href={criticsHref(work.workType, work.slug)}>{`Based on ${criticCoverage(landscapes.critics.coverageCount)}`}</a>
+        <CountTip label="Critics" tip={criticCoverage(landscapes.critics.coverageCount)} href={criticsHref(work.workType, work.slug)} />
         <a href={audienceHref(work.workType, work.slug)}>{landscapes.audience.sampleNote.replace(/\.$/, "")}</a>
       </p>
       <div className="work-card-actions">

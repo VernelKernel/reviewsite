@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { WorkType } from "@/generated/prisma/client";
 import { GapCallouts } from "@/components/comparison/gap-callouts";
 import { CriticReading } from "@/components/evaluations/critic-reading";
-import { DistributionBar } from "@/components/evaluations/distribution-bar";
+import { CountTip, DistributionBar } from "@/components/evaluations/distribution-bar";
 import { ReviewCard, type ReviewCardModel } from "@/components/reviews/review-card";
 import { criticCoverage, splitLandscapes } from "@/lib/aggregation/landscape";
 import { audienceHref, criticsHref, detailsHref, workHref } from "@/lib/domain/labels";
@@ -105,9 +105,9 @@ function RecordList({
 }) {
   const landscape = view === "critics" ? critics : audience;
   const showing =
-    view === "critics"
-      ? `Showing ${criticCoverage(landscape.coverageCount)}`
-      : `Showing ${landscape.sampleSize} audience ${landscape.sampleSize === 1 ? "evaluation" : "evaluations"}`;
+    view === "audience"
+      ? `Showing ${landscape.sampleSize} audience ${landscape.sampleSize === 1 ? "evaluation" : "evaluations"}`
+      : null;
 
   return (
     <div className="record-body">
@@ -141,11 +141,13 @@ function RecordList({
         />
         {view === "audience" ? <GapCallouts landscape={audience} /> : null}
       </div>
-      <p className="sample-note">{showing}</p>
+      <p className="sample-note">
+        {view === "critics" ? <CountTip label="Critics" tip={criticCoverage(landscape.coverageCount)} /> : showing}
+      </p>
       {reviews.length === 0 ? (
         <p className="empty">
           {view === "critics"
-            ? "No core outlets have a reading in this view yet."
+            ? "No outlets have a reading in this view yet."
             : "No audience evaluations in this view yet."}
         </p>
       ) : (
@@ -219,21 +221,6 @@ function Details({ work }: { work: NonNullable<Awaited<ReturnType<typeof getWork
           <div>
             <dt>Genres</dt>
             <dd>{genres.map((genre) => genre.genre.name).join(", ")}</dd>
-          </div>
-        ) : null}
-        {work.steamReception ? (
-          <div>
-            <dt>On Steam</dt>
-            <dd>
-              {work.steamReception.label}
-              {work.steamReception.totalCount > 0
-                ? ` · ${work.steamReception.totalCount.toLocaleString("en-US")} reviews`
-                : ""}
-              <span className="steam-links">
-                <a href={work.steamReception.storeUrl}>Store page</a>
-                <a href={work.steamReception.reviewsUrl}>Read the reviews on Steam</a>
-              </span>
-            </dd>
           </div>
         ) : null}
       </dl>

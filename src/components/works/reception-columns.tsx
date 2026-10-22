@@ -30,7 +30,7 @@ export function ReceptionColumns({
           title="Critics"
           href={criticHref}
           reviews={recent(critics)}
-          empty="No core outlets have a reading in this view yet."
+          empty="No outlets have a reading in this view yet."
           kind="critic"
         />
       ) : null}
