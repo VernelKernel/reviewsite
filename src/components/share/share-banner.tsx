@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { ShareCardEditor } from "@/components/share/share-card-editor";
+import { ShareCardEditor, type ShareCardImage } from "@/components/share/share-card-editor";
 
 export function ShareBanner({
   heading,
@@ -18,21 +18,20 @@ export function ShareBanner({
   dialogNote: string;
   title: string;
   path: string;
-  render: () => Promise<File>;
+  render: () => Promise<File | ShareCardImage[]>;
 }) {
   const headingId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const previewUrl = useRef<string | null>(null);
+  const previewUrls = useRef<string[]>([]);
   const [pending, setPending] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [cards, setCards] = useState<Array<ShareCardImage & { preview: string }>>([]);
   const [status, setStatus] = useState("");
   const [editorOpen, setEditorOpen] = useState(false);
 
   useEffect(() => {
     return () => {
-      if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
+      for (const url of previewUrls.current) URL.revokeObjectURL(url);
     };
   }, []);
 
@@ -46,12 +45,16 @@ export function ShareBanner({
     setPending(true);
     setStatus("");
     try {
-      const next = await render();
-      if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
-      const url = URL.createObjectURL(next);
-      previewUrl.current = url;
-      setFile(next);
-      setPreview(url);
+      const rendered = await render();
+      const images = Array.isArray(rendered) ? rendered : [{ id: "card", label: "Image", file: rendered }];
+      if (images.length === 0) throw new Error("No card to prepare.");
+      for (const url of previewUrls.current) URL.revokeObjectURL(url);
+      const ready = images.map((image) => {
+        const preview = URL.createObjectURL(image.file);
+        return { ...image, preview };
+      });
+      previewUrls.current = ready.map((image) => image.preview);
+      setCards(ready);
       setEditorOpen(true);
     } catch {
       setStatus("Could not prepare the card.");
@@ -88,8 +91,7 @@ export function ShareBanner({
           note={dialogNote}
           title={title}
           path={path}
-          file={file}
-          preview={preview}
+          cards={cards}
           onClose={() => {
             setEditorOpen(false);
             buttonRef.current?.focus();

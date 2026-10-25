@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { hiddenVertexPoints, type Focus, type VertexPointSettings } from "@/components/evaluations/dimension-shape";
-import { renderLandscapeCard, scopeLabel } from "@/components/evaluations/landscape-card";
+import { landscapeCardPopulations, renderLandscapeCard, scopeLabel } from "@/components/evaluations/landscape-card";
 import { ReviewLandscapeView } from "@/components/evaluations/review-landscape";
 import type { ReviewCardModel } from "@/components/reviews/review-card";
 import { ShareBanner } from "@/components/share/share-banner";
@@ -49,6 +49,8 @@ export function WorkReading({
   const focus = twoRows ? requestedFocus : null;
   const scope: ShapeMode = focus ?? mode;
   const hasEvaluations = critics.sampleSize + audience.sampleSize > 0;
+  const cardPopulations = landscapeCardPopulations(scope, critics, audience);
+  const singleLabel = cardPopulations.length === 1 ? scopeLabel(cardPopulations[0]) : null;
 
   return (
     <>
@@ -73,30 +75,43 @@ export function WorkReading({
       {hasEvaluations ? (
         <ShareBanner
           heading="Share this reading"
-          body={`Turn what these evaluations say into a card, then send the image. The card shows ${scopeLabel(scope)}.`}
+          body={
+            singleLabel
+              ? `Turn what these evaluations say into a card, then send the image. The card shows ${singleLabel}.`
+              : "Critics and audience each get a card. Choose which image to download."
+          }
           dialogHeading="Your share card"
-          dialogNote={`${scopeLabel(scope)}, from published evaluations. Download it, or send it from here.`}
+          dialogNote={
+            singleLabel
+              ? `${singleLabel}, from published evaluations. Download it, or send it from here.`
+              : "Each population has its own card, from published evaluations. Choose which image to download."
+          }
           title={share.title}
           path={share.path}
-          render={() =>
-            renderLandscapeCard({
-              title: share.title,
-              kind: card.kind,
-              url: `${window.location.origin}${share.path}`,
-              path: share.path,
-              host: window.location.host,
-              scope,
-              critics,
-              audience,
-              period: card.period,
-              filters: card.filters,
-              coverSrc: card.coverSrc,
-              showPoints: {
-                critics: vertexPoints.critics.execution,
-                audience: vertexPoints.audience.execution,
-              },
-            })
-          }
+          render={async () => {
+            const images = [];
+            for (const population of cardPopulations) {
+              images.push({
+                id: population,
+                label: population === "critics" ? "Critics" : "Audience",
+                file: await renderLandscapeCard({
+                  title: share.title,
+                  kind: card.kind,
+                  url: `${window.location.origin}${share.path}`,
+                  path: share.path,
+                  host: window.location.host,
+                  scope: population,
+                  critics,
+                  audience,
+                  period: card.period,
+                  filters: card.filters,
+                  coverSrc: card.coverSrc,
+                  showPoints: vertexPoints[population],
+                }),
+              });
+            }
+            return images;
+          }}
         />
       ) : null}
       {children}

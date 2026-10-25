@@ -3489,6 +3489,10 @@ body:has(.mockup-sheet) .page {
   background: var(--color-canvas);
 }
 
+.mockup-frame figure + figure {
+  margin-top: var(--space-8);
+}
+
 .mockup-chart-card {
   display: grid;
   gap: var(--space-4);
@@ -4129,6 +4133,10 @@ body:has(.mockup-sheet) .page {
 
 .share-card-dialog h2 {
   font-size: var(--text-h3);
+}
+
+.share-card-choice {
+  margin-top: var(--space-4);
 }
 
 .share-card-dialog img {

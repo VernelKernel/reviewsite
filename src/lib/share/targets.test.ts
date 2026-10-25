@@ -33,5 +33,7 @@ describe("share targets", () => {
   it("names the downloaded file from the work slug", () => {
     expect(shareFileName("/games/hades-ii?lens=EXECUTION")).toBe("hades-ii-frame.png");
     expect(shareFileName("/movies/the-green-knight")).toBe("the-green-knight-frame.png");
+    expect(shareFileName("/games/hades-ii", "critics")).toBe("hades-ii-critics-frame.png");
+    expect(shareFileName("/games/hades-ii", "audience")).toBe("hades-ii-audience-frame.png");
   });
 });

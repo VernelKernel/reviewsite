@@ -17,9 +17,10 @@ export function shareSummary(title: string): string {
   return `${title}. ${WATERMARK_LINE} on Frame.`;
 }
 
-export function shareFileName(path: string): string {
+export function shareFileName(path: string, population?: string): string {
   const slug = path.split("?")[0].split("#")[0].split("/").filter(Boolean).pop() || "reading";
-  return `${slug}-frame.png`;
+  const part = population ? `${population}-` : "";
+  return `${slug}-${part}frame.png`;
 }
 
 export function networkTargets(url: string, title: string): ShareTarget[] {

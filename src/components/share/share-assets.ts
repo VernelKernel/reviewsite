@@ -14,3 +14,7 @@ export function saveFile(file: File) {
   anchor.click();
   window.setTimeout(() => URL.revokeObjectURL(href), 1500);
 }
+
+export function saveFiles(files: File[]) {
+  for (const file of files) saveFile(file);
+}

@@ -1,8 +1,14 @@
 "use client";
 
 import { useEffect, useId, useState, type RefObject } from "react";
-import { SHARE_ICONS, saveFile } from "@/components/share/share-assets";
+import { SHARE_ICONS, saveFile, saveFiles } from "@/components/share/share-assets";
 import { networkTargets, shareSummary, type ShareTarget } from "@/lib/share/targets";
+
+export type ShareCardImage = {
+  id: string;
+  label: string;
+  file: File;
+};
 
 export function ShareCardEditor({
   dialogRef,
@@ -10,8 +16,7 @@ export function ShareCardEditor({
   note,
   title,
   path,
-  file,
-  preview,
+  cards,
   onClose,
 }: {
   dialogRef: RefObject<HTMLDialogElement | null>;
@@ -19,12 +24,12 @@ export function ShareCardEditor({
   note: string;
   title: string;
   path: string;
-  file: File | null;
-  preview: string | null;
+  cards: Array<ShareCardImage & { preview: string }>;
   onClose: () => void;
 }) {
   const headingId = useId();
   const [origin] = useState(() => (typeof window === "undefined" ? "" : window.location.origin));
+  const [selectedId, setSelectedId] = useState(cards[0]?.id ?? "");
   const [canShareFile, setCanShareFile] = useState(false);
   const [canCopyImage] = useState(
     () =>
@@ -33,26 +38,41 @@ export function ShareCardEditor({
       typeof navigator.clipboard?.write === "function",
   );
   const [status, setStatus] = useState("");
+  const selected = cards.find((card) => card.id === selectedId) ?? cards[0] ?? null;
+  const file = selected?.file ?? null;
+  const several = cards.length > 1;
 
   useEffect(() => {
     setStatus("");
+    setSelectedId(cards[0]?.id ?? "");
+  }, [cards]);
+
+  useEffect(() => {
     setCanShareFile(Boolean(file && typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })));
   }, [file]);
 
   const url = `${origin}${path}`;
   const targets = networkTargets(origin ? url : path, title);
+  const selectedName = selected ? selected.label.toLowerCase() : "image";
 
-  function download() {
-    if (!file) return;
+  function downloadSelected() {
+    if (!file || !selected) return;
     saveFile(file);
-    setStatus("Image downloaded");
+    setStatus(several ? `${selected.label} image downloaded` : "Image downloaded");
+  }
+
+  function downloadAll() {
+    const files = cards.map((card) => card.file);
+    if (files.length === 0) return;
+    saveFiles(files);
+    setStatus(files.length > 1 ? "Both images downloaded" : "Image downloaded");
   }
 
   async function copyImage() {
-    if (!file) return;
+    if (!file || !selected) return;
     try {
       await navigator.clipboard.write([new ClipboardItem({ [file.type]: file })]);
-      setStatus("Image copied. Paste it where you share.");
+      setStatus(several ? `${selected.label} image copied. Paste it where you share.` : "Image copied. Paste it where you share.");
     } catch {
       setStatus("This browser would not copy the image. Download it instead.");
     }
@@ -65,15 +85,19 @@ export function ShareCardEditor({
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       saveFile(file);
-      setStatus("Image downloaded. Attach it where you share.");
+      setStatus(several ? `${selected?.label ?? "Image"} image downloaded. Attach it where you share.` : "Image downloaded. Attach it where you share.");
     }
   }
 
   function post(target: ShareTarget) {
-    if (!file) return;
+    if (!file || !selected) return;
     saveFile(file);
     window.open(target.href, "_blank", "noopener,noreferrer");
-    setStatus("Image downloaded. Attach it to the post that just opened.");
+    setStatus(
+      several
+        ? `${selected.label} image downloaded. Attach it to the post that just opened.`
+        : "Image downloaded. Attach it to the post that just opened.",
+    );
   }
 
   async function copyLink() {
@@ -89,11 +113,34 @@ export function ShareCardEditor({
     <dialog ref={dialogRef} className="share-card-dialog" aria-labelledby={headingId} onClose={onClose}>
       <h2 id={headingId}>{heading}</h2>
       <p className="meta">{note}</p>
-      {preview ? <img src={preview} alt={`Share card for ${title}`} /> : null}
+      {several ? (
+        <div className="share-card-choice shape-segment" role="radiogroup" aria-label="Which card to save">
+          {cards.map((card) => (
+            <button
+              key={card.id}
+              type="button"
+              role="radio"
+              aria-checked={card.id === selected?.id}
+              onClick={() => {
+                setSelectedId(card.id);
+                setStatus("");
+              }}
+            >
+              {card.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      {selected ? <img src={selected.preview} alt={`Share card for ${title}, ${selected.label}`} /> : null}
       <div className="share-card-actions" role="group" aria-label="Save the image">
-        <button className="btn btn-primary" type="button" disabled={!file} onClick={download}>
-          Download image
+        <button className="btn btn-primary" type="button" disabled={!file} onClick={downloadSelected}>
+          {several ? `Download ${selectedName} image` : "Download image"}
         </button>
+        {several ? (
+          <button className="btn btn-secondary" type="button" onClick={downloadAll}>
+            Download both
+          </button>
+        ) : null}
         {canCopyImage ? (
           <button className="btn btn-secondary" type="button" disabled={!file} onClick={() => void copyImage()}>
             Copy image
@@ -113,7 +160,11 @@ export function ShareCardEditor({
               className="share-hit"
               type="button"
               disabled={!file}
-              aria-label={`Download image and ${target.label.replace(/^Share/, "share")}`}
+              aria-label={
+                several
+                  ? `Download ${selectedName} image and ${target.label.replace(/^Share/, "share")}`
+                  : `Download image and ${target.label.replace(/^Share/, "share")}`
+              }
               data-tooltip={target.label}
               onClick={() => post(target)}
             >

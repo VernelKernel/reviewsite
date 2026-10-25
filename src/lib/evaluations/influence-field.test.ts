@@ -61,6 +61,19 @@ describe("influence field", () => {
     for (const weight of negative.weights) expect(weight.negative).toBe(1);
   });
 
+  it("lets a mixed minority reach the same purity as a negative minority", () => {
+    const samples = maskSources(56, 0);
+    const mixed = calibrateInfluences(samples, { positive: 0.77, mixed: 0.23, negative: 0 });
+    const negative = calibrateInfluences(samples, { positive: 0.86, mixed: 0, negative: 0.14 });
+    const mixedTip = mixed.weights[nearest(samples, 0, 0.9)];
+    const negativeTip = negative.weights[nearest(samples, 0, 0.9)];
+    expect(mixedTip.mixed).toBeGreaterThan(0.8);
+    expect(negativeTip.negative).toBeGreaterThan(0.8);
+    const both = calibrateInfluences(samples, { positive: 0.5, mixed: 0.13, negative: 0.37 });
+    const bottom = both.weights[nearest(samples, 0, 0.9)];
+    expect(bottom.negative).toBeGreaterThan(bottom.mixed);
+  });
+
   it("places 14% negative at the lower tip and keeps mixed out", () => {
     const samples = maskSources(56, 0);
     const { weights } = calibrateInfluences(samples, { positive: 0.86, mixed: 0, negative: 0.14 });

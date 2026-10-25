@@ -2,14 +2,19 @@ import { percentages, type Distribution } from "@/lib/aggregation/landscape";
 import { fieldModelFrom, shadeField, type FieldPalette, type Lab, type SpinSource } from "./field";
 import { radarPoint } from "./radar";
 
-/** Artistic placement of the three influences. y increases toward the bottom tip. */
+/**
+ * Artistic placement of the three influences. y increases toward the bottom tip.
+ * Mixed is lower and tighter so a minority gold share can reach the same purity
+ * at its focus that negative already reaches. A wide center wash stops near an
+ * even blend with green, and that blend is olive rather than gold.
+ */
 export const INFLUENCE_SOURCES = {
   positive: [
     { cx: 0, cy: -0.58, sx: 0.82, sy: 0.52, gain: 1.2 },
     { cx: -0.62, cy: -0.16, sx: 0.46, sy: 0.52, gain: 0.88 },
     { cx: 0.62, cy: -0.16, sx: 0.46, sy: 0.52, gain: 0.88 },
   ],
-  mixed: [{ cx: 0, cy: 0.12, sx: 0.55, sy: 0.46, gain: 1.35 }],
+  mixed: [{ cx: 0, cy: 0.48, sx: 0.3, sy: 0.26, gain: 1.35 }],
   negative: [{ cx: 0, cy: 0.7, sx: 0.44, sy: 0.38, gain: 1 }],
 } as const;
 
@@ -393,11 +398,32 @@ function mixColor(
   return shadeField(model, mixLab(weights, model), x, y);
 }
 
+/** Yellow gold, in OKLab hue. Caution tokens sit browner than this, toward orange. */
+const GOLD_HUE = (88 * Math.PI) / 180;
+
+/**
+ * The bar's gold is the caution color lightened, which reads yellow.
+ * The diamond keeps that hue and raises chroma, the way its red already
+ * stays on the bar's red instead of drifting brown.
+ */
+function goldMixed(lab: Lab): Lab {
+  const chroma = Math.hypot(lab[1], lab[2]);
+  if (chroma < 1e-4) return lab;
+  const hue = Math.atan2(lab[2], lab[1]);
+  let delta = GOLD_HUE - hue;
+  if (delta > Math.PI) delta -= Math.PI * 2;
+  if (delta < -Math.PI) delta += Math.PI * 2;
+  const warmed = hue + delta * 0.45;
+  const lifted = chroma * 1.18;
+  return [lab[0], Math.cos(warmed) * lifted, Math.sin(warmed) * lifted];
+}
+
 function mixLab(weights: InfluenceWeights, anchors: { positive: Lab; mixed: Lab; negative: Lab }): Lab {
+  const mixed = goldMixed(anchors.mixed);
   return [
-    anchors.positive[0] * weights.positive + anchors.mixed[0] * weights.mixed + anchors.negative[0] * weights.negative,
-    anchors.positive[1] * weights.positive + anchors.mixed[1] * weights.mixed + anchors.negative[1] * weights.negative,
-    anchors.positive[2] * weights.positive + anchors.mixed[2] * weights.mixed + anchors.negative[2] * weights.negative,
+    anchors.positive[0] * weights.positive + mixed[0] * weights.mixed + anchors.negative[0] * weights.negative,
+    anchors.positive[1] * weights.positive + mixed[1] * weights.mixed + anchors.negative[1] * weights.negative,
+    anchors.positive[2] * weights.positive + mixed[2] * weights.mixed + anchors.negative[2] * weights.negative,
   ];
 }
 

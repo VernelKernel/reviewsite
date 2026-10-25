@@ -1,18 +1,18 @@
 import {
   criticCoverage,
   distributionLabel,
+  dominantKey,
   pairedDimensions,
+  pairedEnjoymentDimensions,
   percentages,
   shapePoints,
   summaryLines,
-  type CountShare,
   type Distribution,
   type ReviewLandscape,
   type ShapeMode,
   type ShapePoint,
   type ShapeTone,
 } from "@/lib/aggregation/landscape";
-import { completionLabel } from "@/lib/domain/labels";
 import { distributionStops } from "@/components/evaluations/distribution-bar";
 import { nestExportLayout, paintNest, readNestPalette } from "@/components/evaluations/nest-paint";
 import { loadCoverArt } from "@/components/works/emblem-export";
@@ -28,7 +28,8 @@ export type LandscapeCardInput = {
   url: string;
   path: string;
   host: string;
-  scope: ShapeMode;
+  /** One card describes one population. Critics and audience are separate files. */
+  scope: Exclude<ShapeMode, "both">;
   critics: ReviewLandscape;
   audience: ReviewLandscape;
   /** Month span of the evaluations behind the card. */
@@ -37,8 +38,8 @@ export type LandscapeCardInput = {
   filters: string[];
   /** Tall cover, when the work has one. The header paints it with the critic emblem. */
   coverSrc?: string | null;
-  /** Impression-radar vertex dots, matching each population's Execution graph. Hidden when omitted. */
-  showPoints?: Partial<Record<Population, boolean>>;
+  /** Vertex dots for this card's two graphs. Hidden when omitted. */
+  showPoints?: Partial<Record<"enjoyment" | "execution", boolean>>;
 };
 
 type Palette = {
@@ -79,27 +80,27 @@ export async function renderLandscapeCard(input: LandscapeCardInput): Promise<Fi
   ctx.fillStyle = palette.canvas;
   ctx.fillRect(0, 0, WIDTH, SCRATCH_HEIGHT);
 
-  const rows = populationsFor(input);
-  const dimensions = pairedDimensions(input.critics, input.audience);
+  const population = input.scope;
+  const landscape = population === "critics" ? input.critics : input.audience;
+  const enjoymentPoints = shapePoints(pairedEnjoymentDimensions(input.critics, input.audience), population);
+  const executionPoints = shapePoints(pairedDimensions(input.critics, input.audience), population);
 
   let y = PAD;
   y = (await drawHeader(ctx, palette, input, y)) + 20;
-  for (const population of rows) {
-    const landscape = population === "critics" ? input.critics : input.audience;
-    y =
-      drawRow(
-        ctx,
-        palette,
-        input.host,
-        population,
-        landscape,
-        shapePoints(dimensions, population),
-        input.showPoints?.[population] === true,
-        y,
-      ) + 20;
-  }
-  y = drawGlance(ctx, palette, input, rows, y) + 20;
-  y = drawSummary(ctx, palette, input, rows, y) + 28;
+  y =
+    drawCharts(
+      ctx,
+      palette,
+      input.host,
+      population,
+      landscape,
+      enjoymentPoints,
+      executionPoints,
+      input.showPoints?.enjoyment === true,
+      input.showPoints?.execution === true,
+      y,
+    ) + 20;
+  y = drawSummary(ctx, palette, input, [population], y) + 28;
   y = drawFooter(ctx, palette, input.url, y);
 
   const height = Math.ceil(y);
@@ -111,20 +112,25 @@ export async function renderLandscapeCard(input: LandscapeCardInput): Promise<Fi
   outCtx.drawImage(scratch, 0, 0, WIDTH * dpr, height * dpr, 0, 0, WIDTH * dpr, height * dpr);
   const blob = await new Promise<Blob | null>((resolve) => out.toBlob(resolve, "image/png"));
   if (!blob) throw new Error("Could not prepare the image.");
-  return new File([blob], shareFileName(input.path), { type: "image/png" });
+  return new File([blob], shareFileName(input.path, population), { type: "image/png" });
+}
+
+/** Populations that have published evaluations in the current scope, critics first. */
+export function landscapeCardPopulations(
+  scope: ShapeMode,
+  critics: ReviewLandscape,
+  audience: ReviewLandscape,
+): Population[] {
+  const rows: Population[] = [];
+  if (scope !== "audience" && critics.sampleSize > 0) rows.push("critics");
+  if (scope !== "critics" && audience.sampleSize > 0) rows.push("audience");
+  return rows;
 }
 
 export function scopeLabel(scope: ShapeMode): string {
   if (scope === "critics") return "FRAME Critics";
   if (scope === "audience") return "FRAME Audience";
   return "FRAME Community";
-}
-
-function populationsFor(input: LandscapeCardInput): Population[] {
-  const rows: Population[] = [];
-  if (input.scope !== "audience" && input.critics.sampleSize > 0) rows.push("critics");
-  if (input.scope !== "critics" && input.audience.sampleSize > 0) rows.push("audience");
-  return rows;
 }
 
 async function drawHeader(ctx: CanvasRenderingContext2D, palette: Palette, input: LandscapeCardInput, y: number): Promise<number> {
@@ -230,28 +236,67 @@ function layoutTitle(
   return { size: min, line: Math.round(min * 1.2), lines };
 }
 
-function drawRow(
+function drawCharts(
   ctx: CanvasRenderingContext2D,
   palette: Palette,
   host: string,
   population: Population,
   landscape: ReviewLandscape,
-  points: ShapePoint[],
-  showPoints: boolean,
+  enjoymentPoints: ShapePoint[],
+  executionPoints: ShapePoint[],
+  showEnjoymentPoints: boolean,
+  showExecutionPoints: boolean,
   y: number,
 ): number {
   const stageWidth = 600;
   const height = 480;
   const gap = 16;
-  drawStage(ctx, palette, host, population, landscape, points, showPoints, PAD, y, stageWidth, height);
+  drawStage(
+    ctx,
+    palette,
+    host,
+    chartHeading("Enjoyment dimensions", landscape.enjoyment),
+    population,
+    landscape,
+    enjoymentPoints,
+    showEnjoymentPoints,
+    PAD,
+    y,
+    stageWidth,
+    height,
+  );
   drawGap(ctx, palette, population, landscape, PAD + stageWidth + gap, y, INNER - stageWidth - gap, height);
-  return y + height;
+  const executionY = y + height + 20;
+  drawStage(
+    ctx,
+    palette,
+    host,
+    chartHeading("Execution dimensions", landscape.execution),
+    population,
+    landscape,
+    executionPoints,
+    showExecutionPoints,
+    PAD,
+    executionY,
+    stageWidth,
+    height,
+  );
+  return executionY + height;
+}
+
+/** Matches the on-page chart title: the family name, plus the headline stance once four evaluations share one. */
+function chartHeading(label: string, distribution: Distribution): string {
+  if (distribution.count < 4) return label;
+  const dominant = dominantKey(distribution);
+  if (!dominant) return label;
+  return `${label}: ${dominant.charAt(0).toUpperCase()}${dominant.slice(1)}`;
 }
 
 function drawStage(
   ctx: CanvasRenderingContext2D,
   palette: Palette,
   host: string,
+  heading: string,
   population: Population,
   landscape: ReviewLandscape,
   points: ShapePoint[],
@@ -268,11 +313,13 @@ function drawStage(
   ctx.fillStyle = fill;
   ctx.fill();
 
-  ctx.fillStyle = palette.label;
-  ctx.font = `600 15px ${palette.body}`;
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  ctx.fillText("IMPRESSION", x + 24, y + 36);
+  ctx.font = `500 14px ${palette.body}`;
+  const hostWidth = ctx.measureText(host).width;
+  ctx.font = `600 15px ${palette.body}`;
+  ctx.fillStyle = palette.label;
+  ctx.fillText(fit(ctx, heading.toUpperCase(), Math.max(160, width - 72 - hostWidth)), x + 24, y + 36);
   ctx.font = `500 14px ${palette.body}`;
   ctx.textAlign = "right";
   ctx.fillText(host, x + width - 24, y + 36);
@@ -463,34 +510,6 @@ function drawBar(
   return top + 36;
 }
 
-function drawGlance(ctx: CanvasRenderingContext2D, palette: Palette, input: LandscapeCardInput, rows: Population[], y: number): number {
-  const items: { value: string; label: string }[] = [];
-  if (rows.includes("critics")) items.push({ value: criticCoverage(input.critics.coverageCount), label: "Critic outlets" });
-  if (rows.includes("audience")) items.push({ value: String(input.audience.sampleSize), label: "Audience evaluations" });
-  const landscapes = rows.map((population) => (population === "critics" ? input.critics : input.audience));
-  const completion = topShare(landscapes.map((landscape) => landscape.completions));
-  if (completion) items.push({ value: completionLabel[completion] ?? completion, label: "Most common experience" });
-  if (items.length === 0) return y - 20;
-
-  const height = 118;
-  card(ctx, palette, PAD, y, INNER, height);
-  ctx.fillStyle = palette.muted;
-  ctx.font = `600 14px ${palette.body}`;
-  ctx.textAlign = "left";
-  ctx.fillText("AT A GLANCE", PAD + 24, y + 32);
-  const column = (INNER - 48) / items.length;
-  items.forEach((item, index) => {
-    const left = PAD + 24 + column * index;
-    ctx.fillStyle = palette.text;
-    ctx.font = `650 20px ${palette.body}`;
-    ctx.fillText(fit(ctx, item.value, column - 20), left, y + 68);
-    ctx.fillStyle = palette.muted;
-    ctx.font = `400 14px ${palette.body}`;
-    ctx.fillText(fit(ctx, item.label, column - 20), left, y + 92);
-  });
-  return y + height;
-}
-
 function drawSummary(ctx: CanvasRenderingContext2D, palette: Palette, input: LandscapeCardInput, rows: Population[], y: number): number {
   const showCritics = rows.includes("critics");
   const showAudience = rows.includes("audience");
@@ -568,22 +587,6 @@ function drawFooter(ctx: CanvasRenderingContext2D, palette: Palette, url: string
   ctx.fillText(fit(ctx, url, INNER), PAD, y + 52);
   ctx.textBaseline = "alphabetic";
   return y + height;
-}
-
-function topShare(groups: CountShare[][]): string | null {
-  const totals = new Map<string, number>();
-  for (const group of groups) {
-    for (const item of group) totals.set(item.key, (totals.get(item.key) ?? 0) + item.count);
-  }
-  let best: string | null = null;
-  let bestCount = 0;
-  for (const [key, count] of totals) {
-    if (count > bestCount) {
-      best = key;
-      bestCount = count;
-    }
-  }
-  return best;
 }
 
 function toneColor(tone: ShapeTone, palette: Palette): string {
