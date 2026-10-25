@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { CriticNestEmblem } from "@/components/evaluations/critic-nest-emblem";
 import { DistributionBar } from "@/components/evaluations/distribution-bar";
 import { ShapeShare } from "@/components/evaluations/shape-share";
 import {
@@ -331,6 +332,9 @@ function GapPanel({ population, landscape }: { population: Focus; landscape: Rev
   return (
     <section className="panel shape-gap" aria-labelledby={headingId}>
       <h3 id={headingId}>{`${NAMES[population].toUpperCase()} OVERALL`}</h3>
+      <div className="shape-gap-mark">
+        <CriticNestEmblem compact decorative execution={landscape.execution} enjoyment={landscape.enjoyment} />
+      </div>
       <DistributionBar label="Enjoyment" distribution={landscape.enjoyment} unit={unit} layout="under" />
       {enjoymentDimensions.length > 0 ? (
         <DimensionBreakdown dimensions={enjoymentDimensions} />
