@@ -23,6 +23,7 @@ export const GAME_DIMENSION_SLUGS = [
   "gameplay",
   "story",
   "music",
+  "sound",
   "art-direction",
   "technical-quality",
   "performance",
