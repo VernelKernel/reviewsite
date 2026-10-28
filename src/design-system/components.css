@@ -558,6 +558,474 @@ p {
   gap: var(--space-2);
 }
 
+.list-four-stage {
+  --wide-skyscraper: 160px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--wide-skyscraper);
+  column-gap: var(--space-7);
+  align-items: start;
+}
+
+.list-four-ad-slot {
+  min-height: 600px;
+}
+
+.list-four-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.list-four {
+  height: 100%;
+}
+
+.list-four .work-card-link {
+  flex: 1;
+  padding: var(--space-3);
+  gap: var(--space-2);
+}
+
+.list-four h3.list-four-title {
+  display: -webkit-box;
+  margin: 0;
+  min-height: calc(1.12em * 2);
+  overflow: hidden;
+  font-size: var(--text-h3);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.list-four .card-counts {
+  min-height: calc(1.65em * 2 + var(--space-1));
+}
+
+.list-four-body {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 0.78fr) minmax(0, 1.35fr);
+  gap: var(--space-2);
+  align-items: start;
+}
+
+.list-four-art {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 2 / 3;
+  background: var(--color-surface-elevated);
+  border-radius: var(--radius-sm);
+}
+
+.list-four-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.list-four:hover .list-four-art img {
+  transform: none;
+}
+
+.list-four-badge {
+  position: absolute;
+  right: 2%;
+  bottom: 1.333%;
+  width: 24.2%;
+  aspect-ratio: 1;
+  pointer-events: none;
+}
+
+.list-four .nest-emblem {
+  --emblem-scale: 0.25;
+}
+
+.list-four-badge .nest-emblem {
+  width: 100%;
+  height: 100%;
+}
+
+.list-four-charts {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  min-width: 0;
+  background: transparent;
+}
+
+.list-four-chart {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.3rem;
+  align-items: center;
+  min-width: 0;
+  background: transparent;
+}
+
+.list-four-rail {
+  display: flex;
+  align-items: center;
+  column-gap: 0.3rem;
+  align-self: center;
+}
+
+.list-four-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: flex-end;
+  gap: 0.1rem;
+}
+
+.list-four-rail-execution .list-four-mark {
+  flex-direction: column-reverse;
+  align-self: flex-end;
+}
+
+.list-four-axis {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-micro);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.list-four-rail .flair-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.list-four-scale-slot {
+  position: relative;
+  width: 0.4rem;
+  height: 6.5rem;
+  flex: none;
+}
+
+.list-four-scale.dist-bar {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6.5rem;
+  height: 0.4rem;
+  transform: translate(-50%, -50%) rotate(-90deg);
+}
+
+.list-four-plot {
+  position: relative;
+  min-width: 0;
+}
+
+.list-four-field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.list-four-radar {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  background: transparent;
+}
+
+.list-four-radar text {
+  font-family: var(--font-body);
+  fill: var(--color-text-secondary);
+}
+
+.list-four-label {
+  font-weight: 560;
+}
+
+.list-four-outline {
+  fill: none;
+  stroke: color-mix(in srgb, var(--color-text-primary) 72%, transparent);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+.list-four-empty {
+  display: grid;
+  place-items: center;
+  min-height: 7.5rem;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-meta);
+  text-align: center;
+}
+
+.list-four .list-four-plot {
+  aspect-ratio: 3 / 2;
+  width: 100%;
+}
+
+.list-four .list-four-plot:has(.list-four-empty) {
+  overflow: hidden;
+}
+
+.list-four .list-four-empty {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  padding: var(--space-1);
+}
+
+@media (max-width: 1240px) {
+  .list-four-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .list-four-ad-slot {
+    display: none;
+  }
+
+  .list-four-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .list-four-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .list-four-body {
+    grid-template-columns: minmax(5.5rem, 0.55fr) minmax(0, 1fr);
+  }
+}
+
+.list-six {
+  height: 100%;
+  min-width: 0;
+  padding: var(--space-3);
+  gap: var(--space-3);
+}
+
+.list-six-title-link,
+.list-six-cover,
+.list-six-shape,
+.list-six-take a {
+  cursor: pointer;
+}
+
+.list-six-title-link,
+.list-six-cover {
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.list-six-title-link:hover,
+.list-six-cover:hover {
+  color: inherit;
+  text-decoration: none;
+}
+
+.list-six h3.list-six-title {
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--text-h3);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list-six-top {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 42%) minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: stretch;
+  min-width: 0;
+}
+
+.list-six-art {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 2 / 3;
+  background: var(--color-surface-elevated);
+  border-radius: var(--radius-sm);
+}
+
+.list-six-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.list-six:hover .list-six-art img {
+  transform: none;
+}
+
+.list-six-badge {
+  position: absolute;
+  right: 2%;
+  bottom: 1.333%;
+  width: 24.2%;
+  aspect-ratio: 1;
+  pointer-events: none;
+}
+
+.list-six-badge .nest-emblem {
+  width: 100%;
+  height: 100%;
+}
+
+.list-six-take {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  min-height: 0;
+}
+
+.list-six-take h4 {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
+  font-weight: 560;
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+
+.list-six-take a {
+  display: -webkit-box;
+  min-height: calc(1.3em * 2);
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: var(--text-meta);
+  line-height: 1.3;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.list-six-take a:hover {
+  color: var(--color-accent);
+}
+
+.list-six-nest {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+  margin-top: var(--space-2);
+}
+
+.list-six-nest .nest-emblem {
+  width: min(7.5rem, 100%);
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.list-six-readings {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.list-six-readings dt {
+  min-height: calc(1.3em * 2);
+  color: var(--color-text-secondary);
+  font-size: var(--text-meta);
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.list-six-readings dd {
+  display: -webkit-box;
+  min-height: calc(1.3em * 2);
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-text-primary);
+  font-size: var(--text-meta);
+  font-weight: 650;
+  line-height: 1.3;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.list-six-rule {
+  width: 100%;
+  height: 0;
+  margin: 0;
+  border: 0;
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.list-six-cue {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-meta);
+  line-height: 1.3;
+  text-align: center;
+}
+
+.list-six-shapes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 9rem));
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.list-six-shape {
+  display: block;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+
+.list-six-shape:hover {
+  color: inherit;
+  text-decoration: none;
+  background: var(--color-surface-elevated);
+}
+
+.list-six-shape:active {
+  background: var(--color-canvas);
+}
+
+.list-six .list-four-plot {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+}
+
+.list-six .list-four-plot:has(.list-four-empty) {
+  overflow: hidden;
+}
+
+.list-six .list-four-empty {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  padding: var(--space-1);
+  font-size: var(--text-micro);
+}
+
+.list-six .work-card-actions {
+  padding: 0;
+  margin-top: auto;
+}
+
 .meta {
   color: var(--color-text-muted);
   font-size: var(--text-meta);
