@@ -57,7 +57,7 @@ The rail is as tall as the main column, so the nav can stick. The poster scrolls
 
 `.work-intro` is a wrapping flex row, `justify-content: flex-start`. The synopsis and the facts sit next to each other. The facts grow into the space beside the synopsis so their right edge lines up with the main column, which is also the right edge of the platform filter.
 
-- Copy: `flex: 1 1 28rem`, `max-width: 38rem`. Kicker is the work type (`Game`). The title is an `h1` at `--text-h1`, not `--text-display`. The synopsis is `.lede` and uses that same column. One primary button, `Evaluate this work`, sits under the synopsis and does not stretch.
+- Copy: `flex: 1 1 28rem`, `max-width: 38rem`. Kicker is the work type (`Game`). The title is an `h1` at `--text-h1`, not `--text-display`. The synopsis is `.synopsis` and uses that same column. One primary button, `Evaluate this work`, sits under the synopsis and does not stretch.
 - Facts: `flex: 1 1 22rem`, no max width. No fill, radius, or shadow. The only container edge is a left border (`--color-border-strong`) with padding on that side. Rows are Released, Creators, Genres, On Steam, Platforms. Omit a row when the work has no value, and omit the block when none exist. Labels are a `5.5rem` column. Steam links are metadata size under the reception line.
 
 The facts block is only as tall as its rows. It must not stretch to match the poster, and the poster must not stretch to match the facts.

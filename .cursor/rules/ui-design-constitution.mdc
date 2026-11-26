@@ -1,0 +1,25 @@
+---
+description: FRAME visual language. Read the UI Design Constitution before changing UI.
+alwaysApply: true
+---
+
+# UI Design Constitution
+
+`docs/UI_DESIGN_CONSTITUTION.md` is the enshrined visual design document for FRAME. It is the authority for which token and which shared class a piece of content uses.
+
+Before creating or restyling a page, component, or style:
+
+1. Read `docs/UI_DESIGN_CONSTITUTION.md`.
+2. Use the existing role. Do not invent a page-specific size, color, or weight.
+3. If the visual language itself must change, update the shared class or the theme token, and update the constitution in the same change.
+
+Roles already settled:
+
+- Work synopsis: `.synopsis`
+- Page introduction: `.lede`
+- One-line review impression: `.impression-line`
+- Review comment: `.prose` at `--text-meta` (muted in lists and excerpts, primary on the evaluation page)
+- Fact values: `--text-meta`, primary
+- Buttons: `.btn` plus one variant (`btn-primary`, `btn-secondary`, `btn-ghost`)
+
+Tokens live in `src/design-system/themes/`. Shared classes live in `src/design-system/components.css`. The constitution decides when each is used. Mood and light/dark change token values only.

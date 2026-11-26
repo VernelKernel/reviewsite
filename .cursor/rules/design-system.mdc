@@ -40,3 +40,6 @@ These are themes, not separate applications.
 18. Do not branch JSX on `theme === ...` unless the visual structure genuinely cannot be expressed with tokens. Prefer token changes.
 19. Do not make theme switching a prominent public navigation item. Color mode may be quiet. Mood switching stays in the appearance control.
 20. The default mood is `core`, overridable with `NEXT_PUBLIC_DEFAULT_MOOD`.
+21. `docs/UI_DESIGN_CONSTITUTION.md` is the authority for which token and which shared class a piece of content uses. Read it before adding or restyling a page.
+22. Equivalent content uses the shared class for that role. Do not override its font size, color, or weight on one page.
+23. A work synopsis is `.synopsis`. A page introduction is `.lede`. A one-line review impression is `.impression-line`. A review comment uses `.prose` at `--text-meta`. Buttons use `.btn` and a variant.

@@ -154,7 +154,7 @@ export async function WorkPage({
             <div className="hero-copy">
               <p className="kicker">{workTypeLabel[work.workType]}</p>
               <h1>{work.title}</h1>
-              {work.synopsis ? <p className="lede">{work.synopsis}</p> : null}
+              {work.synopsis ? <p className="synopsis">{work.synopsis}</p> : null}
               <a className="btn btn-primary" href={evaluateHref(work.workType, work.slug)}>
                 Evaluate this work
               </a>

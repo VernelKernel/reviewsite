@@ -182,7 +182,7 @@ function Details({ work }: { work: NonNullable<Awaited<ReturnType<typeof getWork
   return (
     <div className="record-body">
       {work.synopsis ? (
-        <p className="lede">{work.synopsis}</p>
+        <p className="synopsis">{work.synopsis}</p>
       ) : (
         <p className="meta">No description is stored for this work yet.</p>
       )}
