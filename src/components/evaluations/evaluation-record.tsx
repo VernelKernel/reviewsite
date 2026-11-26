@@ -178,7 +178,7 @@ function DimensionBreakdown({ id, title, axes }: { id: string; title: string; ax
           ))}
         </ul>
       ) : (
-        <p className="meta">No dimensions judged.</p>
+        <p className="meta">Dimensions not specified.</p>
       )}
     </section>
   );

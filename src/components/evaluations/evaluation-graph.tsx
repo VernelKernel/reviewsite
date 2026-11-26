@@ -164,7 +164,7 @@ function RadarField({
           </svg>
         </div>
       ) : (
-        <p className="evaluation-chart-empty">No dimensions judged.</p>
+        <p className="evaluation-chart-empty">Dimensions not specified.</p>
       )}
     </div>
   );

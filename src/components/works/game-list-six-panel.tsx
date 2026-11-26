@@ -31,7 +31,7 @@ function stanceLine(distribution: Distribution): string {
 }
 
 function shapeSummary(label: string, points: ShapePoint[], sample: string): string {
-  if (!closed(points)) return `Critics ${label.toLowerCase()}. Not enough dimensions for a shape. ${sample}.`;
+  if (!closed(points)) return `Critics ${label.toLowerCase()}. Not enough dimensions to shape. ${sample}.`;
   const readings = points.map((point) => `${point.name}, ${distributionLabel(point.distribution)}`).join(". ");
   return `Critics ${label.toLowerCase()}, ${sample}. ${readings}.`;
 }
@@ -54,7 +54,7 @@ function CriticShape({
         <GlanceShape points={points} summary={summary} labels={false} />
       ) : (
         <div className="list-four-plot">
-          <p className="list-four-empty">Not enough dimensions for a shape.</p>
+          <p className="list-four-empty">Not enough dimensions to shape.</p>
         </div>
       )}
     </a>

@@ -4,7 +4,7 @@ import { listWorks } from "@/lib/works/queries";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const works = await listWorks();
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3003";
   return [
     { url: base, changeFrequency: "daily", priority: 1 },
     { url: `${base}/games`, changeFrequency: "weekly", priority: 0.8 },

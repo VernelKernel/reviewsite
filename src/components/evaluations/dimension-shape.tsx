@@ -207,7 +207,7 @@ function FamilyChart({
       {points.length > 0 ? (
         <ShapeChart points={points} label={title} showPoints={showPoints} />
       ) : (
-        <p className="population-stage-empty">No dimensions judged.</p>
+        <p className="population-stage-empty">Dimensions not specified.</p>
       )}
     </div>
   );

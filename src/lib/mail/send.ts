@@ -31,7 +31,7 @@ export function accountVerificationEmailHtml(url: string): string {
 }
 
 export function accountVerificationUrl(token: string): string {
-  const origin = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  const origin = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3003").replace(/\/$/, "");
   return `${origin}/verify?token=${encodeURIComponent(token)}`;
 }
 
