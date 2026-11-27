@@ -12,7 +12,6 @@ import {
   type NestFrame,
 } from "@/components/evaluations/nest-paint";
 import { useSpinEpoch } from "@/components/evaluations/spin-clock";
-import { breathScale } from "@/lib/evaluations/breath";
 
 const TURN_SECONDS = 16;
 
@@ -107,7 +106,6 @@ export function CriticNestEmblem({
         enjoyment: enjoymentSource,
         executionAngle: angle,
         enjoymentAngle: angle,
-        scale: breathScale(elapsed),
         empty,
       });
     };

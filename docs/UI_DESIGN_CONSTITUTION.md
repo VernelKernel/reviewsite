@@ -76,7 +76,7 @@ Use the class. Do not restyle the content in the page.
 | Fact value | `.fact-card .fact-list dd`, `.record-facts dd` | `--text-meta` | primary | Released, creators, publisher, genres, platforms. Same size as the label, primary color so the value reads as the content. |
 | Kicker | `.kicker` | `--text-micro` | muted | Uppercase, letter-spacing 0.12em. Work type, record back-link, account label. |
 | Button label | `.btn` | `--text-meta` | depends on variant | See section 6. |
-| Navigation | `.nav-links a`, `.record-tabs a` | `--text-meta` | secondary, current item primary | |
+| Navigation | `.nav-links a`, `.record-tabs a`, `.evaluation-nav a`, `.work-nav-action` | `--text-meta` | secondary, current item primary | |
 | Chip | `.chip` | `--text-meta` | secondary | |
 | Compact card title | `.work-card h2`, `.work-card h3`, `.compare-column-body h2` | 1.15rem | primary | Dense catalog and compare cards. Not the page title. |
 | Home strip title | `.home-review-body h3` | 1.05rem | primary | Denser than a catalog card. Intentional. |
@@ -154,7 +154,7 @@ Do not invent a new button class for a new page.
 | Choice chip | `.chip` | Metadata size. Current chip uses an accent border. |
 | Segmented control | `.shape-segment button` | Metadata size. The checked segment is accent. |
 | Tabs on a record | `.record-tabs a` | Text link with an accent underline on the current page. Not a button. |
-| Work and evaluation nav | `.evaluation-nav a`, `.work-nav-action` | Same row pattern. Current item mixes accent into the surface. |
+| Work and evaluation nav | `.evaluation-nav a`, `.work-nav-action` | `--text-meta`, with the icon at 1em. Current item mixes accent into the surface. |
 | Dialog | `.share-card-dialog` | Uses `--shadow-modal` and the strong border. |
 
 ### Review blocks
