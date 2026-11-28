@@ -182,7 +182,9 @@ A short label that appears on hover and keyboard focus uses `.tip` with `data-to
 
 ### Nest emblem
 
-The outer diamond is execution. The inner diamond is enjoyment. A nest that is not decorative exposes each diamond as `.nest-target`. The gutter between them, and the corners outside the outer diamond, are not targets. The cursor stays the arrow. The tip names the diamond and the reading. The emblem sets `--nest-hole` and `--nest-inner` from `nestShares()`. Those are geometry, not a color or a margin.
+The outer diamond is execution. The inner diamond is enjoyment. A nest that is not decorative exposes each diamond as `.nest-target`. The gutter between them, and the corners outside the outer diamond, are not tip targets. The cursor stays the arrow on the gutter. The tip names the diamond and the reading. The emblem sets `--nest-hole` and `--nest-inner` from `nestShares()`. Those are geometry, not a color or a margin.
+
+On the sample game list, each diamond and `.list-six-nest-link` open the work page. The surrounding link is the emblem’s square plus `--space-3` on every side, and it stays inside `.list-six-nest`. The gutter does not navigate. Hover still shows the reading. The pointer is a hand on a diamond and on the surrounding link, and an arrow on the gutter. Hover and active lift the emblem. The boundary is not drawn. Keyboard focus uses the focus ring.
 
 On screen, the nest and every glance shape take the shared facet finish: a neutral white-to-black wash, and on the nest a hairline rim. The wash is illumination, clipped to pixels that are already painted, so the gutter stays clear and the stance colors stay the data. Exported images do not take the wash. The canvas shadow is neutral black through `color-mix`, because `--color-text-primary` flips in dark mode and would glow. A mark sitting on artwork (`.emblem-badge`) uses the smaller shadow. Hovering a nest diamond lifts the emblem. Hovering a glance target lifts `.shape-slot`.
 

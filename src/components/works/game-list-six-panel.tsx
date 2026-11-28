@@ -91,7 +91,8 @@ export function GameListSixPanel({ work }: { work: CardWork }) {
             <h4>Critics Take</h4>
             <a href={criticsHref(work.workType, work.slug)}>{sample}</a>
             <div className="list-six-nest">
-              <CriticNestEmblem compact spin enjoyment={enjoyment} execution={execution} />
+              <a className="list-six-nest-link" href={href} aria-label={`${work.title} review`} />
+              <CriticNestEmblem compact spin href={href} enjoyment={enjoyment} execution={execution} />
             </div>
           </div>
         </div>

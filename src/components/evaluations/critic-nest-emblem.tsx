@@ -26,12 +26,15 @@ export function CriticNestEmblem({
   compact = false,
   decorative = false,
   spin = false,
+  href,
 }: {
   execution: Distribution;
   enjoyment: Distribution;
   compact?: boolean;
   decorative?: boolean;
   spin?: boolean;
+  /** When set, each diamond is a link to this page. The gutter stays inert. */
+  href?: string;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -178,16 +181,35 @@ export function CriticNestEmblem({
       <canvas ref={canvasRef} className="nest-emblem-canvas" aria-hidden="true" />
       {decorative ? null : (
         <div className="nest-targets">
-          <span className="nest-target nest-target-execution tip" tabIndex={0} role="img" aria-label={executionTip} data-tooltip={executionTip}>
-            <span className="nest-target-face" />
-          </span>
+          <DiamondTarget className="nest-target nest-target-execution tip" href={href} label={executionTip} />
           <span className="nest-target nest-target-hole" aria-hidden="true" />
-          <span className="nest-target nest-target-enjoyment tip" tabIndex={0} role="img" aria-label={enjoymentTip} data-tooltip={enjoymentTip}>
-            <span className="nest-target-face" />
-          </span>
+          <DiamondTarget className="nest-target nest-target-enjoyment tip" href={href} label={enjoymentTip} />
         </div>
       )}
     </div>
+  );
+}
+
+function DiamondTarget({
+  className,
+  href,
+  label,
+}: {
+  className: string;
+  href?: string;
+  label: string;
+}) {
+  if (href) {
+    return (
+      <a className={className} href={href} aria-label={label} data-tooltip={label}>
+        <span className="nest-target-face" />
+      </a>
+    );
+  }
+  return (
+    <span className={className} tabIndex={0} role="img" aria-label={label} data-tooltip={label}>
+      <span className="nest-target-face" />
+    </span>
   );
 }
 
