@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clusterGap, clusterOuterRadius, nestGeometry } from "./nest-geometry";
+import { clusterGap, clusterOuterRadius, FRAME_SHARE, nestGeometry, nestShares } from "./nest-geometry";
 
 describe("nest emblem", () => {
   it("uses the same gap as the four-diamond emblem", () => {
@@ -9,5 +9,12 @@ describe("nest emblem", () => {
       expect(gap).toBeCloseTo(clusterGap(scale), 6);
       expect(geometry.innerRadius).toBeGreaterThan(geometry.outerRadius * 0.5);
     }
+  });
+
+  it("keeps execution outside the hole and enjoyment inside it", () => {
+    const shares = nestShares();
+    expect(shares.hole).toBeCloseTo(1 - FRAME_SHARE);
+    expect(shares.inner).toBeLessThan(shares.hole);
+    expect(shares.inner).toBeGreaterThan(0.5);
   });
 });

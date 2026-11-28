@@ -174,6 +174,18 @@ The comment size is always `--text-meta`. Color changes only with the job: muted
 
 Catalog cards (`.work-card`), compare columns, and the home strip share surface, border, radius, and shadow. Their titles stay compact because the card is a browse object, not a page. Sample game-list pages (`/game-list-3` through `/game-list-6`) are layout studies. They may use a denser card. They still use tokens.
 
+### Hover tips
+
+A short label that appears on hover and keyboard focus uses `.tip` with `data-tooltip`. The tip is micro type, primary text on the canvas color, the floating shadow, and sits `0.45rem` above the control. That offset and the `0.28rem 0.45rem` padding belong to the shared class. `.tip-start` aligns the tip to the leading edge. Profile marks, share hits, the two diamonds of a nest emblem, and a glance shape target use this class. Do not add another tooltip treatment.
+
+### Nest emblem
+
+The outer diamond is execution. The inner diamond is enjoyment. A nest that is not decorative exposes each diamond as `.nest-target`. The gutter between them, and the corners outside the outer diamond, are not targets. The cursor stays the arrow. The tip names the diamond and the reading. The emblem sets `--nest-hole` and `--nest-inner` from `nestShares()`. Those are geometry, not a color or a margin.
+
+### Glance shape target
+
+A clickable glance shape uses `.shape-target` inside `.shape-slot`. The target is the bounding square of a shape at full radius (`glanceMaxSpan()`), plus `--space-3` on every side. It is not the whole plot. The slot sets `--shape-max-width` and `--shape-max-height` from that span. Two targets in a row keep the row gap, so the pointer is an arrow and the click ends between them. The boundary is not drawn. Hover and active change the shape outline to accent. Keyboard focus uses the focus ring. The target carries a `.tip`: “Enjoyment Breakdown” or “Execution Breakdown.”
+
 ## 7. Navigation and interaction
 
 The header is one component, `SiteHeader`. Brand, primary links, search, appearance, and menu do not get a second header.

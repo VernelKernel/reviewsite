@@ -81,7 +81,7 @@ export function ShapeShare({ title, path }: { title: string; path: string }) {
         {targets.map((target) => (
           <a
             key={target.id}
-            className="share-hit"
+            className="share-hit tip"
             href={target.href}
             target="_blank"
             rel="noopener noreferrer"
@@ -94,7 +94,7 @@ export function ShapeShare({ title, path }: { title: string; path: string }) {
         <div className="share-send">
           <button
             ref={sendRef}
-            className="share-hit"
+            className="share-hit tip"
             type="button"
             aria-label="Send by email"
             aria-haspopup="menu"
@@ -122,7 +122,7 @@ export function ShapeShare({ title, path }: { title: string; path: string }) {
             </div>
           ) : null}
         </div>
-        <button className="share-hit" type="button" aria-label={copyLabel} data-tooltip={copyLabel} onClick={() => void copyLink()}>
+        <button className="share-hit tip" type="button" aria-label={copyLabel} data-tooltip={copyLabel} onClick={() => void copyLink()}>
           <img src="/share/copy-link.png" alt="" width={32} height={32} draggable={false} />
         </button>
       </div>

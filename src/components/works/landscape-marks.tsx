@@ -22,7 +22,7 @@ export function LandscapeMarks({
 function Mark({ group, name, distribution }: { group: string; name: string; distribution: Distribution }) {
   const verdict = distributionLabel(distribution);
   return (
-    <span className="profile-mark" tabIndex={0} role="img" aria-label={`${group} ${name.toLowerCase()}: ${verdict}`} data-tooltip={verdict}>
+    <span className="profile-mark tip tip-start" tabIndex={0} role="img" aria-label={`${group} ${name.toLowerCase()}: ${verdict}`} data-tooltip={verdict}>
       <ShapeMark distribution={distribution} />
     </span>
   );

@@ -3,14 +3,10 @@
 import { useEffect, useRef } from "react";
 import type { ShapePoint } from "@/lib/aggregation/landscape";
 import { fieldModelFrom, paintField, type FieldPalette } from "@/lib/evaluations/field";
+import { GLANCE_CX, GLANCE_CY, GLANCE_HEIGHT, GLANCE_RADIUS, GLANCE_WIDTH } from "@/lib/evaluations/glance-frame";
 import { radarPoint } from "@/lib/evaluations/radar";
 
-const WIDTH = 480;
-const HEIGHT = 320;
-const CX = 240;
-const CY = 160;
-const RADIUS = 102;
-const LABEL_RADIUS = RADIUS + 30;
+const LABEL_RADIUS = GLANCE_RADIUS + 30;
 
 function labelLines(name: string): string[] {
   if (!name.includes(" ") || name.length < 12) return [name];
@@ -35,10 +31,13 @@ export function GlanceShape({
   points,
   summary,
   labels = true,
+  named = true,
 }: {
   points: ShapePoint[];
   summary: string;
   labels?: boolean;
+  /** When a separate control names the shape, the drawing stays out of the accessibility tree. */
+  named?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -47,13 +46,13 @@ export function GlanceShape({
     if (!canvas) return;
     const draw = () => {
       const dpr = Math.min(2, window.devicePixelRatio || 1);
-      canvas.width = WIDTH * dpr;
-      canvas.height = HEIGHT * dpr;
+      canvas.width = GLANCE_WIDTH * dpr;
+      canvas.height = GLANCE_HEIGHT * dpr;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, WIDTH, HEIGHT);
-      const model = fieldModelFrom(points, CX, CY, RADIUS, readPalette());
+      ctx.clearRect(0, 0, GLANCE_WIDTH, GLANCE_HEIGHT);
+      const model = fieldModelFrom(points, GLANCE_CX, GLANCE_CY, GLANCE_RADIUS, readPalette());
       if (model) paintField(ctx, model);
     };
     draw();
@@ -64,19 +63,25 @@ export function GlanceShape({
 
   const outline = points
     .map((point, index) => {
-      const at = radarPoint(CX, CY, RADIUS, index, points.length, point.distance);
+      const at = radarPoint(GLANCE_CX, GLANCE_CY, GLANCE_RADIUS, index, points.length, point.distance);
       return `${at.x.toFixed(1)},${at.y.toFixed(1)}`;
     })
     .join(" ");
 
   return (
     <div className="list-four-plot">
-      <canvas ref={canvasRef} className="list-four-field" width={WIDTH} height={HEIGHT} aria-hidden="true" />
-      <svg className="list-four-radar" viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label={summary}>
+      <canvas ref={canvasRef} className="list-four-field" width={GLANCE_WIDTH} height={GLANCE_HEIGHT} aria-hidden="true" />
+      <svg
+        className="list-four-radar"
+        viewBox={`0 0 ${GLANCE_WIDTH} ${GLANCE_HEIGHT}`}
+        role={named ? "img" : undefined}
+        aria-label={named ? summary : undefined}
+        aria-hidden={named ? undefined : true}
+      >
         <polygon className="list-four-outline" points={outline} />
         {labels
           ? points.map((point, index) => {
-          const at = radarPoint(CX, CY, LABEL_RADIUS, index, points.length, 1);
+          const at = radarPoint(GLANCE_CX, GLANCE_CY, LABEL_RADIUS, index, points.length, 1);
           const cos = Math.cos(at.angle);
           const anchor = cos > 0.35 ? "start" : cos < -0.35 ? "end" : "middle";
           const lines = labelLines(point.name);

@@ -1,8 +1,8 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, type CSSProperties } from "react";
 import { distributionLabel, type Distribution } from "@/lib/aggregation/landscape";
-import { nestGeometry } from "@/lib/evaluations/nest-geometry";
+import { nestGeometry, nestShares } from "@/lib/evaluations/nest-geometry";
 import type { SpinSource } from "@/lib/evaluations/field";
 import {
   nestSpinSource,
@@ -14,6 +14,11 @@ import {
 import { useSpinEpoch } from "@/components/evaluations/spin-clock";
 
 const TURN_SECONDS = 16;
+const SHARE = nestShares();
+
+function readingTip(name: "Execution" | "Enjoyment", distribution: Distribution): string {
+  return `${name} · ${distributionLabel(distribution)}`;
+}
 
 export function CriticNestEmblem({
   execution,
@@ -154,15 +159,34 @@ export function CriticNestEmblem({
     };
   }, [spin, execution, enjoyment, executionKey, enjoymentKey, spinEpoch]);
 
+  const geometry = {
+    "--nest-hole": SHARE.hole,
+    "--nest-inner": SHARE.inner,
+  } as CSSProperties;
+  const executionTip = readingTip("Execution", execution);
+  const enjoymentTip = readingTip("Enjoyment", enjoyment);
+
   return (
     <div
       ref={rootRef}
       className={compact ? "nest-emblem nest-emblem-compact" : "nest-emblem"}
-      role={decorative ? undefined : "img"}
+      style={geometry}
+      role={decorative ? undefined : "group"}
       aria-label={decorative ? undefined : label}
       aria-hidden={decorative ? true : undefined}
     >
       <canvas ref={canvasRef} className="nest-emblem-canvas" aria-hidden="true" />
+      {decorative ? null : (
+        <div className="nest-targets">
+          <span className="nest-target nest-target-execution tip" tabIndex={0} role="img" aria-label={executionTip} data-tooltip={executionTip}>
+            <span className="nest-target-face" />
+          </span>
+          <span className="nest-target nest-target-hole" aria-hidden="true" />
+          <span className="nest-target nest-target-enjoyment tip" tabIndex={0} role="img" aria-label={enjoymentTip} data-tooltip={enjoymentTip}>
+            <span className="nest-target-face" />
+          </span>
+        </div>
+      )}
     </div>
   );
 }

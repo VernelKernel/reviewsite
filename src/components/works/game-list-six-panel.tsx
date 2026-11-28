@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { CompareButton } from "@/components/comparison/compare-controls";
 import { CriticNestEmblem } from "@/components/evaluations/critic-nest-emblem";
 import { ResetSpinButton, SpinClock } from "@/components/evaluations/spin-clock";
@@ -9,25 +10,14 @@ import {
   pairedDimensions,
   pairedEnjoymentDimensions,
   shapePoints,
-  type Distribution,
   type ShapePoint,
 } from "@/lib/aggregation/landscape";
+import { glanceMaxSpan } from "@/lib/evaluations/glance-frame";
 import { criticsHref, workHref } from "@/lib/domain/labels";
 import { landscapesFor, workArt, type CardWork } from "@/lib/works/present";
 
 function closed(points: ShapePoint[]): boolean {
   return points.length >= 3;
-}
-
-function reviewNote(count: number): string {
-  if (count === 0) return "No published reviews yet";
-  if (count === 1) return "Based on 1 review";
-  return `Based on ${count} reviews`;
-}
-
-function stanceLine(distribution: Distribution): string {
-  if (distribution.count === 0) return "No reviews";
-  return distributionLabel(distribution);
 }
 
 function shapeSummary(label: string, points: ShapePoint[], sample: string): string {
@@ -48,16 +38,22 @@ function CriticShape({
   sample: string;
 }) {
   const summary = shapeSummary(label, points, sample);
+  const span = glanceMaxSpan();
+  const hit = {
+    "--shape-max-width": `${span.width * 100}%`,
+    "--shape-max-height": `${span.height * 100}%`,
+  } as CSSProperties;
   return (
-    <a className="list-six-shape" href={href} aria-label={summary}>
+    <div className="shape-slot" style={hit}>
       {closed(points) ? (
-        <GlanceShape points={points} summary={summary} labels={false} />
+        <GlanceShape points={points} summary={summary} labels={false} named={false} />
       ) : (
         <div className="list-four-plot">
           <p className="list-four-empty">Not enough dimensions to shape.</p>
         </div>
       )}
-    </a>
+      <a className="shape-target tip" href={href} aria-label={summary} data-tooltip={`${label} Breakdown`} />
+    </div>
   );
 }
 
@@ -67,7 +63,7 @@ export function GameListSixPanel({ work }: { work: CardWork }) {
   const critics = landscapes.critics;
   const enjoyment = critics.enjoyment;
   const execution = critics.execution;
-  const sample = reviewNote(critics.sampleSize);
+  const sample = critics.sampleNote.replace(/\.$/, "");
   const href = workHref(work.workType, work.slug);
   const breakdown = `${href}#overview`;
   const enjoymentPoints = shapePoints(pairedEnjoymentDimensions(critics, landscapes.audience), "critics");
@@ -99,16 +95,6 @@ export function GameListSixPanel({ work }: { work: CardWork }) {
             </div>
           </div>
         </div>
-        <dl className="list-six-readings">
-          <div>
-            <dt>Enjoyment: (inner diamond)</dt>
-            <dd>{stanceLine(enjoyment)}</dd>
-          </div>
-          <div>
-            <dt>Execution: outer diamond</dt>
-            <dd>{stanceLine(execution)}</dd>
-          </div>
-        </dl>
         <hr className="list-six-rule" />
         <p className="list-six-cue">Click shapes for in-depth breakdown</p>
         <div className="list-six-shapes">

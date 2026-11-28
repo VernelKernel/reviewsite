@@ -44,3 +44,16 @@ export function clusterOuterRadius(scale: number, rem = 16): number {
 export function clusterGap(scale: number, rem = 16): number {
   return EMBLEM_GUTTER_REM * rem * scale * Math.SQRT2;
 }
+
+/**
+ * How much of the outer diamond the hole and the enjoyment diamond occupy.
+ * The outer diamond is execution. The inner diamond is enjoyment.
+ * The band between the hole and the inner diamond is the gutter, not a target.
+ */
+export function nestShares(outerRadius = 1): { hole: number; inner: number } {
+  const geometry = nestGeometry(outerRadius);
+  return {
+    hole: geometry.holeRadius / geometry.outerRadius,
+    inner: geometry.innerRadius / geometry.outerRadius,
+  };
+}
