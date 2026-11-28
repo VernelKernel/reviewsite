@@ -172,7 +172,7 @@ The comment size is always `--text-meta`. Color changes only with the job: muted
 
 ### Cards
 
-Catalog cards (`.work-card`), compare columns, and the home strip share surface, border, radius, and shadow. A card rests on `--shadow-card` layered with `--shadow-floating`. Its border is a softer mix of `--color-border`. Hover lifts it and leaves `--shadow-floating`. Titles stay compact because the card is a browse object, not a page. Sample game-list pages (`/game-list-3` through `/game-list-6`) are layout studies. They may use a denser card. They still use tokens.
+Catalog cards (`.work-card`), compare columns, and the home strip share surface, border, radius, and shadow. A card rests on `--shadow-card` layered with `--shadow-floating`. Its border is a softer mix of `--color-border`. Hover lifts it and leaves `--shadow-floating`. Titles stay compact because the card is a browse object, not a page. The sample game list (`/game-list-6`) is a layout study. It may use a denser card. It still uses tokens.
 
 Cover art uses `.art-well`: the card shadow, plus a hairline inset of `--color-text-primary`. When the art is its own link (`.art-link`), hovering that link lifts the well and scales the image. Hovering the whole card does not.
 
@@ -208,7 +208,7 @@ Breakpoints already in the stylesheet:
 | --- | --- |
 | 1100px | Work intro stacks. The fact card loses its left border and gains a top border. Some grids drop a column. |
 | 860px | Page grids become a single column. Display type shrinks. Record facts stack. |
-| 720px | The five-card sample grid becomes one column. |
+| 720px | The sample game list becomes one column. |
 
 Do not add a breakpoint for a single page if an existing one already stacks that kind of layout.
 
