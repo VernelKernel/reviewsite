@@ -11,7 +11,7 @@ export function WorkCard({ work }: { work: CardWork }) {
   return (
     <article className="work-card">
       <a className="work-card-link" href={workHref(work.workType, work.slug)}>
-        <div className="work-card-media">
+        <div className="work-card-media art-well">
           <ArtImage art={art} shape="wide" />
         </div>
         <div className="work-card-body">

@@ -110,7 +110,7 @@ export function GameListFourPanel({ work }: { work: CardWork }) {
         <div className="list-four-body">
           <div className="list-four-art">
             <ArtImage art={art} shape="tall" />
-            <div className="list-four-badge">
+            <div className="list-four-badge emblem-badge">
               <CriticNestEmblem
                 compact
                 decorative

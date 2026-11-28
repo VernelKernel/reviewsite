@@ -79,10 +79,10 @@ export function GameListSixPanel({ work }: { work: CardWork }) {
           </h3>
         </a>
         <div className="list-six-top">
-          <a className="list-six-cover" href={href} aria-label={work.title}>
-            <div className="list-six-art">
+          <a className="list-six-cover art-link" href={href} aria-label={work.title}>
+            <div className="list-six-art art-well">
               <ArtImage art={art} shape="tall" />
-              <div className="list-six-badge">
+              <div className="list-six-badge emblem-badge">
                 <CriticNestEmblem compact decorative spin={false} enjoyment={enjoyment} execution={execution} />
               </div>
             </div>

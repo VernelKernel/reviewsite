@@ -108,7 +108,7 @@ export function GameListFivePanel({ work }: { work: CardWork }) {
         <div className="list-five-body">
           <div className="list-five-art">
             <ArtImage art={art} shape="tall" />
-            <div className="list-five-badge">
+            <div className="list-five-badge emblem-badge">
               <CriticNestEmblem
                 compact
                 decorative

@@ -46,7 +46,7 @@ export function GameListThreePanel({ work }: { work: CardWork }) {
             <div className="list-three-cover">
               <div className="list-three-art">
                 <ArtImage art={art} shape="tall" />
-                <div className="list-three-badge">
+                <div className="list-three-badge emblem-badge">
                   <NestMark enjoyment={critics.enjoyment} execution={critics.execution} spin={false} />
                 </div>
               </div>

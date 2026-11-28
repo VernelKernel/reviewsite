@@ -97,7 +97,7 @@ export function CriticNestEmblem({
       if (!frame) return;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
-      paintNest(ctx, frame, execution, enjoyment, readNestPalette(), false);
+      paintNest(ctx, frame, execution, enjoyment, readNestPalette(), false, "color", true);
     };
 
     const drawSpin = (now: number) => {
@@ -112,7 +112,7 @@ export function CriticNestEmblem({
         executionAngle: angle,
         enjoymentAngle: angle,
         empty,
-      });
+      }, true);
     };
 
     const motion = () => spin && !reduce.matches && (execution.count > 0 || enjoyment.count > 0);

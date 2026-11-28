@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { ShapePoint } from "@/lib/aggregation/landscape";
+import { paintFacetSheen } from "@/lib/evaluations/facet-depth";
 import { fieldModelFrom, paintField, type FieldPalette } from "@/lib/evaluations/field";
 import { GLANCE_CX, GLANCE_CY, GLANCE_HEIGHT, GLANCE_RADIUS, GLANCE_WIDTH } from "@/lib/evaluations/glance-frame";
 import { radarPoint } from "@/lib/evaluations/radar";
@@ -53,7 +54,10 @@ export function GlanceShape({
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, GLANCE_WIDTH, GLANCE_HEIGHT);
       const model = fieldModelFrom(points, GLANCE_CX, GLANCE_CY, GLANCE_RADIUS, readPalette());
-      if (model) paintField(ctx, model);
+      if (model) {
+        paintField(ctx, model);
+        paintFacetSheen(ctx);
+      }
     };
     draw();
     const observer = new MutationObserver(draw);

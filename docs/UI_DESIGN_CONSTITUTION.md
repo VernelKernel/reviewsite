@@ -172,7 +172,9 @@ The comment size is always `--text-meta`. Color changes only with the job: muted
 
 ### Cards
 
-Catalog cards (`.work-card`), compare columns, and the home strip share surface, border, radius, and shadow. Their titles stay compact because the card is a browse object, not a page. Sample game-list pages (`/game-list-3` through `/game-list-6`) are layout studies. They may use a denser card. They still use tokens.
+Catalog cards (`.work-card`), compare columns, and the home strip share surface, border, radius, and shadow. A card rests on `--shadow-card` layered with `--shadow-floating`. Its border is a softer mix of `--color-border`. Hover lifts it and leaves `--shadow-floating`. Titles stay compact because the card is a browse object, not a page. Sample game-list pages (`/game-list-3` through `/game-list-6`) are layout studies. They may use a denser card. They still use tokens.
+
+Cover art uses `.art-well`: the card shadow, plus a hairline inset of `--color-text-primary`. When the art is its own link (`.art-link`), hovering that link lifts the well and scales the image. Hovering the whole card does not.
 
 ### Hover tips
 
@@ -181,6 +183,8 @@ A short label that appears on hover and keyboard focus uses `.tip` with `data-to
 ### Nest emblem
 
 The outer diamond is execution. The inner diamond is enjoyment. A nest that is not decorative exposes each diamond as `.nest-target`. The gutter between them, and the corners outside the outer diamond, are not targets. The cursor stays the arrow. The tip names the diamond and the reading. The emblem sets `--nest-hole` and `--nest-inner` from `nestShares()`. Those are geometry, not a color or a margin.
+
+On screen, the nest and every glance shape take the shared facet finish: a neutral white-to-black wash, and on the nest a hairline rim. The wash is illumination, clipped to pixels that are already painted, so the gutter stays clear and the stance colors stay the data. Exported images do not take the wash. The canvas shadow is neutral black through `color-mix`, because `--color-text-primary` flips in dark mode and would glow. A mark sitting on artwork (`.emblem-badge`) uses the smaller shadow. Hovering a nest diamond lifts the emblem. Hovering a glance target lifts `.shape-slot`.
 
 ### Glance shape target
 

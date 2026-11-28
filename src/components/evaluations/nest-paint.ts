@@ -2,6 +2,7 @@ import type { Distribution } from "@/lib/aggregation/landscape";
 import { influenceSpinSource, paintInfluenceDiamond, shareOf, type InfluenceChannel } from "@/lib/evaluations/influence-field";
 import { clusterOuterRadius, nestGeometry } from "@/lib/evaluations/nest-geometry";
 import type { FieldPalette, SpinSource } from "@/lib/evaluations/field";
+import { paintFacetRim, paintFacetSheen } from "@/lib/evaluations/facet-depth";
 import { radarPoint } from "@/lib/evaluations/radar";
 
 export type NestPalette = { field: FieldPalette; empty: string };
@@ -64,12 +65,14 @@ export function paintNest(
   palette: NestPalette,
   edge = false,
   channel: InfluenceChannel = "color",
+  depth = false,
 ) {
   void edge;
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   const hole = frame.outerRadius > 0 ? frame.holeRadius / frame.outerRadius : 0;
   fillDiamond(ctx, execution, palette, frame.cx, frame.cy, frame.outerRadius, hole, channel);
   fillDiamond(ctx, enjoyment, palette, frame.cx, frame.cy, frame.innerRadius, 0, channel);
+  if (depth) finishNest(ctx, frame);
 }
 
 export function paintNestSpin(
@@ -82,12 +85,26 @@ export function paintNestSpin(
     enjoymentAngle: number;
     empty: string;
   },
+  depth = false,
 ) {
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   if (layers.execution) drawRotated(ctx, layers.execution, layers.executionAngle, () => clipRing(ctx, frame));
   else fillClipped(ctx, layers.empty, () => clipRing(ctx, frame), frame.cx, frame.cy, frame.outerRadius);
   if (layers.enjoyment) drawRotated(ctx, layers.enjoyment, layers.enjoymentAngle, () => clipInner(ctx, frame));
   else fillClipped(ctx, layers.empty, () => clipInner(ctx, frame), frame.cx, frame.cy, frame.innerRadius);
+  if (depth) finishNest(ctx, frame);
+}
+
+function finishNest(ctx: CanvasRenderingContext2D, frame: NestFrame) {
+  paintFacetSheen(ctx);
+  paintFacetRim(ctx, () => {
+    ctx.beginPath();
+    addDiamond(ctx, frame.cx, frame.cy, frame.outerRadius);
+  });
+  paintFacetRim(ctx, () => {
+    ctx.beginPath();
+    addDiamond(ctx, frame.cx, frame.cy, frame.innerRadius);
+  });
 }
 
 function fillDiamond(
